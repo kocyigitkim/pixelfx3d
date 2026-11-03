@@ -5,4 +5,5 @@ import weather from './weather.js'; import ui from './ui.js'; import pickups fro
 import mage from './mage.js';
 import priest from './priest.js';
 import shaman from './shaman.js';
-export const CATEGORIES = { moves, fire, explosions, water, ice, lightning, scifi, melee, impacts, projectiles, spawn, arcane, holy, shadow, status, nature, weather, ui, pickups, transitions, critters, warrior, rogue, archer, mage, priest, shaman };
+import dark from './dark.js';
+export const CATEGORIES = { moves, fire, explosions, water, ice, lightning, scifi, melee, impacts, projectiles, spawn, arcane, holy, shadow, status, nature, weather, ui, pickups, transitions, critters, warrior, rogue, archer, mage, priest, shaman, dark };
