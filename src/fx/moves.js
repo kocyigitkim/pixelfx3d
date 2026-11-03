@@ -300,7 +300,7 @@ export default [
         fx.ring({ t0: t, dur: 0.5, r: [0.2, big ? 4.5 : 2.5], width: [0.3, 0.05], normal: 'up', pos: [T[0] + x, 0.02, 0], intensity: 1.4, fill: 0.1, ramp: [[0, '#fff'], [0.5, '#b8d0ff'], [1, '#2a4ad8']] });
         fx.bolt({ from: [T[0] + x, 0.1, 0], to: [T[0] + x - 1.6, 0.1, 0.8], t0: t, dur: 0.25, jag: 0.4, branches: 0, width: 0.03, rate: 24, ramp: [[0, '#fff'], [1, '#6a8aff']] }); fx.bolt({ from: [T[0] + x, 0.1, 0], to: [T[0] + x + 1.4, 0.1, -0.7], t0: t, dur: 0.25, jag: 0.4, branches: 0, width: 0.03, rate: 24, ramp: [[0, '#fff'], [1, '#6a8aff']] });
         sparks(fx, { t, pos: [T[0] + x, 0.5, 0], n: big ? 100 : 50, dir: [0, 1, 0], spread: 1.4, speed: [3, 10], ramp: [[0, '#fff'], [0.4, '#aac8ff'], [1, '#24a', 0]] }); glint(fx, [T[0] + x, 1.2, 0.1], t, big ? 2 : 1.1, '#fff', '#8ab0ff');
-        fx.light({ color: '#9cc0ff', intensity: big ? 170 : 100, pos: [T[0] + x - 0.6, 3.0, 1.2], range: 22, t0: t, dur: 0.7, env: (u) => (Math.random, Math.exp(-u * 4.5)), norm: 90 });
+        fx.light({ color: '#9cc0ff', intensity: big ? 170 : 100, pos: [T[0] + x - 0.6, 3.0, 1.2], range: 22, t0: t, dur: 0.7, env: (u) => Math.exp(-u * 4.5), norm: 90 });
         fx.flash(t, big ? 0.3 : 0.16, '#e0ecff', big ? 0.5 : 0.28);
       };
       strike(0.12, false, 0.1); strike(0.72, false, -0.5); strike(1.15, true, 0);

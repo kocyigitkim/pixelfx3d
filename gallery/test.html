@@ -1,9 +1,15 @@
-<!doctype html><meta charset="utf-8"><body style="margin:0;background:#000"><div id="v" style="width:960px;height:540px"></div>
+<!doctype html><meta charset="utf-8"><link rel="icon" href="data:,"><body style="margin:0;background:#000"><div id="v" style="width:960px;height:540px"></div>
 <script type="importmap">{"imports":{"three":"../node_modules/three/build/three.module.js","three/addons/":"../node_modules/three/examples/jsm/"}}</script>
 <script type="module">
 import { Stage, registerAll, registry } from '../src/index.js';
 registerAll();
-const stage = new Stage(document.getElementById('v'), { preserve: true, maxPixelRatio: 1 });
+// query: transparent=1, legacy=1 (old bloom/flash defaults, for baseline compare), quality=low|medium|high, w, h, bg=hex
+const q = new URLSearchParams(location.search), v = document.getElementById('v');
+if (q.get('bg')) document.body.style.background = '#' + q.get('bg');
+v.style.width = (q.get('w') || 960) + 'px'; v.style.height = (q.get('h') || 540) + 'px';
+const o = { preserve: true, maxPixelRatio: 1, transparent: q.has('transparent'), quality: q.get('quality') || undefined };
+if (q.has('legacy')) Object.assign(o, { bloomScale: 1, flashMax: 1 });
+const stage = new Stage(v, o);
 window.__stage = stage; window.__ids = [...registry.keys()];
 window.__play = (id, opts) => { stage.autoReplay = false; stage.play(id, opts); return stage.fx.duration; };
 window.__seek = (t) => { stage.seek(t); return true; };

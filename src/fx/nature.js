@@ -39,7 +39,7 @@ function spikeGeo(r, h, rng, sides = 6, jit = 0.25) {
 }
 const rockMat = (c = '#6a6258') => new THREE.MeshStandardMaterial({ color: c, roughness: 0.92, metalness: 0.02, flatShading: true });
 const leafGeo = () => { const s = new THREE.Shape(); s.moveTo(0, 0); s.bezierCurveTo(0.35, 0.15, 0.4, 0.6, 0, 1); s.bezierCurveTo(-0.4, 0.6, -0.35, 0.15, 0, 0); return new THREE.ShapeGeometry(s, 10); };
-const ADD = { transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneFactor };
+const ADD = { transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor };
 const NORM = { transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor };
 const _h = {};
 function halo(color, size, hdr = 1.5) {

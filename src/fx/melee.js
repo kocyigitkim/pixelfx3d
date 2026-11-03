@@ -20,7 +20,7 @@ export function sweepSurface(fx, A, B, o) {
   for (let i = 0; i <= N; i++) { vv[i * 2] = 0; vv[i * 2 + 1] = 1; if (i < N) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } }
   const g = new THREE.BufferGeometry(); g.setIndex(idx); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aAge', new THREE.BufferAttribute(age, 1)); g.setAttribute('aV', new THREE.BufferAttribute(vv, 1));
   const u = { uC0: { value: new THREE.Color(o.c0 || '#ffffff') }, uC1: { value: new THREE.Color(o.c1 || '#9cf') }, uC2: { value: new THREE.Color(o.c2 || '#126') }, uInt: { value: o.intensity ?? 2.2 }, uA: { value: 1 }, uEdge: { value: o.edge ?? 2.2 }, uNorm: { value: o.normal ? 1 : 0 } };
-  const m = new THREE.ShaderMaterial({ vertexShader: SW_V, fragmentShader: SW_F, uniforms: u, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: o.normal ? THREE.OneMinusSrcAlphaFactor : THREE.OneFactor });
+  const m = new THREE.ShaderMaterial({ vertexShader: SW_V, fragmentShader: SW_F, uniforms: u, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: o.normal ? THREE.OneMinusSrcAlphaFactor : THREE.OneFactor, blendSrcAlpha: o.normal ? THREE.OneFactor : THREE.ZeroFactor, blendDstAlpha: o.normal ? THREE.OneMinusSrcAlphaFactor : THREE.OneFactor });
   const mesh = new THREE.Mesh(g, m); mesh.frustumCulled = false; mesh.renderOrder = 26;
   fx.mesh(mesh, (t, pr, f, w) => {
     u.uA.value = w;

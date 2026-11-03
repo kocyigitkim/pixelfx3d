@@ -1,11 +1,11 @@
-// usage: node tools/shots.mjs outDir id[,id...] t[,t...]   (ids "all" | "cat:fire" supported)
+// usage: node tools/shots.mjs outDir id[,id...] t[,t...] [query e.g. transparent=1]   (ids "all" | "cat:fire" supported)
 import { chromium } from 'playwright'; import fs from 'node:fs'; import path from 'node:path';
-const [out, idArg, tArg = '0.3,1'] = process.argv.slice(2); fs.mkdirSync(out, { recursive: true });
+const [out, idArg, tArg = '0.3,1', qs = ''] = process.argv.slice(2); fs.mkdirSync(out, { recursive: true });
 const port = process.env.PORT || 8123;
-const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox', '--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const b = await chromium.launch({ args: ['--no-sandbox', '--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const pg = await b.newPage({ viewport: { width: 960, height: 540 } }); const errs = [];
 pg.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errs.push(m.text().slice(0, 600)); }); pg.on('pageerror', (e) => errs.push('PAGEERR ' + e.message.slice(0, 600)));
-await pg.goto(`http://localhost:${port}/gallery/test.html`); await pg.waitForFunction('window.__ready', null, { timeout: 60000 });
+await pg.goto(`http://localhost:${port}/gallery/test.html${qs ? '?' + qs : ''}`); await pg.waitForFunction('window.__ready', null, { timeout: 60000 });
 let ids = await pg.evaluate('window.__ids'); if (idArg.startsWith('cat:')) ids = ids.filter((i) => i.startsWith(idArg.slice(4) + '/')); else if (idArg !== 'all') ids = idArg.split(',');
 const ts = tArg.split(',').map(Number); const report = [];
 for (const id of ids) {

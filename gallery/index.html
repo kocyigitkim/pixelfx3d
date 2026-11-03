@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>pixelfx3d — realistic 3D shader effects</title>
+<link rel="icon" href="data:,">
 <style>
   :root{--bg:#0b0d12;--panel:#12151c;--line:#232835;--fg:#e8ecf4;--dim:#8b94a7;--acc:#ff8a3d}
   *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:13px/1.4 ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif}
@@ -30,6 +31,7 @@
   #err{position:absolute;right:14px;top:14px;max-width:420px;background:#3a1216;border:1px solid #7a2630;color:#ffb3bb;border-radius:8px;padding:8px 12px;display:none;font:12px ui-monospace,monospace;white-space:pre-wrap}
   #prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffffff14}#prog i{display:block;height:100%;width:0;background:var(--acc)}
   @media(max-width:760px){body{grid-template-columns:1fr;grid-template-rows:230px 1fr}aside{border-right:0;border-bottom:1px solid var(--line)}}
+  #view.tr{background:repeating-conic-gradient(#2b2e36 0% 25%,#1c1e24 0% 50%) 0 0/24px 24px}
 </style>
 </head>
 <body>
@@ -52,6 +54,7 @@
     <label>palette <select id="pal"></select></label>
     <label>seed <input id="seed" type="number" value="1337" style="width:72px"></label>
     <label><input id="flip" type="checkbox"> mirror</label>
+    <label><input id="trn" type="checkbox"> transparent</label>
     <button id="tour" title="T">▶ Tour</button>
     <button id="shot" title="P">▣ PNG</button>
   </div>
@@ -68,7 +71,9 @@ registerAll();
 const $ = (s) => document.querySelector(s);
 const PALETTES = { default: null, 'blue flame': ['#001133', '#0a3fd0', '#38a8ff', '#bfe8ff', '#ffffff'], 'toxic green': ['#031a05', '#0c6b18', '#43d63a', '#c8ff8a', '#ffffff'], 'violet': ['#12002a', '#4b0fa8', '#a24cff', '#e2b8ff', '#ffffff'], 'pink': ['#200018', '#a0156b', '#ff4fa8', '#ffc0e0', '#ffffff'], 'gold': ['#2a1600', '#a86a00', '#ffc533', '#fff0a8', '#ffffff'], 'ice': ['#041526', '#1a5f9e', '#58b8ff', '#c8f0ff', '#ffffff'] };
 for (const k of Object.keys(PALETTES)) $('#pal').add(new Option(k, k));
-const stage = new Stage($('#view'), { preserve: true }); stage.start(); window.stage = stage;
+const TR = new URLSearchParams(location.search).has('transparent'); $('#trn').checked = TR; $('#view').classList.toggle('tr', TR);
+$('#trn').onchange = (e) => { const u = new URL(location.href); if (e.target.checked) u.searchParams.set('transparent', '1'); else u.searchParams.delete('transparent'); location.href = u.href; };
+const stage = new Stage($('#view'), { preserve: true, transparent: TR }); stage.start(); window.stage = stage;
 const cats = Object.keys(CATEGORIES).filter((c) => CATEGORIES[c].length);
 let cat = 'all', cur = null, paused = false, tour = false, tourT = 0, tourList = [];
 const total = [...registry.values()].length; $('#count').textContent = `${total} effects · ${cats.length} categories · three.js WebGL2`;
@@ -81,14 +86,14 @@ function drawList() {
 function opts() { const p = PALETTES[$('#pal').value]; return { seed: +$('#seed').value || 1, palette: p || undefined, flip: $('#flip').checked }; }
 function select(id, keepHash) {
   const d = registry.get(id); if (!d) return; cur = id; $('#err').style.display = 'none';
-  try { stage.autoReplay = true; stage.play(d, opts()); stage.fx.timeScale = +$('#spd').value; stage.bloom.strength = +$('#blm').value * ((d.stage?.bloom ?? 0.45) / 0.45); } catch (e) { console.error(e); const el = $('#err'); el.textContent = `${id}\n${e.message}`; el.style.display = 'block'; }
+  try { stage.autoReplay = true; stage.play(d, opts()); stage.fx.timeScale = +$('#spd').value; stage.bloom.strength = +$('#blm').value * ((d.stage?.bloom ?? 0.45) / 0.45) * stage.bloomScale; } catch (e) { console.error(e); const el = $('#err'); el.textContent = `${id}\n${e.message}`; el.style.display = 'block'; }
   $('#nm').textContent = d.name || d.id; $('#meta').textContent = `${d.id} · ${d.loop ? 'loop' : 'one-shot'} · ${d.duration}s${d.act ? ' · acted' : ''}${d.screen ? ' · screen pass' : ''}`;
   if (!keepHash) history.replaceState(null, '', '#' + id); document.querySelectorAll('.it').forEach((e) => e.classList.toggle('on', e.dataset.id === id)); document.querySelector('.it.on')?.scrollIntoView({ block: 'nearest' }); paused = false; $('#pau').textContent = '⏸ Pause';
 }
 $('#q').oninput = drawList; $('#rep').onclick = () => stage.fx?.reset();
 $('#pau').onclick = () => { paused = !paused; if (stage.fx) stage.fx.timeScale = paused ? 0 : +$('#spd').value; $('#pau').textContent = paused ? '▶ Play' : '⏸ Pause'; };
 $('#spd').oninput = (e) => { $('#spv').textContent = (+e.target.value).toFixed(2).replace(/0$/, '') + '×'; if (stage.fx && !paused) stage.fx.timeScale = +e.target.value; };
-$('#blm').oninput = (e) => { stage.bloom.strength = +e.target.value; };
+$('#blm').oninput = (e) => { stage.bloom.strength = +e.target.value * stage.bloomScale; };
 for (const id of ['pal', 'seed', 'flip']) $('#' + id).onchange = () => cur && select(cur, true);
 $('#tour').onclick = () => { tour = !tour; $('#tour').textContent = tour ? '■ Stop' : '▶ Tour'; tourList = visible().map((d) => d.id); tourT = 0; if (tour && tourList.length) select(tourList[0]); };
 $('#shot').onclick = () => { stage.frame(0); const a = document.createElement('a'); a.download = (cur || 'fx').replace('/', '_') + '.png'; a.href = stage.canvas.toDataURL('image/png'); a.click(); };
