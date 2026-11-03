@@ -122,7 +122,7 @@ export default [
       const mat = eggMat(fx, uCrack), prof = eggProfile();
       const cut = 20; const bot = new THREE.Mesh(new THREE.LatheGeometry(prof.slice(0, cut + 1).concat([new THREE.Vector2(0.0005, prof[cut].y)]), 40), mat);
       const top = new THREE.Mesh(new THREE.LatheGeometry([new THREE.Vector2(0.0005, prof[cut].y)].concat(prof.slice(cut)), 40), mat);
-      const inner = new THREE.Mesh(new THREE.SphereGeometry(0.14, 20, 14), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.3, 0.95, 0.42), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false })); inner.position.y = 0.3;
+      const inner = new THREE.Mesh(new THREE.SphereGeometry(0.14, 20, 14), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.9, 0.65, 0.3), transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false })); inner.position.y = 0.3;
       const grp = new THREE.Group(); const topG = new THREE.Group(); topG.position.y = prof[cut].y; top.position.y = -prof[cut].y; topG.add(top); grp.add(bot, topG, inner);
       const nest = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.05, 8, 24), new THREE.MeshStandardMaterial({ color: '#6b4a2a', roughness: 1 })); nest.rotation.x = Math.PI / 2; nest.position.y = 0.03; nest.scale.set(1.15, 1.15, 1.6); grp.add(nest);
       fx.mesh(grp, (t) => {
@@ -132,7 +132,7 @@ export default [
         const b = clamp((t - 1.85) / 0.9); const e = 1 - Math.pow(1 - b, 2);
         topG.position.set(e * 0.25, prof[cut].y + (e * 0.35 - 3.2 * b * b * 0.35) , e * 0.05); topG.rotation.set(e * 0.4, 0, -e * 1.6); topG.visible = b < 0.95;
         bot.visible = true; bot.scale.setScalar(1);
-        inner.visible = t > 1.75 && t < 2.55; inner.scale.setScalar(0.9 + sm(1.7, 1.85, t) * 0.2 + (t > 1.85 ? 0.3 * Math.exp(-(t - 1.85) * 5) : 0)); inner.material.color.setScalar(1).multiplyScalar(0).add(new THREE.Color(1.3, 0.95, 0.42).multiplyScalar(t > 2.3 ? Math.max(0, 1 - (t - 2.3) / 0.7) : 1));
+        inner.visible = t > 1.75 && t < 2.55; inner.scale.setScalar(0.9 + sm(1.7, 1.85, t) * 0.2 + (t > 1.85 ? 0.3 * Math.exp(-(t - 1.85) * 5) : 0)); inner.material.color.setScalar(1).multiplyScalar(0).add(new THREE.Color(0.9, 0.65, 0.3).multiplyScalar(t > 2.3 ? Math.max(0, 1 - (t - 2.3) / 0.7) : 1));
       }, { dur: 99 });
       fx.light({ color: '#ffd890', intensity: 6, pos: [0, 0.3, 0.1], range: 4, env: (t) => sm(1.0, 1.8, t) * 0.8, t0: 0, dur: 1.9 });
       fx.light({ color: '#ffe6a8', intensity: 30, pos: [0, 0.45, 0.2], range: 8, t0: 1.85, dur: 1.25, fade: [0.03, 0.9] });
@@ -140,7 +140,7 @@ export default [
       fx.beam({ pos: [0, 0.3, 0], height: 1.6, r: [0.08, 0.22], intensity: 0.3, t0: 1.85, dur: 1.0, fade: [0.03, 0.8], ramp: [[0, '#fff6d0'], [0.6, '#ffd070'], [1, '#c06000']], noise: 0.4 });
       fx.ring({ t0: 1.85, dur: 0.7, r: [0.1, 1.2], width: [0.15, 0.04], normal: 'up', intensity: 0.8, ramp: [[0, '#fff'], [1, '#fc7']] });
       fx.emitter({ count: 28, kind: 'shard', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.1, pos: [0, 0.32, 0], dir: [0, 1, 0], radial: 1, spread: 1.4, speed: [1.2, 3.2], life: [0.9, 1.6], size: [0.04, 0.03], gravity: [0, -9, 0], bounce: 0.3, rot: 8, ramp: [[0, '#efe3c8'], [1, '#e2d3b0', 1]], delay: 1.85 });
-      fx.emitter({ count: 70, kind: 'soft', shape: 'sphere', radius: 0.12, pos: [0, 0.32, 0], dir: [0, 1, 0], spread: 1.5, speed: [0.5, 2.4], life: [0.7, 1.6], size: [0.03, 0.008], gravity: [0, 0.3, 0], drag: 0.8, ramp: [[0, '#fff'], [0.4, '#ffd070'], [1, '#c60', 0]], intensity: 1.8, delay: 1.85, turb: [0.3, 1] });
+      fx.emitter({ count: 70, kind: 'soft', shape: 'sphere', radius: 0.12, pos: [0, 0.32, 0], dir: [0, 1, 0], spread: 1.5, speed: [0.5, 2.4], life: [0.7, 1.6], size: [0.03, 0.008], gravity: [0, 0.3, 0], drag: 0.8, ramp: [[0, '#fff'], [0.4, '#ffd070'], [1, '#c60', 0]], intensity: 1.0, delay: 1.85, turb: [0.3, 1] });
       fx.emitter({ count: 24, kind: 'smoke', blend: 'normal', lit: 1, shape: 'disc', radius: 0.2, pos: [0, 0.2, 0], dir: [0, 1, 0], radial: 0.8, spread: 1.2, speed: [0.3, 1], life: [0.8, 1.5], size: [0.3, 0.7], ramp: [[0, '#fff2d0', 0.5], [1, '#a89868', 0]], delay: 1.85, order: -1, drag: 1.5 });
       fx.emitter({ count: 14, kind: 'glint', shape: 'sphere', radius: 0.25, pos: [0, 0.3, 0], size: [0.18, 0.04], life: [0.3, 0.6], ramp: [[0, '#fff'], [1, '#fd8', 0]], intensity: 2, delay: 1.9, emit: 0.8, speed: [0, 0.2] });
     } },

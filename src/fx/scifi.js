@@ -127,7 +127,7 @@ export default [
       fx.light({ color: '#ff9a40', intensity: 28, pos: [-0.3, 0.3, 0.3], range: 8, flicker: 0.3, rate: 24 });
       [-0.1, 0.1].forEach((z, i) => {
         const P = (t) => HY(t) + 0.37 - 0.55 + 0.0;
-        fx.emitter({ count: 26, kind: 'flame', shape: 'point', pos: [-0.24, 0.77 + 0.55 - 0.55, z], dir: [0, -1, 0], spread: 0.06, speed: [1.2, 2.2], life: [0.18, 0.3], size: [0.4, 0.15], aspect: -2.4, ramp: [[0, '#d8ecff', 1], [0.25, '#7ab8ff', 0.9], [0.55, '#ff9a3a', 0.7], [1, '#401000', 0]], intensity: 0.7, follow: (m, a, t) => m.position.y = 0.77 + (HY(t) - 0.55) + 0.55 - 0.55 + 0.55 - 0.55 });
+        fx.emitter({ count: 40, kind: 'flame', shape: 'point', pos: [-0.24, 0.77 + 0.55 - 0.55, z], dir: [0, -1, 0], spread: 0.06, speed: [1.2, 2.2], life: [0.25, 0.42], size: [0.55, 0.2], aspect: -2.4, ramp: [[0, '#d8ecff', 1], [0.25, '#7ab8ff', 0.9], [0.55, '#ff9a3a', 0.7], [1, '#401000', 0]], intensity: 1.0, follow: (m, a, t) => m.position.y = 0.77 + (HY(t) - 0.55) + 0.55 - 0.55 + 0.55 - 0.55 });
         fx.emitter({ count: 20, kind: 'spark', shape: 'point', pos: [-0.24, 0.77, z], dir: [0, -1, 0], spread: 0.3, speed: [2, 5], life: [0.2, 0.5], gravity: [0, -3, 0], size: [0.05, 0.015], stretch: 1.2, ramp: [[0, '#fff'], [0.4, '#ffc050'], [1, '#800', 0]], intensity: 2.5, bounce: 0.3, follow: (m, a, t) => m.position.y = 0.77 + (HY(t) - 0.55) });
         fx.emitter({ count: 22, kind: 'smoke', blend: 'normal', shape: 'point', pos: [-0.24, 0.5, z], dir: [0, -1, 0], spread: 0.3, speed: [0.6, 1.4], life: [0.7, 1.1], size: [0.15, 0.6], ramp: [[0, '#66625e', 0], [0.2, '#58544f', 0.35], [1, '#2a2826', 0]], lit: 1, order: -1, turb: [0.2, 1], follow: (m, a, t) => m.position.y = 0.55 + (HY(t) - 0.55) });
       });

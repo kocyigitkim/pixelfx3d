@@ -113,12 +113,14 @@ void main(){
     a=smoothstep(1.,.15,d+(n-.5)*1.1); col*=.55+.9*n; col*=mix(.75,1.15,clamp(.5+(n-n2)*2.+p.y*.25,0.,1.));
   }
   else if(uKind==3){
-    float x=p.x, y=vUv.y; float w=(1.-y)*.95;
-    float n=fbm(vec3(x*1.7,y*2.2-vU*3.,seed)); float wob=(n-.5)*.9*y;
-    float m=smoothstep(w+.12,w-.3,abs(x+wob))*smoothstep(0.,.14,y)*smoothstep(1.,.5,y);
+    float x=p.x, y=vUv.y;
+    float n=fbm(vec3(x*2.2,y*2.6-vU*3.,seed)); float n2=fbm(vec3(x*4.+3.,y*5.-vU*4.5,seed+7.));
+    float w=.9*pow(1.-y,.6)*smoothstep(0.,.18,y+.06); float wob=(n-.5)*1.8*y;   // teardrop: round base, thin noisy tip
+    float m=smoothstep(.1,-.4,abs(x+wob)-w)*smoothstep(1.,.45,y)*smoothstep(-.05,.12,y);
+    m*=smoothstep(.3,.75,n2+m*.5);                                                  // noise erosion: no straight edges
     float core=pow(m,2.2)*(1.-y*.8); float fl=.85+.3*sin(vU*31.+seed*7.);
     vec3 deep=col*col/max(max(col.r,max(col.g,col.b)),1e-3);
-    a=m*(.55+.45*n); col=mix(deep*.55,col*1.3,clamp(core*1.6+n*.25,0.,1.))*fl;
+    a=m*(.4+.4*n); col=mix(deep*.55,col*1.3,clamp(core*1.6+n*.25,0.,1.))*fl;
   }
   else if(uKind==4){ float rr=abs(d-.78); a=exp(-rr*rr*160.)*(.6+.5*vnoise(vec3(atan(p.y,p.x)*3.,seed,uTime*2.))); }
   else if(uKind==5){ // faceted shard
