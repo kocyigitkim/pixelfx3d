@@ -236,11 +236,11 @@ export default [
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 3.6, 8), pm); pole.position.y = 1.8; lamp.add(pole);
       const hd = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffd8a0').multiplyScalar(3) })); hd.position.y = 3.65; lamp.add(hd); lamp.position.set(2.6, 0, -2.5); fx.mesh(lamp, null, { dur: 99 });
       fx.light({ color: '#ffc880', intensity: 40, pos: [2.6, 3.4, -2.2], range: 12 });
-      fx.emitter(RAIN(520, { shapeSize: [9, 0.2, 8], pos: [0, 9, -1], dir: [0.12, -1, 0] }));
-      fx.emitter(RAIN(260, { shapeSize: [3.5, 0.2, 3], pos: [0, 8, 4.5], dir: [0.12, -1, 0], size: [0.9, 0.9], intensity: 0.7 }));
+      fx.emitter(RAIN(380, { shapeSize: [9, 0.2, 8], pos: [0, 9, -1], dir: [0.12, -1, 0] }));
+      fx.emitter(RAIN(180, { shapeSize: [3.5, 0.2, 3], pos: [0, 8, 4.5], dir: [0.12, -1, 0], size: [0.9, 0.9], intensity: 0.7 }));
       // ground splash dots
-      fx.emitter({ count: 200, kind: 'ring', shape: 'box', shapeSize: [7, 0, 7], pos: [0, 0.03, -1], dir: [0, 1, 0], spread: 0.2, speed: 0, life: [0.25, 0.45], size: [0.04, 0.3], ramp: [[0, '#cfe0f0', 0.7], [1, '#cfe0f0', 0]], intensity: 0.7 });
-      fx.emitter({ count: 160, kind: 'drop', shape: 'box', shapeSize: [7, 0, 7], pos: [0, 0.03, -1], dir: [0, 1, 0], spread: 0.7, speed: [0.8, 1.6], gravity: [0, -7, 0], life: [0.25, 0.45], size: [0.03, 0.02], ramp: [[0, '#dfeaf5', 0.9], [1, '#dfeaf5', 0]], intensity: 1.3 });
+      fx.emitter({ count: 150, kind: 'ring', shape: 'box', shapeSize: [7, 0, 7], pos: [0, 0.03, -1], dir: [0, 1, 0], spread: 0.2, speed: 0, life: [0.25, 0.45], size: [0.04, 0.3], ramp: [[0, '#cfe0f0', 0.7], [1, '#cfe0f0', 0]], intensity: 0.7 });
+      fx.emitter({ count: 120, kind: 'drop', shape: 'box', shapeSize: [7, 0, 7], pos: [0, 0.03, -1], dir: [0, 1, 0], spread: 0.7, speed: [0.8, 1.6], gravity: [0, -7, 0], life: [0.25, 0.45], size: [0.03, 0.02], ramp: [[0, '#dfeaf5', 0.9], [1, '#dfeaf5', 0]], intensity: 1.3 });
       fx.emitter({ count: 22, kind: 'smoke', blend: 'normal', shape: 'box', shapeSize: [10, 0.6, 6], pos: [0, 0.5, -6], dir: [1, 0, 0], speed: [0.2, 0.5], life: [7, 8], size: [4, 7], aspect: 0.4, lit: 1, ramp: [[0, '#6a7480', 0], [0.3, '#6a7480', 0.25], [0.7, '#6a7480', 0.25], [1, '#6a7480', 0]], order: -1 });
     } },
 
