@@ -171,9 +171,9 @@ export default [
   /* ------------------------------------------------------------------ rune circle */
   { id: 'arcane/rune-circle', name: 'Rune circle', category: 'arcane', loop: true, duration: 4, stage: { sky: 'dark', view: { pos: [2.4, 2.3, 3.6], target: [0, 0.5, 0], fov: 42 }, bloom: 0.6 },
     build(fx) {
-      const R = [[0, '#3a1080'], [0.5, '#a060ff'], [1, '#f0e0ff']], S = TAU / 12 / 4;
-      fx.decal({ kind: 'rune', r: [1.7, 1.7], glyphs: 12, poly: 6, spin: S * 2, ramp: R, intensity: 1.8 });
-      fx.decal({ kind: 'rune', r: [1.05, 1.05], glyphs: 12, poly: 6, spin: -S * 3, ramp: R, intensity: 1.5, y: 0.006 });
+      const R = [[0, '#3a1080'], [0.5, '#a060ff'], [1, '#f0e0ff']];
+      fx.decal({ kind: 'rune', r: [1.7, 1.7], glyphs: 12, poly: 6, spin: TAU / 4, ramp: R, intensity: 1.8 });
+      fx.decal({ kind: 'rune', r: [1.05, 1.05], glyphs: 12, poly: 6, spin: -TAU / 4, ramp: R, intensity: 1.5, y: 0.006 });
       fx.decal({ kind: 'glow', r: [1.9, 1.9], ramp: [[0, '#000'], [0.5, '#3a1580'], [1, '#a070ff']], intensity: 0.8, alpha: 0.55, y: 0.002 });
       fx.beam({ pos: [0, 0, 0], height: 2.2, r: [1.5, 1.5], intensity: 0.12, ramp: [[0, '#8a40f0'], [1, '#c090ff']], noise: 0.8, edge: 2.5, speed: 1.2 });
       fx.emitter({ count: 90, kind: 'soft', shape: 'disc', radius: 1.6, pos: [0, 0.02, 0], dir: [0, 1, 0], spread: 0.15, speed: [0.3, 0.9], life: [1.5, 2.8], size: [0.04, 0.01], ramp: [[0, '#fff'], [0.4, '#c090ff'], [1, '#50e', 0]], intensity: 2.2, swirl: TAU / 4, turb: [0.2, 1], floorFade: 1 });

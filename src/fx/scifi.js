@@ -143,7 +143,7 @@ export default [
       fx.mesh(posts, null, { dur: 99 });
       const RED = [[0, '#ffe8e0'], [0.35, '#ff5a40'], [1, '#a00808']];
       for (let i = 0; i < 6; i++) fx.beam({ path: (t) => { const y = 0.2 + i * 0.38 + 0.18 * Math.sin(TAU * t / 3 + i * 1.1); return [[-2.2, y, -0.6], [2.2, y, -0.6]]; }, r: [0.012, 0.012], noise: 0.3, speed: 4, pulse: 0.15, edge: 1.0, intensity: 1.6, ramp: RED });
-      fx.beam({ path: (t) => { const k = (t / 3 * 2) % 1; return [[-2.2, 0.1 + 1.9 * k, -0.6], [2.2, 2.0 - 1.9 * k, -0.6]]; }, r: [0.018, 0.018], noise: 0.3, speed: 4, edge: 1.0, intensity: 3.5, ramp: RED, fade: [0.0, 0.0] });
+      fx.beam({ path: (t) => { const k = 0.5 - 0.5 * Math.cos(TAU * t / 3 * 2); return [[-2.2, 0.1 + 1.9 * k, -0.6], [2.2, 2.0 - 1.9 * k, -0.6]]; }, r: [0.018, 0.018], noise: 0.3, speed: 4, edge: 1.0, intensity: 3.5, ramp: RED, fade: [0.0, 0.0] });
       fx.beam({ path: (t) => { const x = -2 + 4 * (0.5 + 0.5 * Math.sin(TAU * t / 3)); return [[x, 0.02, -0.6], [x, 2.3, -0.6]]; }, r: [0.014, 0.014], noise: 0.3, speed: 4, edge: 1.0, intensity: 3, ramp: RED });
       fx.light({ color: '#ff4030', intensity: 40, pos: [0, 1.2, 0.4], range: 9, flicker: 0.1 });
       fx.decal({ kind: 'glow', pos: [0, 0.01, -0.6], r: [2.6, 1.0], ramp: [[0, '#000'], [0.4, '#500'], [1, '#f44']], intensity: 0.5, alpha: 0.6 });

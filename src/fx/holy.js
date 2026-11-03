@@ -200,13 +200,13 @@ export default [
         fragmentShader: `${NOISE} uniform float uPh, uA; varying vec2 vUv;
           void main(){ float r=length(vUv); if(r>1.) discard; float a=atan(vUv.y,vUv.x);
             float r1=pow(abs(sin(a*7.+uPh)),9.)*.5+pow(abs(sin(a*12.-uPh*2.+1.3)),14.)*.45+pow(abs(sin(a*3.+uPh*3.)),20.)*.4;
-            float n=.6+.7*fbm3(vec3(cos(a)*2.,sin(a)*2.,r*2.)+vec3(0.,0.,uPh*.15)); float fall=exp(-r*3.2)*smoothstep(1.,.5,r);
+            float n=.6+.7*fbm3(vec3(cos(a)*2.,sin(a)*2.,r*2.)+vec3(cos(uPh),sin(uPh),0.)*.15); float fall=exp(-r*3.2)*smoothstep(1.,.5,r);
             float rays=r1*n*fall*smoothstep(.1,.3,r); float halo=exp(-r*6.)*1.3+exp(-r*18.)*2.;
             vec3 col=vec3(1.,.78,.32)*rays*1.3+vec3(1.,.9,.6)*halo; gl_FragColor=vec4(col*uA,1.); }` });
       const q = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), m); q.scale.setScalar(3.4); q.position.set(...C); q.renderOrder = 20;
       fx.mesh(q, (t, pr, f, w, obj) => { U.uPh.value = t / D * TAU; obj.quaternion.copy(f.camQuat); }, { dur: 99 });
       fx.orb({ kind: 'fire', r: 0.38, pos: C, intensity: 1.0, noise: 2.5, scroll: 1.2, disp: 0.18, power: 1.6, pulse: [0.04, TAU / D * 2], ramp: [[0, '#ff9a10'], [0.4, '#ffd060'], [0.8, '#fff0c0'], [1, '#fff']] });
-      fx.ring({ r: [0.7, 0.7], width: [0.02, 0.02], normal: 'cam', pos: C, intensity: 0.8, decay: 0, ramp: [[0, '#ffe8a0'], [1, '#ffd070']] });
+      fx.ring({ r: [0.7, 0.7], width: [0.02, 0.02], normal: 'cam', pos: C, intensity: 0.8, decay: 0, breakup: 0, ramp: [[0, '#ffe8a0'], [1, '#ffd070']] });
       fx.emitter({ count: 50, kind: 'glint', shape: 'ring', radius: 1.6, radiusIn: 0.5, pos: C, rot3: [Math.PI / 2, 0, 0], size: [0.22, 0.05], life: [0.5, 1.3], ramp: [[0, '#fff'], [1, '#fc6', 0]], intensity: 3, speed: [0, 0.1] });
       fx.emitter({ count: 90, kind: 'soft', shape: 'sphere', radius: 0.5, pos: C, radial: 1, speed: [0.3, 1.1], life: [1.6, 3.0], size: [0.04, 0.01], ramp: [[0, '#fff'], [0.5, '#ffd060'], [1, '#b60', 0]], intensity: 2.2, turb: [0.2, 1], swirl: TAU / D });
       fx.light({ color: '#ffd070', intensity: 120, pos: [0.3, 1.5, 1.2], range: 10, flicker: 0.04, rate: TAU / D * 2 });

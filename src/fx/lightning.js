@@ -21,7 +21,7 @@ export default [
   { id: 'lightning/ball-lightning', name: 'Ball lightning', category: 'lightning', loop: true, duration: 4, stage: { sky: 'storm', bloom: 0.5, view: { pos: [2.8, 1.7, 3.8], target: [0, 0.8, 0], fov: 42 } },
     build(fx) {
       const P = (t) => [0.95 * Math.sin(TAU * t / 4), 1.0 + 0.12 * Math.sin(TAU * t / 2), 0.75 * Math.sin(TAU * t / 2 + 1)];
-      fx.orb({ kind: 'plasma', r: [0.2, 0.2], intensity: 1.3, noise: 3, scroll: 2.2, disp: 0.35, power: 2, ramp: [[0, '#2a1a9a'], [0.4, '#6a7cff'], [0.8, '#d0e0ff'], [1, '#ffffff']], pulse: [0.1, 9], follow: (o, a, t) => o.position.set(...P(t)) });
+      fx.orb({ kind: 'plasma', r: [0.2, 0.2], intensity: 1.3, noise: 3, scroll: 2.2, disp: 0.35, power: 2, ramp: [[0, '#2a1a9a'], [0.4, '#6a7cff'], [0.8, '#d0e0ff'], [1, '#ffffff']], pulse: [0.1, TAU / 4 * 6], follow: (o, a, t) => o.position.set(...P(t)) });
       fx.orb({ kind: 'energy', r: [0.34, 0.34], intensity: 0.5, noise: 3, scroll: 1.5, disp: 0.5, alpha: 0.7, power: 1.5, ramp: [[0, '#101060'], [0.5, '#5a6cff'], [1, '#b8c8ff']], follow: (o, a, t) => o.position.set(...P(t)) });
       const dec = fx.decal({ kind: 'glow', r: [1.3, 1.3], ramp: [[0, '#000'], [0.4, '#101a70'], [1, '#6a86ff']], intensity: 0.9, alpha: 0.8, y: 0.01 });
       const L = fx.light({ color: '#8aa0ff', intensity: 55, pos: [0, 1, 0], range: 12, flicker: 0.25, rate: 17 });

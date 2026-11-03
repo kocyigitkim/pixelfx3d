@@ -269,20 +269,21 @@ export class Decal extends Prim {
 /* ------------------------------------------------------------------ WATER */
 const WATER_F = `${NOISE}
 uniform float uTime, uVort, uWave, uA, uR, uSpeed, uK, uDecay, uWid; uniform vec4 uRip[8]; uniform vec3 uDeep, uShallow, uSky, uHor, uLightPos, uLightCol; varying vec3 vWP, vP;
-float H(vec2 p){ float h=.012*sin(dot(p,vec2(1.,.6))*3.+uTime*1.3)+.009*sin(dot(p,vec2(-.7,1.))*4.5+uTime*1.7)+(fbm3(vec3(p*1.6,uTime*.25))-.5)*.05*uWave;
+${PER}
+float H(vec2 p){ float h=.012*sin(dot(p,vec2(1.,.6))*3.+ph(1.3))+.009*sin(dot(p,vec2(-.7,1.))*4.5+ph(1.7))+(fbm3T(vec3(p*1.6,0.),vec3(0.,0.,.25))-.5)*.05*uWave;
   for(int i=0;i<8;i++){ vec4 rp=uRip[i]; if(rp.w<=0.) continue; float age=uTime-rp.z; if(age<0.) continue; float r=length(p-rp.xy); float x=r-age*uSpeed; h+=rp.w*exp(-x*x*uWid)*sin(x*uK)*exp(-age*uDecay)/(1.+r*2.5); }
-  float rr=length(p); if(uVort>0.){ float ang=atan(p.y,p.x); h-=uVort*exp(-rr*rr*1.6)*.35; h+=uVort*.03*sin(ang*3.-rr*9.+uTime*3.)*exp(-rr*.6); }
+  float rr=length(p); if(uVort>0.){ float ang=atan(p.y,p.x); h-=uVort*exp(-rr*rr*1.6)*.35; h+=uVort*.03*sin(ang*3.-rr*9.+ph(3.))*exp(-rr*.6); }
   return h; }
 void main(){ vec2 p=vP.xz; float e=.02; float h=H(p); float hx=H(p+vec2(e,0.)), hz=H(p+vec2(0.,e)); vec3 N=normalize(vec3(-(hx-h)/e*3.,1.,-(hz-h)/e*3.));
   vec3 V=normalize(cameraPosition-vWP); float F=.02+.98*pow(1.-clamp(dot(N,V),0.,1.),5.); vec3 R=reflect(-V,N); vec3 sky=mix(uHor,uSky,clamp(R.y*1.4,0.,1.));
   vec3 L=normalize(uLightPos-vWP); float spec=pow(max(dot(R,L),0.),180.)*3.;
   float depth=smoothstep(0.,.8,length(p)/uR); vec3 refr=mix(uShallow,uDeep,.55+.45*depth)*(.35+.65*clamp(N.y,0.,1.)); if(uVort>0.) refr*=1.-uVort*.8*exp(-dot(p,p)*3.);
-  float foam=smoothstep(.03,.1,abs(h)+(fbm3(vec3(p*6.,uTime))-.5)*.03)*.6; vec3 col=mix(refr,sky,F)+spec*uLightCol+foam*vec3(.8,.9,.95)*.5;
+  float foam=smoothstep(.03,.1,abs(h)+(fbm3T(vec3(p*6.,0.),vec3(0.,0.,1.))-.5)*.03)*.6; vec3 col=mix(refr,sky,F)+spec*uLightCol+foam*vec3(.8,.9,.95)*.5;
   float edge=1.-smoothstep(.88,1.,length(p)/uR); gl_FragColor=vec4(col*edge*uA,edge*uA*.97); }`;
 export class Water extends Prim {
   constructor(fx, p) {
     super(fx, p); const R = p.r ?? 3; this.u = { uTime: { value: 0 }, uVort: { value: p.vortex ?? 0 }, uWave: { value: p.waves ?? 1 }, uA: { value: 1 }, uR: { value: R }, uSpeed: { value: p.speed ?? 1.6 }, uK: { value: p.k ?? 14 }, uDecay: { value: p.decay ?? 1.1 }, uWid: { value: p.width ?? 25 },
-      uRip: { value: Array.from({ length: 8 }, () => new THREE.Vector4(0, 0, 0, 0)) }, uDeep: { value: new THREE.Color(p.deep || '#021a2b') }, uShallow: { value: new THREE.Color(p.shallow || '#1b6a86') }, uSky: { value: new THREE.Color(p.sky || '#6aa0d8') }, uHor: { value: new THREE.Color(p.horizon || '#cfe6f2') }, ...lightU(fx) };
+      uRip: { value: Array.from({ length: 8 }, () => new THREE.Vector4(0, 0, 0, 0)) }, uDeep: { value: new THREE.Color(p.deep || '#021a2b') }, uShallow: { value: new THREE.Color(p.shallow || '#1b6a86') }, uSky: { value: new THREE.Color(p.sky || '#6aa0d8') }, uHor: { value: new THREE.Color(p.horizon || '#cfe6f2') }, ...per(fx), ...lightU(fx) };
     const v = `varying vec3 vWP, vP; void main(){ vP=position; vec4 wp=modelMatrix*vec4(position,1.); vWP=wp.xyz; gl_Position=projectionMatrix*viewMatrix*wp; }`;
     const g = new THREE.CircleGeometry(R, 96); g.rotateX(-Math.PI / 2); const o = new THREE.Mesh(g, new THREE.ShaderMaterial({ vertexShader: v, fragmentShader: WATER_F, uniforms: this.u, ...bl(false), side: THREE.DoubleSide })); o.renderOrder = 7; this.place(o); o.position.y = p.y ?? 0.012;
     this.ripples = (typeof p.ripples === 'function' ? [] : (p.ripples || [])).map((r) => ({ ...r }));
