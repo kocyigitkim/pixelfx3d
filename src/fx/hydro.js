@@ -1,6 +1,6 @@
 // Hydro (water element) category: 8 base-tier skills (PLAN2 B12). Built from the T-WHP, T-BUF/T-HEL, T-PUL, T-ORB and T-NOV-style layers.
 import * as THREE from 'three';
-import { kit, SKILL, meta, act, sm, TAU, POSES, rock, WATER, VAPOR } from './_skill.js';
+import { kit, SKILL, meta, act, sm, TAU, POSES, rock, addMat, WATER, VAPOR } from './_skill.js';
 import { contact, bladeTable } from './melee.js';
 
 const m = meta('hydro', 'base');
@@ -190,21 +190,22 @@ export default [
   SKILL('hydro/tsunami-arc', 'Tsunami arc', m(['water'], 'wave', 0.8, 18, 7, 'arc'), 2.6, {
     view: 'long',
     act: act('sideslash', 0.6, 4),
-    // P3=371
+    // P3=571
     build(fx, o) {
       const k = kit(fx, o, WATER);
       // one wave sheet: front travels x .8 -> 4.5 over [d, d+1.2], height scales in and out, crest curls forward
       const sheet = (H, d) => {
         const X = (t) => 0.8 + 3.7 * sm(d, d + 1.2, t), S = (t) => Math.max(1e-3, sm(d, d + 0.4, t) * (1 - sm(d + 0.9, d + 1.2, t)));
-        const geo = new THREE.PlaneGeometry(4, H, 32, 8); geo.rotateY(Math.PI / 2);
-        const pos = geo.attributes.position;
-        for (let i = 0; i < pos.count; i++) { const z = pos.getZ(i); pos.setX(i, pos.getX(i) + 0.5 * (z / 2) ** 2); pos.setY(i, pos.getY(i) + 0.25 * (z / 2) ** 2); }
-        const wave = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: '#2f8fe0', transparent: true, opacity: 0.75, roughness: 0.1, side: THREE.DoubleSide }));
-        fx.mesh(wave, (t) => { wave.position.set(X(t), H / 2, 0); wave.scale.y = S(t); wave.visible = S(t) > 0.01; }, { t0: 0, dur: d + 1.3 });
+        // open crescent (concave side faces -x); scale.x = arc height because the arc lies in the xy plane after the rotations
+        const geo = new THREE.CylinderGeometry(1.2, 1.2, 2.8, 24, 1, true, Math.PI * 0.55, Math.PI * 0.9);
+        const wave = new THREE.Mesh(geo, addMat(k.col(1), 1.1, 0.75)); wave.rotation.set(0, -Math.PI / 2, Math.PI / 2);
+        fx.mesh(wave, (t) => { wave.position.set(X(t), H / 2, 0); wave.scale.x = S(t); wave.visible = S(t) > 0.01; }, { t0: 0, dur: d + 1.3 });
         k.ribbon({ points: (t) => Array.from({ length: 17 }, (_, j) => { const z = -2 + 0.25 * j; return [X(t) + 0.5 * (z / 2) ** 2, H / 2 + (H / 2) * S(t), z]; }), n: 16, width: 0.08, intensity: 1.2, t0: d, dur: 1.3 });
         return { X, S, H };
       };
       const W = sheet(1.8, 0);
+      k.em({ count: 140, kind: 'drop', shape: 'box', shapeSize: [0.2, 0.2, 2.6], dir: [1, 1.2, 0], spread: 0.5, speed: [1.5, 3], life: [0.4, 0.7], size: [0.06, 0.02], gravity: [0, -9, 0], intensity: 1.5, delay: 0, emit: 1.2, t0: -0.02, follow: (mm, a, t) => mm.position.set(W.X(t), 1.9, 0) });
+      k.smoke({ ramp: VAPOR, count: 60, shape: 'box', shapeSize: [0.3, 0.2, 2.6], size: [0.5, 1.1], life: [0.6, 1.0], delay: 0, emit: 1.2, follow: (mm, a, t) => mm.position.set(W.X(t) - 0.3, 0.5, 0) });
       k.em({ count: 120, kind: 'drop', shape: 'sphere', radius: 0.15, dir: [1, 0.6, 0], spread: 0.6, speed: [0.5, 1.5], gravity: [0, -9, 0], life: [0.5, 0.9], size: [0.03, 0.015], delay: 0, emit: 1.2, follow: (mm, a, t) => mm.position.set(W.X(t), W.H / 2 + (W.H / 2) * W.S(t), 0) });
       k.em({ count: 60, kind: 'bubble', shape: 'box', shapeSize: [1, 0.4, 2], pos: [2.2, 0.5, 0], dir: [1, 0, 0], speed: [0.5, 1.5], life: [0.8, 1.4], size: [0.03, 0.05], delay: 0.1, emit: 1.0, t0: 0.1 });
       k.smoke({ count: 40, shape: 'disc', radius: 0.8, pos: [2.0, 0.3, 0], dir: [1, 0.2, 0], speed: [0.3, 1.0], life: [0.8, 1.4], size: [0.3, 0.7], ramp: VAPOR, delay: 0.2, emit: 1.2, t0: 0.2 });

@@ -140,12 +140,12 @@ export default [
       const k = kit(fx, o, AIR), A = [0.6, 1.38, 0.2], B0 = [3.8, 1.2, 0];
       const nb = k.g >= 2 ? 18 : 14;
       for (let i = 0; i < nb; i++) {
-        const b = new THREE.Mesh(new THREE.SphereGeometry(1, 6, 4), addMat(k.col(1), 0.8));
+        const b = new THREE.Mesh(new THREE.SphereGeometry(1, 6, 4), addMat(k.col(1), 0.48));
         b.scale.set(0.03, 0.18, 0.005);
         const B = [B0[0], B0[1] + (i - nb / 2) * 0.12, (i - nb / 2) * 0.1];
         const P = (t) => lerp3(A, B, sm(0, 0.9, t));
         fx.mesh(b, (t) => { b.position.set(...P(t)); b.rotation.set(0, 0, t * 9 + i); }, { t0: 0, dur: 1.4 });
-        k.trail({ path: P, t0: 0.02, dur: 1.1, len: 0.3, width: 0.03, intensity: 0.8 });
+        k.trail({ path: P, t0: 0.02, dur: 1.1, len: 0.3, width: 0.03, intensity: 1.2 });
       }
       k.em({ count: 8, kind: 'streak', shape: 'point', pos: B0, dir: [0, 1, 0], spread: 1.4, speed: [1, 3], life: [0.2, 0.4], size: [0.1, 0.02], stretch: 2, intensity: 0.8, delay: 0.55, emit: 0.001, t0: 0.53 });
       k.em({ count: 60, kind: 'petal', shape: 'sphere', radius: 0.8, pos: [2, 1.4, 0], dir: [1, -0.2, 0], spread: 0.6, speed: [0.5, 1.2], life: [1, 1.6], size: [0.1, 0.06], blend: 'normal', lit: 1, intensity: 0.4, delay: 0.3, emit: 1.2, t0: 0.3 });

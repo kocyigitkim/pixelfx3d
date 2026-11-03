@@ -21,12 +21,12 @@ export default [
   SKILL('geo/stone-fist', 'Stone fist', m(['earth'], 'summon-punch', 0.6, 10, 4, 'point'), 2.4, {
     view: 'wide',
     act: act('cast', 0.5, 3.4, { keys: [[-0.5, 'castCharge'], [0.35, 'castRelease', 'snap']] }),
-    // P3=253
+    // P3=293
     build(fx, o) {
       const k = kit(fx, o, EARTH), rm = rock();
-      const fist = new THREE.Group(), core = new THREE.Mesh(new THREE.DodecahedronGeometry(0.45), rm);
-      fist.add(core);
-      for (let i = 0; i < 4; i++) { const kn = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.16), rm); kn.position.set(0.36, 0.2 - 0.13 * i, 0); fist.add(kn); }
+      const fist = new THREE.Group(), body = new THREE.Group(), core = new THREE.Mesh(new THREE.DodecahedronGeometry(0.45), rm);
+      body.scale.setScalar(1.7); body.add(core); fist.add(body); // inner group: pop() owns fist.scale
+      for (let i = 0; i < 4; i++) { const kn = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.16), rm); kn.position.set(0.36, 0.2 - 0.13 * i, 0); body.add(kn); }
       fist.position.set(1.6, 0.3, 0);
       k.pop(fist, 0, 0.3, 1.6, 2.1, (t) => { fist.position.x = 1.6 + 1.4 * sm(0.35, 0.5, t); });
       dustBurst(k, [1.6, 0.05, 0], 40, 0);
@@ -34,6 +34,7 @@ export default [
       ct(fx, k, [3.2, 1.2, 0], 0.5, 50);
       dustBurst(k, [3.4, 0.1, 0], 40, 0.5);
       rockBurst(k, [3.4, 0.2, 0], 20, 0.5);
+      rockBurst(k, [3.4, 0.2, 0], 40, 0.5);
       k.decal({ kind: 'cracks', r: [1.2, 1.6], pos: [3.4, 0, 0], t0: 0.5, dur: 1.5, reveal: 0.3, cells: 4 });
       rockBurst(k, [3.0, 0.3, 0], 20, 1.6); // crumble
       k.light({ pos: [2.6, 1.2, 0.8], t0: 0, dur: 2.4, fade: [0.05, 0.6], intensity: 60 });
@@ -196,18 +197,21 @@ export default [
   SKILL('geo/stone-wall', 'Stone wall', m(['earth'], 'wall', 0.5, 18, 0, 'line'), 3.2, {
     view: 'high',
     act: act('stomp', null, false),
-    // P3=211
+    // P3=223
     build(fx, o) {
       const k = kit(fx, o, EARTH), rm = rock(), X = 1.6, D = 3.2;
-      const blockG = new THREE.BoxGeometry(0.25, 0.22, 0.3);
-      // 7 slabs along z, each rises over its own 0.18 s window and sinks into the ground at the end
-      for (let i = 0; i < 7; i++) {
-        const h = 1.2 + 0.1 * i, grp = new THREE.Group(), body = new THREE.Mesh(new THREE.BoxGeometry(0.5, h, 0.4), rm), a = 0.04 * i;
-        body.position.y = h / 2; grp.add(body);
-        if (k.g >= 2) { const blk = new THREE.Mesh(blockG, rm); blk.position.set(0, h + 0.11, 0); grp.add(blk); }
-        grp.position.set(X, 0, -1.5 + 0.5 * i);
-        fx.mesh(grp, (t) => { const u = sm(a, a + 0.18, t); grp.visible = u > 0.01; grp.scale.y = Math.max(1e-3, u); grp.position.y = -(h + 0.2) * sm(2.8, D, t); }, { t0: -5, dur: 99 });
+      const wall = new THREE.Group(), blockG = new THREE.BoxGeometry(0.25, 0.22, 0.3);
+      // 5 tilted slabs along z in one group: all rise together (group scale.y) and sink at the end
+      for (let i = 0; i < 5; i++) {
+        const h = 1.6 + 0.35 * Math.sin(i * 2.1), slab = new THREE.Mesh(new THREE.BoxGeometry(0.42, h, 0.5), rm);
+        slab.position.set(0, h / 2, (i - 2) * 0.46);
+        slab.rotation.set(0, i % 2 ? 0.08 : -0.08, 0.04 * Math.sin(i * 1.7));
+        wall.add(slab);
+        if (k.g >= 2) { const blk = new THREE.Mesh(blockG, rm); blk.position.set(0, h / 2 + 0.11, 0); slab.add(blk); }
       }
+      wall.position.set(X, 0, 0);
+      fx.mesh(wall, (t) => { const u = sm(0, 0.5, t); wall.visible = u > 0.01; wall.scale.y = Math.max(1e-3, u); wall.position.y = -1.8 * sm(2.8, D, t); }, { t0: -5, dur: 99 });
+      rockBurst(k, [X, 0.3, 0], 12, 0.04);
       k.smoke({ count: 80, shape: 'line', shapeSize: [1.5, 0, 0], rot3: [0, Math.PI / 2, 0], pos: [X, 0.1, 0], size: 0.5, ramp: DUST, delay: 0.04, emit: 0.6, t0: 0.04 });
       rockBurst(k, [X, 0.3, 0], 30, 0.1, { shape: 'line', shapeSize: [1.5, 0, 0], rot3: [0, Math.PI / 2, 0] });
       k.decal({ kind: 'cracks', r: [1.8, 1.8], pos: [X, 0, 0], t0: 0.1, dur: 3.0, reveal: 0.5, cells: 5 });

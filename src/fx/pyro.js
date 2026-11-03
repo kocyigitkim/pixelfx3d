@@ -88,7 +88,7 @@ export default [
   SKILL('pyro/flare-lance', 'Flare lance', m(['fire'], 'projectile-pierce', 0.4, 8, 10, 'line'), 1.8, {
     view: 'long',
     act: act('throw', 0.2, 3.8, { weapon: 'spear' }),
-    // P3=261
+    // P3=381
     build(fx, o) {
       const k = kit(fx, o, FIRE);
       const A = [0.6, 1.38, 0.2], E = [5.5, 1.25, 0];
@@ -96,7 +96,8 @@ export default [
       const spear = new THREE.Mesh(new THREE.ConeGeometry(0.05, 1.0, 6), metal('#3a2a1a', '#ff9a30', 1.5));
       spear.rotation.z = -Math.PI / 2;
       fx.mesh(spear, (t) => spear.position.set(...P(t)), { t0: -0.1, dur: 0.6 });
-      k.em({ count: 60, kind: 'flame', shape: 'point', dir: [1, 0, 0], spread: 0.1, speed: [0.5, 1.2], life: [0.3, 0.5], size: [0.25, 0.1], aspect: 1.6, intensity: 0.4, emit: 0.3, follow: (mm, ta, t) => mm.position.set(...P(t)) });
+      k.em({ count: 60, kind: 'flame', shape: 'point', dir: [1, 0, 0], spread: 0.1, speed: [0.5, 1.2], life: [0.3, 0.5], size: [0.4, 0.16], aspect: 1.6, intensity: 0.4, emit: 0.3, follow: (mm, ta, t) => mm.position.set(...P(t)) });
+      k.em({ count: 120, kind: 'flame', shape: 'point', dir: [-1, 0, 0], spread: 0.25, speed: [0.5, 1.2], life: [0.25, 0.4], size: [0.45, 0.15], aspect: 1.6, intensity: 0.5, delay: 0, emit: 0.3, t0: -0.02, follow: (mm, ta, t) => mm.position.set(...P(t)) });
       k.trail({ path: P, t0: 0, dur: 0.3, len: 0.5, width: 0.06 });
       k.gather(A, 0, 0.3, 0.7, 30);
       k.ring({ t0: 0.2, dur: 0.4, r: [0.1, 1.2], normal: [1, 0, 0], pos: [3.8, 1.2, 0] });
@@ -138,13 +139,15 @@ export default [
   SKILL('pyro/pyre-sigil', 'Pyre sigil', m(['fire'], 'delayed-column', 0.6, 12, 6, 'circle'), 2.8, {
     view: 'wide',
     act: act('cast', 1.2, 3),
-    // P3=501
+    // P3=701
     build(fx, o) {
       const k = kit(fx, o, FIRE);
       k.decal({ kind: 'rune', r: [1.4, 1.4], pos: G, t0: -0.4, dur: 1.8, reveal: 0.5, glyphs: 14, poly: 6, spin: 0.4 });
       k.ring({ t0: 0.9, dur: 0.3, r: [1.4, 0.3], normal: 'up', pos: G, decay: 0.2 });
       k.em({ count: 60, kind: 'flame', shape: 'ring', radius: 1.3, radiusIn: 1.2, pos: G, dir: [0, 1, 0], speed: [0.5, 1], life: [0.5, 1], size: [0.2, 0.08], aspect: 1.8, intensity: 0.4, delay: 0.3, emit: 0.9 });
       k.em({ count: 200, kind: 'flame', shape: 'disc', radius: 0.7, pos: G, dir: [0, 1, 0], speed: [3, 6], life: [0.5, 1], size: [0.4, 0.2], aspect: 2, intensity: 0.45, delay: 1.2, emit: 0.8 });
+      k.em({ count: 200, kind: 'flame', shape: 'disc', radius: 0.5, pos: [G[0], 0.05, 0], dir: [0, 1, 0], spread: 0.08, speed: [4, 6.5], life: [0.5, 0.8], size: [0.7, 0.3], aspect: 2.2, intensity: 0.45, turb: [0.4, 1.6], delay: 1.2, emit: 0.6, t0: 1.18 });
+      k.ring({ r: [0.3, 2.6], normal: 'cam', pos: [G[0], 1.2, 0], t0: 1.2, dur: 0.4, intensity: 1.6 });
       k.beam({ pos: G, height: 6, r: [0.8, 0.5], intensity: 0.3, t0: 1.2, dur: 1.4, fade: [0.1, 0.5] });
       k.ring({ t0: 1.2, dur: 0.6, r: [0.2, 3.5], normal: 'up', pos: G });
       k.light({ pos: [G[0], 1.2, 0.8], t0: 1.2, dur: 1.6, fade: [0.05, 0.6], flicker: 0.3, intensity: 200 });
@@ -161,7 +164,7 @@ export default [
   SKILL('pyro/ashfall', 'Ashfall', m(['fire'], 'ground-dot', 0.8, 16, 6, 'circle'), 3.2, {
     view: 'wide',
     act: { kind: 'castup', target: [3, 0, 0], windup: 0.6, hits: [{ t: 0.6, stop: 0.06, shake: 0.3, amp: 0.04, push: 1.6 }, { t: 1.2, stop: 0, shake: 0.05, amp: 0.02, push: 0 }, { t: 1.8, stop: 0, shake: 0.05, amp: 0.02, push: 0 }, { t: 2.4, stop: 0, shake: 0.05, amp: 0.02, push: 0 }] },
-    // P3=451
+    // P3=641
     build(fx, o) {
       const k = kit(fx, o, FIRE);
       const TOP = [3, 4, 0];
@@ -171,6 +174,8 @@ export default [
       k.em({ count: 60, kind: 'spark', shape: 'disc', radius: 1.2, pos: [3, 0.05, 0], dir: [0, 1, 0], spread: 0.5, speed: [0.5, 1.5], life: [0.5, 1], gravity: [0, -4, 0], size: [0.06, 0.02], stretch: 0.8, intensity: 2.5, emit: 2.4 });
       k.decal({ kind: 'scorch', r: [0.5, 1.8], heat: [0, 1], pos: G, t0: 0, dur: 3.2 });
       k.light({ pos: [3, 1, 0.8], t0: 0, dur: 3.2, fade: [0.1, 0.8], flicker: 0.3, intensity: 40 });
+      k.em({ count: 120, kind: 'flake', shape: 'disc', radius: 1.6, pos: [3, 3.2, 0], dir: [0, -1, 0], spread: 0.3, speed: [0.6, 1.1], life: [2.2, 3.0], size: [0.05, 0.03], ramp: [[0, '#8a8078', 0], [0.2, '#6a625a', 0.8], [1, '#2a2622', 0]], blend: 'normal', lit: 1, turb: [0.3, 1.2], delay: 0.2, emit: 2.6, t0: 0.18 });
+      k.em({ count: 70, kind: 'spark', shape: 'disc', radius: 1.6, pos: [3, 3.0, 0], dir: [0, -1, 0], spread: 0.3, speed: [0.8, 1.4], life: [1.6, 2.4], size: [0.04, 0.015], intensity: 3, ramp: [[0, '#fff0b0'], [0.5, '#ff8a20'], [1, '#400', 0]], delay: 0.2, emit: 2.6, t0: 0.18 });
       if (k.g >= 2) k.em({ count: 40, kind: 'flame', shape: 'disc', radius: 1.2, pos: [3, 0.05, 0], dir: [0, 1, 0], speed: [0.2, 0.6], life: [0.5, 1], size: [0.2, 0.1], aspect: 1.8, intensity: 0.4, delay: 0.2, emit: 2.6 });
       if (k.g === 3) k.em({ count: 40, kind: 'streak', shape: 'disc', radius: 1.6, pos: TOP, dir: [0, -1, 0], speed: [4, 6], life: [0.5, 0.8], size: [0.1, 0.04], stretch: 1.5, intensity: 1.5, delay: 0.5, emit: 2.2 });
       k.extras(G, 0.6);
@@ -179,7 +184,7 @@ export default [
   SKILL('pyro/phoenix-dive', 'Phoenix dive', m(['fire'], 'leap-dive', 0.6, 16, 6, 'point'), 2.2, {
     view: 'wide',
     act: act('stomp', 0, 3, { windup: 0.7, hits: [{ t: 0, stop: 0.12, shake: 0.55, amp: 0.08, push: 2 }] }),
-    // P3=301
+    // P3=461
     build(fx, o) {
       const k = kit(fx, o, FIRE);
       const BX = (t) => 2 * sm(-0.35, 0, t), BY = (t) => 0.8 * Math.sin(Math.PI * clamp((t + 0.35) / 0.35));
@@ -189,6 +194,9 @@ export default [
       k.ribbon({ points: wing(-1), n: 2, width: 0.05, head: () => 1.001, fade: [0.05, 0.3], t0: -0.35, dur: 1.2 });
       k.trail({ path: (t) => [BX(t), BY(t) + 1.0, 0], len: 0.6, width: 0.1, t0: -0.35, dur: 0.35 });
       k.em({ count: 80, kind: 'flame', shape: 'sphere', radius: 0.2, dir: [-1, -0.3, 0], spread: 0.6, speed: [0.5, 1.5], life: [0.4, 0.8], size: [0.25, 0.1], aspect: 1.8, intensity: 0.4, delay: -0.35, emit: 0.35, t0: -0.35, follow: (mm, ta, t) => mm.position.set(BX(t), BY(t) + 1.0, 0) });
+      k.em({ count: 160, kind: 'flame', shape: 'sphere', radius: 0.25, dir: [0, 1, 0], spread: 0.5, speed: [0.4, 1.0], life: [0.3, 0.5], size: [0.5, 0.2], aspect: 1.5, intensity: 0.5, delay: -0.35, emit: 0.35, t0: -0.37, follow: (m, a, t) => m.position.set(fx.body.position.x, fx.body.position.y + 1.0, 0) });
+      k.trail({ path: (t) => [fx.body.position.x - 0.3, fx.body.position.y + 1.2, 0.6], t0: -0.35, dur: 0.35, len: 0.5, width: 0.18, intensity: 1.6 });
+      k.trail({ path: (t) => [fx.body.position.x - 0.3, fx.body.position.y + 1.2, -0.6], t0: -0.35, dur: 0.35, len: 0.5, width: 0.18, intensity: 1.6 });
       k.ring({ t0: 0, dur: 0.6, r: [0.2, 4], normal: 'up', pos: [2, 0.02, 0] });
       k.em({ count: 80, kind: 'flame', shape: 'sphere', radius: 0.3, pos: [2, 0.2, 0], dir: [0, 1, 0], spread: 0.8, speed: [1, 3], life: [0.4, 0.8], size: [0.3, 0.1], aspect: 1.8, intensity: 0.4, emit: 0.001 });
       k.decal({ kind: 'scorch', r: [1, 1.4], pos: [2, 0, 0], t0: 0, dur: 2.0 });
