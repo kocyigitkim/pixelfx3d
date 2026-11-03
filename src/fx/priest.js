@@ -222,12 +222,13 @@ export default [
       const banner = new THREE.Group();
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.8, 8), new THREE.MeshStandardMaterial({ color: '#6a4a2a', roughness: 0.8 }));
       pole.position.y = 0.9;
-      const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.7), new THREE.MeshStandardMaterial({ color: '#f6e2a0', emissive: '#ffc040', emissiveIntensity: 0.5, side: THREE.DoubleSide }));
+      const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.7), addMat(k.col(1), 1.4, 0.85));
       cloth.position.set(0.25, 1.55, 0);
       banner.add(pole, cloth); banner.position.set(...B);
-      k.pop(banner, 0, 0.15, 3.1, 3.2, (t) => { cloth.rotation.y = 0.3 * Math.sin((TAU * 3 * t) / 3.2); });
+      k.pop(banner, 0, 0.15, 3.1, 3.2, (t) => { cloth.rotation.y = 0.3 * Math.sin((TAU * 3 * t) / 3.2); banner.rotation.y = 0.25 * Math.sin(t * 7); banner.rotation.z = 0.08 * Math.sin(t * 9); });
       for (const t of [0.3, 1.1, 1.9, 2.7]) k.ring({ t0: t, dur: 0.6, r: [0.2, 2.4], normal: 'up', pos: B });
       k.decal({ kind: 'rune', r: [1.2, 1.2], spin: 0.3, pos: B, t0: 0, dur: 3.2 });
+      k.decal({ kind: 'rune', r: [1.2, 1.2], pos: B, t0: 0.3, dur: 2.8, glyphs: 10, poly: 6, spin: 0.3, intensity: 1.3 });
       k.em({ count: 80, kind: 'soft', shape: 'disc', radius: 0.6, pos: [B[0], 0.1, B[2]], dir: [0, 1, 0], speed: [0.4, 0.9], delay: 0.3, emit: 2.6, t0: 0.3 });
       k.smoke({ count: 20, shape: 'disc', radius: 0.5, pos: [B[0], 0.05, B[2]], ramp: DUST, delay: 0, emit: 0.3, t0: 0 });
       k.light({ pos: [B[0], 1.2, B[2]], t0: 0, dur: 3.2, env: (t) => 0.5 + 0.5 * Math.sin((Math.PI * t) / 3.2), intensity: 40 });

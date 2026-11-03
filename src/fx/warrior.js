@@ -178,8 +178,9 @@ export default [
       const k = kit(fx, o, STEEL);
       // crescent wave that travels along x
       const wave = (y, d) => (t) => arcPts(0.8 + 3.2 * sm(d, d + 0.45, t), y, 0.7, -0.2, 2.6, 23);
-      k.ribbon({ points: wave(0.6, 0), n: 23, width: 0.14, head: () => 1.001, t0: 0, dur: 0.5 });
-      k.em({ count: 80, kind: 'spark', shape: 'line', shapeSize: [1.6, 0, 0], pos: [2.4, 0.05, 0], dir: [0, 1, 0], speed: [1, 3], delay: 0, emit: 0.45, t0: 0 });
+      k.ribbon({ points: wave(0.6, 0), n: 23, width: 0.32, intensity: 2.2, head: () => 1.001, t0: 0, dur: 0.5 });
+      k.em({ count: 40, kind: 'spark', shape: 'line', shapeSize: [1.6, 0, 0], pos: [2.4, 0.05, 0], dir: [0, 1, 0], speed: [1, 3], delay: 0, emit: 0.45, t0: 0 });
+      k.em({ count: 40, kind: 'soft', shape: 'point', size: [0.5, 0.2], life: [0.15, 0.25], intensity: 0.8, delay: 0, emit: 0.45, t0: 0, follow: (m, a, t) => { m.position.set(0.8 + 3.2 * sm(0, 0.45, t), 0.6, 0); } });
       k.smoke({ count: 40, shape: 'line', shapeSize: [1.6, 0, 0], pos: [2.4, 0.05, 0], ramp: DUST, delay: 0, emit: 0.45 });
       k.impact([3.8, 0.8, 0], 0.4, 50);
       for (const x of [1, 1.8, 2.6, 3.4]) k.decal({ kind: 'scorch', r: [0.3, 0.6], pos: [x, 0, 0] });
@@ -216,7 +217,7 @@ export default [
   SKILL('warrior/shield-rush', 'Shield rush', m(['steel'], 'dash-stun', 0.2, 10, 5, 'line'), 1.5, {
     view: 'side',
     act: { kind: 'thrust', weapon: 'sword', target: [2.0, 0, 0], windup: 0.5, keys: [[-0.5, 'guard'], [-0.3, 'dashLow'], [0, 'lunge', 'snap'], [0.3, 'lunge'], [0.9, 'guard']], hits: [{ t: 0.02, stop: 0.12, shake: 0.3, amp: 0.04, push: 2.2 }] },
-    // P3=117
+    // P3=148
     build(fx, o) {
       const k = kit(fx, o, STEEL);
       const x0 = -1.5, x1 = 1.2, t0 = -0.3;
@@ -225,7 +226,8 @@ export default [
       for (const y of [0.5, 0.8, 1.1, 1.4]) {
         k.ribbon({ points: (t) => { const x = X(Math.min(0, Math.max(t0, t))); return [[x - 1.4, y, 0], [x - 0.6, y, 0], [x, y, 0]]; }, n: 2, width: 0.025, head: () => 1.001, fade: [0.03, 0.12], t0, dur: 0.6 });
       }
-      k.smoke({ count: 30, shape: 'line', shapeSize: [1.35, 0, 0], pos: [-0.15, 0.05, 0], dir: [-1, 0.2, 0], ramp: DUST, delay: t0, emit: 0.3, t0 });
+      k.smoke({ count: 60, shape: 'line', shapeSize: [1.35, 0, 0], pos: [-0.15, 0.05, 0], dir: [-1, 0.2, 0], size: 0.45, ramp: DUST, delay: t0, emit: 0.3, t0 });
+      k.em({ count: 1, kind: 'soft', shape: 'point', size: [0.9, 0.9], life: [0.5, 0.5], intensity: 1.2, delay: -0.3, t0: -0.3, emit: 0.001, follow: (m, a, t) => m.position.set(fx.body.position.x + 0.45, 1.1, 0.15) });
       // shield on the left arm, with a glow shell that follows it
       const shield = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.05, 24), metal());
       shield.rotation.z = Math.PI / 2;
@@ -236,6 +238,7 @@ export default [
       ct(fx, k, [1.6, 1.2, 0.1], 0.02, 40);
       k.em({ count: 5, kind: 'glint', shape: 'ring', radius: 0.3, pos: [2, 2.05, 0], swirl: 4, delay: 0.05, emit: 1, t0: 0.05 });
       k.ring({ t0: 0.02, dur: 0.5, r: [0.2, 2], normal: [1, 0, 0], pos: [1.6, 1.2, 0] });
+      k.ring({ r: [0.2, 2.2], normal: 'cam', pos: [1.6, 1.1, 0], t0: 0.02, dur: 0.4, intensity: 1.4 });
       if (k.g >= 2) k.em({ count: 40, kind: 'spark', shape: 'ring', radius: 0.5, pos: [2, 1.9, 0], delay: 0.03, emit: 0.001, t0: 0.03 });
     } }),
 

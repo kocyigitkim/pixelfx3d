@@ -117,10 +117,10 @@ export default [
   SKILL('rogue/caltrop-field', 'Caltrop field', m(['steel'], 'trap', 0.3, 14, 5, 'circle'), 2.4, {
     view: 'wide',
     act: act('throw', 0.9, 3, { weapon: 'dagger' }),
-    // P3=185
+    // P3=186
     build(fx, o) {
       const k = kit(fx, o, STEEL), A = [0.6, 1.38, 0.2], T = 0.35, TRIG = 0.9;
-      const mat = metal(), geo = new THREE.TetrahedronGeometry(0.05), spikeGeo = new THREE.ConeGeometry(0.04, 0.3, 6);
+      const mat = metal(), geo = new THREE.TetrahedronGeometry(0.05), spikeGeo = new THREE.ConeGeometry(0.1, 0.75, 6);
       // 12 caltrops on parabolas from A onto a disc r 0.9 at [2.6,0,0]
       const L = Array.from({ length: 12 }, () => { const a = fx.rng() * TAU, r = 0.9 * Math.sqrt(fx.rng()); return [2.6 + r * Math.cos(a), 0.02, r * Math.sin(a)]; });
       L.forEach((E) => {
@@ -131,11 +131,13 @@ export default [
       });
       k.ring({ t0: T, dur: 0.35, r: [0.2, 1.2], normal: 'up', pos: [2.6, 0, 0] });
       // trigger: 8 spikes pop up under the caltrops
-      for (const E of L.slice(0, 8)) { const s = new THREE.Mesh(spikeGeo, mat); s.position.set(E[0], 0.15, E[2]); k.pop(s, TRIG, TRIG + 0.05, 2.3, 2.4); }
+      for (const E of L.slice(0, 8)) { const s = new THREE.Mesh(spikeGeo, mat); s.position.set(E[0], 0.375, E[2]); k.pop(s, TRIG, TRIG + 0.05, 2.3, 2.4); }
       k.sparks([2.9, 0.3, 0], TRIG, 40);
       ct(fx, k, [2.9, 0.4, 0], TRIG, 40);
       k.smoke({ count: 20, shape: 'disc', radius: 0.4, pos: [2.6, 0.05, 0], ramp: DUST, delay: TRIG, emit: 0.3, t0: TRIG - 0.02 });
       k.decal({ kind: 'rings', r: [1.1, 1.1], pos: [2.6, 0, 0], t0: 0.4, dur: 2 });
+      k.decal({ kind: 'rune', r: [1.1, 1.1], pos: [2.6, 0, 0], t0: 0.1, dur: 2.2, glyphs: 8, poly: 4, intensity: 1.2 });
+      k.glint([2.6, 0.05, 0], T, 1.2);
       k.light({ pos: [2.9, 0.8, 0.6], t0: TRIG, dur: 0.8, fade: [0.02, 0.4], intensity: 50 });
       fx.flash(TRIG, 0.1, k.col(0), 0.12);
       if (k.g === 3) k.sparks([2.9, 0.3, 0], 1.4, 30);
@@ -214,8 +216,9 @@ export default [
       const fire = (a0, R, w, z) => {
         const P = (t) => { const a = a0 + w * Math.min(t, TF), o2 = [R * Math.cos(a), 1.1, R * Math.sin(a)]; return lerp3(o2, [3.7, 1.1, z], sm(TF, TF + FLY, t)); };
         const d = new THREE.Mesh(geo, mat);
+        d.scale.setScalar(2.2);
         fx.mesh(d, (t) => d.position.set(...P(t)), { t0: -0.2, dur: TF + FLY + 0.05 });
-        k.trail({ path: P, t0: 0, dur: TF + FLY, len: 0.12, width: 0.03 });
+        k.trail({ path: P, t0: 0, dur: TF + FLY, len: 0.35, width: 0.06, intensity: 2 });
         k.sparks([3.7, 1.1, z], TF + FLY, 12);
       };
       for (let i = 0; i < 6; i++) fire((i * TAU) / 6, 0.9, 9, (i - 2.5) * 0.15);

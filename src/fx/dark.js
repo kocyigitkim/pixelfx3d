@@ -183,6 +183,8 @@ export default [
       k.beam({ pos: G, height: 5, r: [1.2, 0.6], intensity: 0.5, t0: 1.5, dur: 1.3 });
       k.orb({ kind: 'void', r: [0.3, 1.4], pos: [3, 1, 0], intensity: 0.5, t0: 1.5, dur: 1.3 });
       k.ring({ t0: 1.5, dur: 0.8, r: [0.2, 5], normal: 'up', pos: [3, 0.02, 0] });
+      fx.flash(1.5, 0.12, k.col(0), 0.3);
+      k.ring({ r: [0.3, 3.2], normal: 'cam', pos: [3, 1, 0], t0: 1.5, dur: 0.45, intensity: 1.8 });
       k.sparks([3, 0.5, 0], 1.5, 80);
       k.smoke({ count: 50, shape: 'disc', radius: 1, pos: [3, 0.05, 0], radial: 1, speed: [1, 3], delay: 1.5, emit: 0.001, t0: 1.5 });
       k.light({ pos: [3, 1.2, 0.8], t0: 1.5, dur: 1.3, env: (t) => Math.exp(-2.4 * t), intensity: 90 });

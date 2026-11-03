@@ -47,16 +47,17 @@ export default [
     // P3=186
     build(fx, o) {
       const k = kit(fx, o, STORM);
-      const BASE = [1.2, 0, 0.4], CR = [1.2, 2.2, 0.4], TH = [3, 1.5, 0], GP = [3.4, 0.02, -0.6];
+      const BASE = [1.2, 0, 0.4], CR = [1.2, 3.5, 0.4], TH = [3, 1.5, 0], GP = [3.4, 0.02, -0.6];
       const totem = new THREE.Group(); totem.position.set(...BASE);
       const wood = rock('#6a4a2a');
       for (let i = 0; i < 3; i++) { const seg = new THREE.Mesh(i % 2 ? new THREE.CylinderGeometry(0.12, 0.14, 0.6, 8) : new THREE.BoxGeometry(0.28, 0.6, 0.28), wood); seg.position.y = 0.3 + i * 0.6; totem.add(seg); }
       const top = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.04, 8, 16), metal()); top.rotation.x = Math.PI / 2; top.position.y = 2.0; totem.add(top);
       const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.16), metal('#9ab8ff', '#6a8cff', 1.2)); crystal.position.set(0, 2.2, 0); totem.add(crystal);
-      k.pop(totem, -0.1, 0.2, 3.1, 3.2);
+      k.pop(totem, -0.1, 0.2, 3.1, 3.2, () => totem.scale.multiplyScalar(1.6));
       // three pulses: bolt to the target head, ring and sparks
       for (const t of [0.9, 1.7, 2.5]) {
         k.bolt({ from: CR, to: TH, t0: t, dur: 0.2, fade: [0.02, 0.1], jag: 0.3, branches: 1, branchLen: 0.2, width: 0.03, rate: 30, flicker: 0.4, intensity: 3 });
+        for (const q of [[1.9, 3.9, 0.9], [0.5, 3.0, -0.4], [1.9, 2.8, -0.5]]) k.bolt({ from: CR, to: q, t0: t, dur: 0.2, jag: 0.3, branches: 1, branchLen: 0.2, width: 0.05, rate: 30, intensity: 2.6 });
         k.ring({ t0: t, dur: 0.5, r: [0.2, 1.8], normal: 'up', pos: BASE });
         k.sparks(TH, t, 25);
         if (k.g >= 2) k.bolt({ from: CR, to: GP, t0: t, dur: 0.2, jag: 0.3, branches: 1, branchLen: 0.2, width: 0.03, rate: 30, intensity: 3 });
@@ -151,7 +152,7 @@ export default [
       add(new THREE.CylinderGeometry(0.08, 0.08, 0.7, 6), [0, -0.35, 0], armL);
       for (const x of [-0.15, 0.15]) add(new THREE.CylinderGeometry(0.1, 0.1, 0.6, 6), [x, 0.3, 0]);
       for (const z of [-0.07, 0.07]) { const eye = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), addMat(k.col(0), 3, 1)); eye.position.set(0.13, 1.62, z); golem.add(eye); }
-      k.pop(golem, 0.2, 1.2, 3.0, 3.4, (t) => { armR.rotation.z = 1.4 * sm(2.0, 2.2, t); });
+      k.pop(golem, 0.2, 1.2, 3.0, 3.4, (t) => { golem.scale.multiplyScalar(1.7); armR.rotation.z = 1.4 * sm(2.0, 2.2, t); });
       k.decal({ kind: 'rune', r: [1.3, 1.3], pos: G0, t0: -0.4, dur: 4 });
       k.decal({ kind: 'cracks', r: [1.6, 1.6], pos: G0, t0: 0.2, dur: 3, reveal: 0.5, heat: [1, 0.1], cells: 4, y: 0.005 });
       k.em({ count: 30, kind: 'rock', blend: 'normal', lit: 1, shape: 'disc', radius: 0.6, pos: [G0[0], 0.05, 0], dir: [0, 1, 0], spread: 0.9, speed: [1, 3], gravity: [0, -10, 0], bounce: 0.35, size: [0.14, 0.08], ramp: [[0, '#6c5a48'], [1, '#6c5a48', 1]], delay: 0.2, emit: 1, t0: 0.2 });

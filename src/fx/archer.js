@@ -21,7 +21,7 @@ export default [
   SKILL('archer/triple-volley', 'Triple volley', m(['steel', 'air'], 'volley', 0.7, 6, 9, 'cone'), 1.5, {
     view: 'long',
     act: ACT_BOW(0.25),
-    // P3=221
+    // P3=271
     build(fx, o) {
       const k = kit(fx, o, STEEL), A1 = [0.75, 1.45, 0], T = 0.25;
       // one arrow aimed at fan angle a, launched at s: trail, then sparks and dust at its end
@@ -29,7 +29,8 @@ export default [
         const to = [4, 1.3, 3.25 * Math.tan(a)], path = (t) => lerp3(A1, to, clamp((t - s) / T));
         fly(fx, path, s, T + 0.05);
         k.trail({ path, t0: s, dur: T + 0.05, len: 0.3, width: 0.03 });
-        k.sparks(to, s + T, 20);
+        k.trail({ path, t0: s, dur: T + 0.05, len: 0.5, width: 0.07, intensity: 2.5 });
+        k.sparks(to, s + T, 30);
         k.smoke({ count: 10, shape: 'disc', radius: 0.2, pos: to, ramp: DUST, delay: s + T, emit: 0.001, t0: s + T });
       };
       k.ring({ r: [0.05, 0.5], normal: [1, 0, 0], pos: A1, t0: 0, dur: 0.22 });
@@ -45,7 +46,7 @@ export default [
   SKILL('archer/needle-rain', 'Needle rain', m(['steel'], 'ground-rain', 0.7, 14, 8, 'circle'), 2.6, {
     view: 'wide',
     act: { ...ACT_BOW(0.85), target: [3.2, 0, 0] },
-    // P3=401
+    // P3=491
     build(fx, o) {
       const k = kit(fx, o, STEEL), G = [3.2, 0, 0], T = 0.85, GS = [G[0], 0.05, 0];
       // T-GND: rune circle, ring closes in, then the strike
@@ -53,6 +54,7 @@ export default [
       k.ring({ r: [1.6, 0.3], normal: 'up', pos: G, t0: T - 0.3, dur: 0.3, decay: 0.2 });
       k.trail({ path: (t) => lerp3(A, [1.5, 5, 0], clamp(t / 0.2)), t0: 0, dur: 0.25, len: 0.3, width: 0.05 });
       k.em({ count: 160, kind: 'streak', shape: 'disc', radius: 1.5, pos: [G[0], 6, 0], dir: [0, -1, 0], spread: 0.05, speed: [14, 16], life: [0.38, 0.4], size: [0.6, 0.3], stretch: 2, delay: 0.5, emit: 1.1 });
+      k.em({ count: 90, kind: 'streak', shape: 'disc', radius: 1.4, pos: [G[0], 5, 0], dir: [0, -1, 0], spread: 0.05, speed: [9, 12], life: [0.4, 0.5], size: [0.5, 0.5], stretch: 2.5, intensity: 2.2, delay: 0.5, emit: 1.1, t0: 0.48 });
       k.em({ count: 120, kind: 'spark', shape: 'disc', radius: 1.5, pos: GS, life: [0.2, 0.4], speed: [1, 3], delay: T, emit: 1.1 });
       k.smoke({ count: 50, shape: 'disc', radius: 1.5, pos: GS, ramp: DUST, delay: T, emit: 1.1 });
       // stuck arrows in the ground
@@ -147,12 +149,12 @@ export default [
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(D0 - 0.6, D0, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u }); });
       k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
       const bow = bowOf(fx, k);
-      k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
-      k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: D0, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / D0), intensity: 40 });
+      k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up', intensity: 0.6 });
+      k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: D0, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / D0), intensity: 20 });
       fx.flash(0.3, 0.1, k.col(0), 0.12);
       k.em({ count: 30, kind: 'glint', shape: 'point', pos: E, size: [0.3, 0.1], life: [0.3, 0.3], delay: 0.3, emit: 2.2 });
-      k.ring({ r: [0.55, 0.55], width: [0.03, 0.03], normal: [1, 0, 0], pos: A, t0: 0.3, dur: 2.1, decay: 0 });
-      k.ring({ r: [0.55, 0.55], width: [0.03, 0.03], normal: [0, 0, 1], pos: A, t0: 0.3, dur: 2.1, decay: 0 });
+      k.ring({ r: [0.275, 0.275], width: [0.03, 0.03], normal: [1, 0, 0], pos: A, t0: 0.3, dur: 2.1, decay: 0, intensity: 0.7 });
+      k.ring({ r: [0.275, 0.275], width: [0.03, 0.03], normal: [0, 0, 1], pos: A, t0: 0.3, dur: 2.1, decay: 0, intensity: 0.7 });
       k.em({ count: 40, kind: 'soft', shape: 'ring', radius: 0.55, rot3: [0, 0, Math.PI / 2], swirl: 3, follow: (mm) => mm.position.copy(bow.position), delay: 0.3, emit: 2.1 });
       // 6 ribbons converge from 2 m out onto the eye
       for (let i = 0; i < 6; i++) {

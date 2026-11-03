@@ -96,12 +96,14 @@ export default [
   SKILL('mage/arcane-barrage', 'Arcane barrage', m(['arcane'], 'volley-homing', 0.4, 8, 9, 'point'), 2.0, {
     view: 'long', sky: 'night',
     act: act('cast', 0.5, 4, { weapon: 'staff', hits: hits([0.62, 0.74, 0.86, 0.98], 0.4) }),
-    // P3=188
+    // P3=196
     build(fx, o) {
       const k = kit(fx, o, ARCANE), B = [3.9, 1.2, 0];
       const ctrl = (i) => [1.8, 1.38 + 0.6 * (i % 2 ? -1 : 1), 0.8 * ((i % 3) - 1)];
       const missile = (i) => {
-        k.trail({ path: (t) => bez(A, ctrl(i), B, clamp((t - 0.12 * i) / 0.45)), t0: 0.12 * i, dur: 0.5, len: 0.25, width: 0.07 });
+        const Pi = (t) => bez(A, ctrl(i), B, clamp((t - 0.12 * i) / 0.45));
+        k.trail({ path: Pi, t0: 0.12 * i, dur: 0.5, len: 0.25, width: 0.09, intensity: 3 });
+        k.em({ count: 1, kind: 'soft', shape: 'point', size: [0.28, 0.28], life: [0.5, 0.5], intensity: 2.5, delay: 0.12 * i, t0: 0.12 * i - 0.02, emit: 0.001, follow: (m, a, t) => m.position.set(...Pi(t)) });
         k.ring({ t0: 0.12 * i, dur: 0.25, r: [0.05, 0.35], normal: 'cam', pos: A });
       };
       for (let i = 0; i < 6; i++) missile(i);
@@ -251,15 +253,16 @@ export default [
     } }),
 
   SKILL('mage/gravity-well', 'Gravity well', m(['arcane', 'void'], 'pull', 0.6, 18, 6, 'circle'), 3.0, {
-    view: 'wide', sky: 'void',
+    view: 'wide', sky: 'dark',
     act: act('cast', null, 3, { weapon: 'staff', target: [3.6, 0, 0] }),
-    // P3=301
+    // P3=311
     build(fx, o) {
       const k = kit(fx, o, VOID), G = [3, 1, 0], R = 2.5, BURST = [3.2, 1, 0];
       fx.on((t) => { fx.target.position.x = 3.6 - 0.4 * sm(0.2, 2.5, t); });
       k.orb({ kind: 'void', r: [0.05, 0.5], pos: G, t0: 0.2, dur: 2.1 });
+      k.shell({ r: [0.1, 0.55], pos: G, t0: 0.2, dur: 2.5, intensity: 0.35, hemi: false, ramp: [[0, '#000'], [0.6, '#2a0a50'], [1, '#9a60ff']] });
       k.decal({ kind: 'rings', r: [2, 2], pos: [3, 0, 0] });
-      k.em({ count: 150, kind: 'soft', shape: 'sphere', radius: R, radial: 1, speed: [-5, -3.5], swirl: 3, life: [0.4, 0.6], pos: G, delay: 0.2, emit: 2, t0: 0.2 });
+      k.em({ count: 160, kind: 'soft', shape: 'sphere', radius: R, radial: 1, speed: [-5, -3.5], swirl: 3, life: [0.4, 0.6], pos: G, delay: 0.2, emit: 2, t0: 0.2, intensity: 1.2 });
       k.em({ count: 30, kind: 'rock', blend: 'normal', lit: 1, shape: 'sphere', radius: 2, radial: 1, speed: [-2, -1.2], pos: G, delay: 0.2, emit: 2.1, t0: 0.2 });
       for (const t of [0.4, 1.1, 1.8]) k.ring({ t0: t, dur: 0.7, r: [2.6, 0.3], normal: 'up', pos: [3, 0.02, 0] });
       k.ring({ t0: 2.5, dur: 0.5, r: [0.2, 3], normal: 'cam', pos: BURST });
