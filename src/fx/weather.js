@@ -306,9 +306,9 @@ export default [
       const deck = (n, z, y, sz, spd, k) => fx.emitter({ count: n, kind: 'smoke', blend: 'normal', shape: 'box', shapeSize: [40, 3, 20], pos: [0, y, z], dir: [1, 0, 0], spread: 0.05, speed: spd, life: [9.8, 9.9], size: sz, sizeVar: 0.4, aspect: 0.55, turb: [1, 0.15], ramp: [[0, '#2a3340', 0], [0.2, '#36414f', k], [0.8, '#2e3846', k], [1, '#2a3340', 0]], lit: 1, order: -2 });
       deck(30, -35, 22, [22, 30], [3, 4.5], 0.95); deck(22, -18, 17, [16, 22], [4, 6], 0.85); deck(14, -8, 14, [12, 18], [5, 7], 0.55);
       const wind = { dir: [0.35, -1, 0.1] };
-      fx.emitter(RAIN(620, { shapeSize: [11, 0.2, 9], pos: [-2, 9, -1], ...wind, speed: [17, 22], life: [0.45, 0.55], size: [0.55, 0.55], intensity: 1.0 }));
-      fx.emitter(RAIN(300, { shapeSize: [4, 0.2, 3], pos: [-1, 8, 4.5], ...wind, speed: [17, 22], life: [0.4, 0.5], size: [1, 1], intensity: 0.75 }));
-      fx.emitter({ count: 220, kind: 'drop', shape: 'box', shapeSize: [8, 0, 8], pos: [0, 0.03, -1], dir: [0, 1, 0], spread: 0.8, speed: [1, 2.2], gravity: [0, -8, 0], life: [0.25, 0.5], size: [0.035, 0.025], ramp: [[0, '#dfeaf5', 0.9], [1, '#dfeaf5', 0]], intensity: 1.4 });
+      fx.emitter(RAIN(420, { shapeSize: [11, 0.2, 9], pos: [-2, 9, -1], ...wind, speed: [17, 22], life: [0.45, 0.55], size: [0.55, 0.55], intensity: 1.0 }));
+      fx.emitter(RAIN(200, { shapeSize: [4, 0.2, 3], pos: [-1, 8, 4.5], ...wind, speed: [17, 22], life: [0.4, 0.5], size: [1, 1], intensity: 0.75 }));
+      fx.emitter({ count: 160, kind: 'drop', shape: 'box', shapeSize: [8, 0, 8], pos: [0, 0.03, -1], dir: [0, 1, 0], spread: 0.8, speed: [1, 2.2], gravity: [0, -8, 0], life: [0.25, 0.5], size: [0.035, 0.025], ramp: [[0, '#dfeaf5', 0.9], [1, '#dfeaf5', 0]], intensity: 1.4 });
       fx.emitter({ count: 40, kind: 'smoke', blend: 'normal', shape: 'box', shapeSize: [12, 0.6, 6], pos: [0, 0.5, -6], dir: [1, 0, 0], speed: [1, 2], life: [6, 8], size: [4, 8], aspect: 0.4, lit: 1, ramp: [[0, '#5a6674', 0], [0.3, '#5a6674', 0.22], [0.7, '#5a6674', 0.22], [1, '#5a6674', 0]], order: -1 });
     } },
 ];
