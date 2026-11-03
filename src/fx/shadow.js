@@ -136,16 +136,16 @@ export default [
           vec2 mo=vec2(sin(w)*.012,cos(w)*.008); float dm=length(p-mo); float moon=smoothstep(R*1.04+.002,R*1.04-.004,dm);
           vec3 sky=mix(vec3(.01,.012,.04),vec3(.06,.05,.14),smoothstep(1.,0.,d));
           float disk=smoothstep(R+.003,R-.004,d); vec3 sun=vec3(2.2,1.9,1.4)*disk;
-          float cor=exp(-(d-R)*(d>R?9.:0.)); float st=fbm(vec3(cos(ang)*2.2+uTime*.1,sin(ang)*2.2,(d-R)*5.-uTime*.4));
+          float cor=exp(-(d-R)*(d>R?9.:0.)); float st=fbm(vec3(cos(ang)*2.2+cos(w)*.4,sin(ang)*2.2+sin(w)*.4,(d-R)*5.));
           float streak=pow(st,1.6)*2.6*(.7+.3*sin(w+ang*3.)); vec3 corona=vec3(.85,.78,1.)*(cor*cor*cor*.8+streak*.55*exp(-(d-R)*7.))*step(R*.9,d);
           float rim=exp(-pow((d-R)*60.,2.))*.9;
-          float ba=.9+sin(w)*.25; float bd=length(p-(R*1.0)*vec2(cos(ba),sin(ba))); float bead=exp(-bd*bd*5000.)*(1.5+2.5*pow(.5+.5*sin(w),2.)); vec3 beadc=vec3(2.6,2.4,2.3)*bead;
+          float ba=.9+sin(w)*.25; float bd=length(p-(R*1.0)*vec2(cos(ba),sin(ba))); float bead=exp(-bd*bd*5000.)*(0.8+1.6*pow(.5+.5*sin(w),2.)); vec3 beadc=vec3(1.8,1.6,1.5)*bead;
           vec3 col=sky+sun+corona+vec3(1.,.8,.7)*rim*.8+beadc; col=mix(col,vec3(0.,0.,.004)+vec3(.1,.06,.18)*exp(-pow((dm-R*1.04)*50.,2.))*.7,moon);
-          float a=edge; gl_FragColor=vec4(col*a,a); }` });
+          float a=edge*clamp(max(moon,max(col.r,max(col.g,col.b))),0.,1.); gl_FragColor=vec4(col*edge,a); }` });
       m.blending = THREE.CustomBlending; m.blendSrc = THREE.OneFactor; m.blendDst = THREE.OneMinusSrcAlphaFactor;
       const pl = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), m); pl.position.set(0, 3, -4); pl.renderOrder = 5;
       fx.mesh(pl, (t, pr, f, w, o, ta) => { m.uniforms.uTime.value = ta; m.uniforms.uPh.value = (ta % 4) / 4; }, { dur: 99 });
-      fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: [0.0, 3.0, -3.9], size: [0.9, 0.9], life: [4, 4], emit: 0.001, ramp: [[0, '#fff', 0.3], [0.5, '#fff', 0.9], [1, '#fff', 0.3]], intensity: 3, follow: (m, ta, t) => { const ba = 0.9 + Math.sin(t / 4 * Math.PI * 2) * 0.25; m.position.set(Math.cos(ba) * 1.6, 3 + Math.sin(ba) * 1.6, -3.9); } });
+      fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: [0.0, 3.0, -3.9], size: [0.6, 0.6], life: [4, 4], emit: 0.001, ramp: [[0, '#fff', 0.3], [0.5, '#fff', 0.9], [1, '#fff', 0.3]], intensity: 1.6, follow: (m, ta, t) => { const ba = 0.9 + Math.sin(t / 4 * Math.PI * 2) * 0.25; m.position.set(Math.cos(ba) * 1.6, 3 + Math.sin(ba) * 1.6, -3.9); } });
       fx.emitter({ count: 40, kind: 'soft', shape: 'ring', radius: 3.4, radiusIn: 2.2, dir: [0, 0, 1], spread: 0.1, speed: [0.05, 0.2], life: [3, 4], size: [0.04, 0.01], ramp: [[0, '#fff', 0], [0.3, '#d8c8ff', 0.6], [1, '#fff', 0]], intensity: 1.5, rot3: [Math.PI / 2, 0, 0], pos: [0, 3, -3.9] });
     } },
 
@@ -221,7 +221,7 @@ export default [
     } },
 
   /* ===================================================================== necro skulls */
-  { id: 'shadow/necro-skulls', name: 'Necro skulls', category: 'shadow', loop: true, duration: 3, stage: { sky: 'dark', bloom: 0.55, view: { pos: [3, 2.1, 4.2], target: [0, 1.1, 0], fov: 38 } },
+  { id: 'shadow/necro-skulls', name: 'Necro skulls', category: 'shadow', loop: true, duration: 3, stage: { sky: 'dark', bloom: 0.45, view: { pos: [3, 2.1, 4.2], target: [0, 1.1, 0], fov: 38 } },
     build(fx) {
       const G = '#4dff7a', Cn = [0, 1.15, 0], tilt = new THREE.Euler(0.45, 0, 0.25), Rr = 1.15, NS = 4;
       const orbitPos = (i, t, out) => { const a = ((t / 3) + i / NS) * Math.PI * 2; out.set(Math.cos(a) * Rr, Math.sin(a * 2) * 0.05, Math.sin(a) * Rr).applyEuler(tilt); out.x += Cn[0]; out.y += Cn[1]; out.z += Cn[2]; return out; };
@@ -231,9 +231,9 @@ export default [
       fx.decal({ kind: 'glow', r: [1.6, 1.6], intensity: 1, alpha: 0.7, ramp: [[0, '#000'], [0.5, '#0a5a2a'], [1, '#4dff7a']] });
       const tmp = new THREE.Vector3(), nx = new THREE.Vector3();
       for (let i = 0; i < NS; i++) {
-        const sk = skull(G, 4); sk.scale.setScalar(0.34); const eg = halo(G, 0.5, 0.6); sk.add(eg); eg.scale.setScalar(1.9); eg.position.z = -0.2;
-        fx.mesh(sk, (t, pr, f, w, o, ta) => { orbitPos(i, t, tmp); o.position.copy(tmp); orbitPos(i, t + 0.05, nx); nx.sub(tmp); o.rotation.set(0, Math.atan2(nx.x, nx.z), 0); sk.userData.jaw.rotation.x = 0.15 + 0.2 * Math.sin(ta * 5 + i * 2); }, { dur: 99 });
-        fx.trail({ path: (t) => { orbitPos(i, t, tmp); return [tmp.x, tmp.y - 0.02, tmp.z]; }, len: 0.55, width: 0.12, n: 28, intensity: 1.4, ramp: [[0, '#d0ffd8'], [0.3, '#4dff7a'], [1, '#021408']] });
+        const sk = skull(G, 2); sk.scale.setScalar(0.34); const eg = halo(G, 0.5, 0.6); sk.add(eg); eg.scale.setScalar(1.9); eg.position.z = -0.2;
+        fx.mesh(sk, (t, pr, f, w, o, ta) => { orbitPos(i, t, tmp); o.position.copy(tmp); orbitPos(i, t + 0.05, nx); nx.sub(tmp); o.rotation.set(0, Math.atan2(nx.x, nx.z), 0); sk.userData.jaw.rotation.x = 0.15 + 0.2 * Math.sin((t / 3) * Math.PI * 6 + i * 2); }, { dur: 99 });
+        fx.trail({ path: (t) => { orbitPos(i, t, tmp); return [tmp.x, tmp.y - 0.02, tmp.z]; }, len: 0.55, width: 0.08, n: 28, intensity: 0.8, ramp: [[0, '#9effb0'], [0.3, '#2fd060'], [1, '#021408']] });
       }
       fx.emitter({ count: 40, kind: 'smoke', blend: 'normal', shape: 'ring', radius: Rr, radiusIn: Rr - 0.2, dir: [0, 0.4, 0], spread: 0.4, speed: [0.05, 0.3], life: [1.2, 2.2], size: [0.25, 0.7], ramp: [[0, '#1a4a2c', 0], [0.3, '#2a6a40', 0.25], [1, '#04100a', 0]], lit: 1, rot3: [0.45, 0, 0.25], pos: Cn, order: -1 });
       fx.light({ color: '#4dff7a', intensity: 40, pos: [0, 1.2, 0], range: 7, flicker: 0.3 });

@@ -250,9 +250,9 @@ export default [
         bird.position.set(0.03 * Math.sin(u * TAU * 2), 0.04 * Math.sin(ph + 1.2) + 0.03 * Math.sin(u * TAU * 3), 0); bird.rotation.z = 0.07 * Math.sin(ph + 1.5) + 0.1; bird.rotation.y = 0.5 + 0.1 * Math.sin(u * TAU); bird.userData.head.position.y = 0.04 + 0.006 * Math.sin(ph * 2);
         tail.rotation.z = 0.15 * Math.sin(ph + 2.2) - 0.1; tail.children.forEach((c, i) => { c.rotation.x = 0.06 * Math.sin(ph + i) ; }); root.position.y = 1.2; }, {});
       // sky blobs of light + falling feathers
-      fx.light({ color: '#fff4dc', intensity: 40, pos: [1.5, 3, 2], range: 12 });
+      fx.light({ color: '#fff4dc', intensity: 16, pos: [1.5, 3, 2], range: 12 });
       fx.emitter({ count: 4, kind: 'petal', blend: 'normal', lit: 1, shape: 'box', shapeSize: [0.2, 0.05, 0.1], pos: [-0.2, 1.1, 0], dir: [-0.3, -1, 0], spread: 0.4, speed: [0.1, 0.3], size: [0.05, 0.04], life: [1.8, 2.4], gravity: [0, -0.1, 0], turb: [0.4, 1.5], rot: 3, ramp: [[0, '#6aa8ee', 0], [0.2, '#6aa8ee', 1], [1, '#4a88d0', 0]], aspect: 2.2 });
-      fx.emitter({ count: 14, kind: 'dust', blend: 'normal', lit: 1, shape: 'box', shapeSize: [1.5, 0.8, 0.6], pos: [0, 1.2, 0], size: [0.06, 0.12], life: [2, 3.5], speed: [0.02, 0.08], ramp: [[0, '#fff', 0], [0.4, '#fff', 0.2], [1, '#fff', 0]], order: -1 });
+      fx.emitter({ count: 14, kind: 'dust', blend: 'normal', lit: 1, shape: 'box', shapeSize: [1.5, 0.8, 0.6], pos: [0, 1.2, 0], size: [0.06, 0.12], life: [2, 3.5], speed: [0.02, 0.08], ramp: [[0, '#fff', 0], [0.4, '#fff', 0.12], [1, '#fff', 0]], order: -1 });
     } },
 
   /* ===================================================================== BUTTERFLY */
@@ -313,16 +313,16 @@ export default [
 
   /* ===================================================================== FLYING SKULL */
   { id: 'critters/flying-skull', name: 'Flying skull', category: 'critters', loop: true, duration: 2.4,
-    stage: { sky: 'dark', bloom: 0.55, view: { pos: [0.7, 1.45, 2.5], target: [0, 1.3, 0], fov: 36 } },
+    stage: { sky: 'dark', bloom: 0.45, view: { pos: [0.7, 1.45, 2.5], target: [0, 1.3, 0], fov: 36 } },
     build(fx) {
       const sk = skullModel(), root = new THREE.Group(); root.add(sk); sk.scale.setScalar(1.7);
       fx.mesh(root, (t) => { const u = t / 2.4, k = u * TAU; root.position.set(0.05 * Math.sin(k), 1.3 + 0.1 * Math.sin(k * 2), 0.05 * Math.cos(k)); sk.rotation.set(0.08 * Math.sin(k * 2 + 1) + 0.05, -PI / 2 + 0.45 * Math.sin(k) + 0.35, 0.08 * Math.sin(k)); const chat = Math.max(0, Math.sin(k * 6)) * 0.2 + 0.05; sk.userData.jaw.rotation.z = -chat * (0.6 + 0.4 * Math.sin(k * 2)); }, {});
       const FP = [0, 1.62, 0];
-      fx.orb({ kind: 'fire', r: [0.11, 0.11], pos: [0.0, 1.58, -0.04], intensity: 1.0, ramp: [[0, '#300'], [0.35, '#e30'], [0.7, '#fb3'], [1, '#fff6c0']], noise: 3, scroll: 2.4, disp: 0.5, alpha: 0.8, follow: (o, ta, t) => { const k = (t / 2.4) * TAU; o.position.set(0.05 * Math.sin(k) - 0.01, 1.52 + 0.1 * Math.sin(k * 2), 0.05 * Math.cos(k) - 0.03); } });
-      fx.emitter({ count: 34, kind: 'flame', shape: 'disc', radius: 0.07, dir: [0, 1, 0], spread: 0.16, speed: [0.25, 0.8], life: [0.5, 0.9], size: [0.4, 0.1], aspect: 2, intensity: 0.7, turb: [0.15, 2], ramp: [[0, '#fff2c0', 1], [0.25, '#ffa020', 0.9], [0.7, '#d02000', 0.5], [1, '#300', 0]], pos: FP, follow: (m, ta, t) => { const k = (t / 2.4) * TAU; m.position.set(0.05 * Math.sin(k), 1.52 + 0.1 * Math.sin(k * 2), 0.05 * Math.cos(k) - 0.03); } });
-      fx.emitter({ count: 26, kind: 'spark', shape: 'disc', radius: 0.08, dir: [0, 1, 0], spread: 0.7, speed: [0.5, 1.5], life: [0.8, 1.6], gravity: [0, 0.2, 0], size: [0.035, 0.01], stretch: 0.5, intensity: 3.5, ramp: [[0, '#fff6c0'], [0.4, '#ff8a20'], [1, '#400', 0]], pos: FP, follow: (m, ta, t) => { const k = (t / 2.4) * TAU; m.position.set(0.05 * Math.sin(k), 1.55 + 0.1 * Math.sin(k * 2), 0.05 * Math.cos(k)); } });
+      fx.orb({ kind: 'fire', r: [0.11, 0.11], pos: [0.0, 1.58, -0.04], intensity: 0.6, ramp: [[0, '#300'], [0.35, '#d82a06'], [0.7, '#ff9a2a'], [1, '#ffd890']], noise: 3, scroll: 2.4, disp: 0.5, alpha: 0.8, follow: (o, ta, t) => { const k = (t / 2.4) * TAU; o.position.set(0.05 * Math.sin(k) - 0.01, 1.52 + 0.1 * Math.sin(k * 2), 0.05 * Math.cos(k) - 0.03); } });
+      fx.emitter({ count: 34, kind: 'flame', shape: 'disc', radius: 0.07, dir: [0, 1, 0], spread: 0.16, speed: [0.25, 0.8], life: [0.5, 0.9], size: [0.4, 0.1], aspect: 2, intensity: 0.45, turb: [0.15, 2], ramp: [[0, '#fff2c0', 1], [0.25, '#ffa020', 0.9], [0.7, '#d02000', 0.5], [1, '#300', 0]], pos: FP, follow: (m, ta, t) => { const k = (t / 2.4) * TAU; m.position.set(0.05 * Math.sin(k), 1.52 + 0.1 * Math.sin(k * 2), 0.05 * Math.cos(k) - 0.03); } });
+      fx.emitter({ count: 26, kind: 'spark', shape: 'disc', radius: 0.08, dir: [0, 1, 0], spread: 0.7, speed: [0.5, 1.5], life: [0.8, 1.6], gravity: [0, 0.2, 0], size: [0.035, 0.01], stretch: 0.5, intensity: 2.5, ramp: [[0, '#fff6c0'], [0.4, '#ff8a20'], [1, '#400', 0]], pos: FP, follow: (m, ta, t) => { const k = (t / 2.4) * TAU; m.position.set(0.05 * Math.sin(k), 1.55 + 0.1 * Math.sin(k * 2), 0.05 * Math.cos(k)); } });
       const lp = fx.light({ color: '#ff8a30', intensity: 3.5, pos: [0, 1.7, 0.2], range: 7, flicker: 0.3, rate: 11 }); fx.on((t) => { lp.l.position.set(0, 1.55 + 0.1 * Math.sin((t / 2.4) * TAU * 2), 0.25); });
-      fx.light({ color: '#dfe8ff', intensity: 18, pos: [1.2, 1.5, 2.0], range: 8 }); fx.light({ color: '#ff4a10', intensity: 2, pos: [0, 1.25, 0.5], range: 3, flicker: 0.4, rate: 7 });
+      fx.light({ color: '#dfe8ff', intensity: 10, pos: [1.2, 1.5, 2.0], range: 8 }); fx.light({ color: '#ff4a10', intensity: 2, pos: [0, 1.25, 0.5], range: 3, flicker: 0.4, rate: 7 });
       floorBlob(fx, 0.5, '#ff8030', true, (t) => ({ s: 1.4, a: 0.3 + 0.08 * Math.sin((t / 2.4) * TAU * 3) }));
       fx.emitter({ count: 18, kind: 'smoke', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.1, dir: [0, 1, 0], spread: 0.3, speed: [0.2, 0.5], life: [1.2, 2], size: [0.12, 0.4], ramp: [[0, '#222', 0], [0.2, '#3a3028', 0.3], [1, '#111', 0]], pos: [0, 1.8, 0], order: -1 });
     } },
@@ -431,9 +431,9 @@ export default [
     stage: { sky: 'dusk', bloom: 0.4, view: { pos: [0.3, 0.9, 2.5], target: [0, 0.42, 0], fov: 36 } },
     build(fx) {
       const R = 0.32; let geo = new THREE.IcosahedronGeometry(1, 4); geo.deleteAttribute('uv'); geo.deleteAttribute('normal'); geo = mergeVertices(geo, 1e-4); geo.computeVertexNormals(); const base = new Float32Array(geo.attributes.position.array), P = geo.attributes.position;
-      const mat = new THREE.MeshPhysicalMaterial({ color: '#46d83a', metalness: 0, roughness: 0.08, transmission: 0.85, thickness: 0.9, ior: 1.4, attenuationColor: new THREE.Color('#1c8a18'), attenuationDistance: 0.35, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 2.2, specularIntensity: 1 });
+      const mat = new THREE.MeshPhysicalMaterial({ color: '#46d83a', metalness: 0, roughness: 0.08, transmission: 0.55, thickness: 0.9, ior: 1.4, attenuationColor: new THREE.Color('#1c8a18'), attenuationDistance: 0.35, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.3, specularIntensity: 1 });
       const body = new THREE.Mesh(geo, mat), grp = new THREE.Group(); grp.add(body);
-      const core = ellipsoid(0.07, 0.06, 0.06, new THREE.MeshStandardMaterial({ color: '#b6ff40', emissive: '#6ae020', emissiveIntensity: 1.2, roughness: 0.5 }), 16); core.position.set(-0.08, -0.02, -0.02); grp.add(core);
+      const core = ellipsoid(0.07, 0.06, 0.06, new THREE.MeshStandardMaterial({ color: '#b6ff40', emissive: '#6ae020', emissiveIntensity: 0.8, roughness: 0.5 }), 16); core.position.set(-0.08, -0.02, -0.02); grp.add(core);
       const eyeM = std('#fff', { roughness: 0.2 }), pupM = new THREE.MeshBasicMaterial({ color: '#0a1a08' }); const eyes = []; for (const s of [-1, 1]) { const e = ellipsoid(0.045, 0.055, 0.04, eyeM, 14); e.position.set(0.19, 0.1, s * 0.11); const pu = ellipsoid(0.022, 0.032, 0.02, pupM, 10); pu.position.set(0.035, 0, 0); e.add(pu); grp.add(e); eyes.push(e); }
       const bubs = []; for (let i = 0; i < 6; i++) { const b = ellipsoid(0.012 + hash(i) * 0.012, 0.012 + hash(i) * 0.012, 0.012 + hash(i) * 0.012, new THREE.MeshStandardMaterial({ color: '#d8ffc8', roughness: 0.1, transparent: true, opacity: 0.7 }), 8); b.userData = { a: hash(i + 3) * TAU, r: 0.08 + hash(i + 5) * 0.14, y: -0.1 + hash(i + 9) * 0.25 }; grp.add(b); bubs.push(b); }
       const st = (t) => { // returns sy (vertical scale), h (height above floor of base), sx via volume
@@ -444,7 +444,7 @@ export default [
         for (let i = 0; i < P.count; i++) { let x = base[i * 3], y = base[i * 3 + 1], z = base[i * 3 + 2]; const ph = Math.sin(k * 3 + y * 9 + x * 5) * Math.cos(k * 2 + z * 7);
           let X = x * (1 + w * ph) * sx, Y = y * (1 + w * ph) * sy, Z = z * (1 + w * ph) * sx; if (Y < -0.55 * sy) { const f = (Y + 0.55 * sy); Y = -0.55 * sy + f * 0.35; const spread = 1 + 0.45 * sw * (1 - Math.max(0, Y / sy)); X *= spread * (1 + 0.12 * Math.abs(f)); Z *= spread * (1 + 0.12 * Math.abs(f)); } P.setXYZ(i, X * R, Y * R, Z * R); }
         P.needsUpdate = true; geo.computeVertexNormals(); grp.position.y = R * 0.68 * sy + h + 0.005; eyes.forEach((e, i) => { e.position.set(0.27 * sx, 0.1 * sy, (i ? 1 : -1) * 0.11 * sx); e.scale.set(0.05, 0.062 * (1 + 0.2 * (sy - 1)), 0.04); });
-        core.position.set(-0.08 + 0.03 * Math.sin(k * 0.5), -0.02 + 0.03 * Math.sin(k * 0.7), -0.02 + 0.02 * Math.cos(k)); bubs.forEach((b, i) => { const u = (t / 1.8 + b.userData.y) ; b.position.set(Math.cos(b.userData.a + t) * b.userData.r * sx, ((b.userData.y + 0.25 * Math.sin(t * 3.49 + i)) ) * sy, Math.sin(b.userData.a + t) * b.userData.r * sx); void u; }); grp.rotation.y = -PI / 2 + 0.3 * Math.sin((t / 1.8) * TAU); }, {});
+        core.position.set(-0.08 + 0.03 * Math.sin(k * 0.5), -0.02 + 0.03 * Math.sin(k * 0.7), -0.02 + 0.02 * Math.cos(k)); bubs.forEach((b, i) => { const u = (t / 1.8 + b.userData.y) ; b.position.set(Math.cos(b.userData.a + (t / 1.8) * TAU) * b.userData.r * sx, ((b.userData.y + 0.25 * Math.sin((t / 1.8) * TAU * 2 + i)) ) * sy, Math.sin(b.userData.a + (t / 1.8) * TAU) * b.userData.r * sx); void u; }); grp.rotation.y = -PI / 2 + 0.3 * Math.sin((t / 1.8) * TAU); }, {});
       // puddle
       const pud = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshPhysicalMaterial({ color: '#46d83a', roughness: 0.05, transmission: 0.0, transparent: true, opacity: 0.5, clearcoat: 1, envMapIntensity: 2 })); pud.rotation.x = -PI / 2; pud.position.y = 0.004;
       fx.mesh(pud, (t) => { const u = t > 1.12 ? 1 - sstep(1.2, 1.8, t) : 0; const g = t > 1.12 ? sstep(1.12, 1.3, t) : 0; pud.scale.setScalar(0.05 + 0.5 * R * g * 1.0 + 0.001); pud.material.opacity = 0.55 * u * g; }, {});

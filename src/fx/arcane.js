@@ -216,10 +216,10 @@ export default [
     } },
 
   /* ------------------------------------------------------------------ time stop */
-  { id: 'arcane/time-stop', name: 'Time stop', category: 'arcane', loop: false, duration: 3.6, body: true, stage: { sky: 'dusk', view: { pos: [2.2, 1.5, 5.0], target: [0, 1.25, 0], fov: 44 }, bloom: 0.55 },
+  { id: 'arcane/time-stop', name: 'Time stop', category: 'arcane', loop: false, duration: 3.6, body: true, stage: { sky: 'dusk', view: { pos: [2.2, 1.5, 5.0], target: [0, 1.25, 0], fov: 44 }, bloom: 0.45 },
     screen: { glsl: `vec3 trans(vec2 uv, vec3 c, float p, float t, float a){
       float g=smoothstep(.27,.34,p)*(1.-smoothstep(.62,.72,p)); float l=dot(c,vec3(.3,.55,.15)); vec3 gray=vec3(l)*vec3(.9,.95,1.15);
-      vec3 o=mix(c,gray,g*.92); float fl=exp(-pow((p-.28)*30.,2.)); o=mix(o,vec3(1.)-o,fl*.6); float sh=exp(-pow((p-.66)*22.,2.)); o+=vec3(.7,.8,1.)*sh*.35;
+      vec3 o=mix(c,gray,g*.92); float fl=exp(-pow((p-.28)*30.,2.)); o=mix(o,vec3(1.)-o,fl*.25); float sh=exp(-pow((p-.66)*22.,2.)); o+=vec3(.7,.8,1.)*sh*.35;
       float v=smoothstep(.9,.2,length((uv-.5)*vec2(a,1.))); o*=mix(1.,v,g*.5); return o; }` },
     build(fx) {
       const TF = 1.0, TC = 1.7, TS = 2.3; const crack = { value: 0 }, tex = clockTexture();
@@ -228,7 +228,7 @@ export default [
         vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
         fragmentShader: `${NOISE} uniform sampler2D uTex; uniform float uCrack; varying vec2 vUv;
           void main(){ vec4 c=texture2D(uTex,vUv); vec2 q=vUv*2.-1.; float w=fbm3(vec3(q*3.,1.))*.5; vec2 vo=voronoi(vec3(q*3.2+w,0.)); float line=smoothstep(.07,.0,vo.y); float rv=smoothstep(uCrack*1.4,uCrack*1.4-.25,length(q)+fbm3(vec3(q*4.,2.))*.4);
-          float cr=line*rv*step(.001,uCrack); vec3 col=c.rgb*(1.-cr*.6)+vec3(.6,.8,1.)*cr*2.2; gl_FragColor=vec4(col,c.a); }` });
+          float cr=line*rv*step(.001,uCrack); vec3 col=c.rgb*(1.-cr*.6)+vec3(.6,.8,1.)*cr*1.4; gl_FragColor=vec4(col,c.a); }` });
       const dial = new THREE.Mesh(new THREE.CircleGeometry(1.05, 64), dialMat); grp.add(dial);
       const gold = new THREE.MeshStandardMaterial({ color: '#d8b050', metalness: 1, roughness: 0.3 });
       const rim = new THREE.Mesh(new THREE.TorusGeometry(1.08, 0.05, 12, 64), gold); grp.add(rim);
@@ -244,13 +244,13 @@ export default [
         glow.intensity = (t > TF ? 3 : 1) * (1 - sm(TS - 0.1, TS + 0.2, t)); 
       }, { dur: 99 });
       fx.on((t) => { const s = sm(TF - 0.05, TF + 0.4, t); fx.body.set({ tint: '#9fb8ff', tintAmt: s * 0.45 * (1 - sm(3.0, 3.6, t)), rim: '#9fc0ff', rimAmt: s * 0.8 * (1 - sm(3.0, 3.6, t)), scanCol: '#9fc0ff' }); });
-      fx.flash(TF, 0.25, '#ffffff', 0.45); fx.shake(TF, 0.25, 0.03); fx.flash(TS, 0.3, '#dfe8ff', 0.6); fx.shake(TS, 0.5, 0.05);
+      fx.flash(TF, 0.25, '#ffffff', 0.25); fx.shake(TF, 0.25, 0.03); fx.flash(TS, 0.3, '#dfe8ff', 0.3); fx.shake(TS, 0.5, 0.05);
       fx.ring({ t0: TF, dur: 0.9, r: [0.3, 6], width: [0.5, 0.05], normal: 'cam', pos: [0, 1.45, -1.0], intensity: 1.0, ramp: [[0, '#fff'], [1, '#7aa0ff']] });
       fx.ring({ t0: TF, dur: 0.8, r: [0.3, 5], width: [0.4, 0.05], normal: 'up', intensity: 1.0, ramp: [[0, '#fff'], [1, '#7aa0ff']] });
       fx.ring({ t0: TS, dur: 0.8, r: [0.5, 5.5], width: [0.4, 0.05], normal: 'cam', pos: [0, 1.45, -1.0], intensity: 1.2, ramp: [[0, '#fff'], [1, '#9fc0ff']] });
       fx.emitter({ count: 120, kind: 'shard', blend: 'normal', lit: 1, shape: 'disc', radius: 1.0, pos: [0, 1.45, -1.0], rot3: [Math.PI / 2, 0, 0], dir: [0, 0, 1], spread: 1.1, radial: 0.6, speed: [0.6, 3.6], life: [1.0, 1.4], size: [0.16, 0.1], gravity: [0, -6, 0], bounce: 0.3, rot: 6, ramp: [[0, '#a8c4ff'], [1, '#7a9cd8', 1]], delay: TS });
-      fx.emitter({ count: 70, kind: 'glint', shape: 'disc', radius: 1.0, pos: [0, 1.45, -1.0], rot3: [Math.PI / 2, 0, 0], size: [0.25, 0.05], life: [0.3, 0.9], ramp: [[0, '#fff'], [1, '#8ab0ff', 0]], intensity: 3.5, delay: TS, emit: 0.3, speed: [0, 0.4] });
-      fx.emitter({ count: 120, kind: 'soft', shape: 'ring', radius: 1.0, radiusIn: 0.4, pos: [0, 1.45, -1.0], rot3: [Math.PI / 2, 0, 0], radial: 1, speed: [0.3, 1.2], life: [1.0, 1.8], size: [0.04, 0.01], ramp: [[0, '#fff'], [1, '#7aa0ff', 0]], intensity: 2.4, delay: TS, emit: 0.2, drag: 1, gravity: [0, -0.4, 0] });
+      fx.emitter({ count: 70, kind: 'glint', shape: 'disc', radius: 1.0, pos: [0, 1.45, -1.0], rot3: [Math.PI / 2, 0, 0], size: [0.25, 0.05], life: [0.3, 0.9], ramp: [[0, '#fff'], [1, '#8ab0ff', 0]], intensity: 2.2, delay: TS, emit: 0.3, speed: [0, 0.4] });
+      fx.emitter({ count: 120, kind: 'soft', shape: 'ring', radius: 1.0, radiusIn: 0.4, pos: [0, 1.45, -1.0], rot3: [Math.PI / 2, 0, 0], radial: 1, speed: [0.3, 1.2], life: [1.0, 1.8], size: [0.04, 0.01], ramp: [[0, '#fff'], [1, '#7aa0ff', 0]], intensity: 1.6, delay: TS, emit: 0.2, drag: 1, gravity: [0, -0.4, 0] });
       fx.emitter({ count: 50, kind: 'soft', shape: 'sphere', radius: 0.8, pos: [0, 1.2, 0], speed: [0, 0.1], life: [1.2, 1.8], size: [0.03, 0.008], ramp: [[0, '#cfe0ff'], [1, '#7aa0ff', 0]], intensity: 2, delay: TF, emit: 1.2, turb: [0.1, 1], drag: 2 });
       fx.light({ color: '#9fc0ff', intensity: 50, pos: [0.5, 1.4, 0.8], range: 9, env: (t) => (t > TF ? 1 : 0.2) * (t > TS ? 1.5 : 1), t0: 0.1, dur: 3.5, fade: [0.2, 0.6] });
     } },

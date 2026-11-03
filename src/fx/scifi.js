@@ -114,7 +114,7 @@ export default [
     } },
 
   /* ------------------------------------------------ jetpack */
-  { id: 'scifi/jetpack', name: 'Jetpack', category: 'scifi', loop: true, duration: 2, body: true, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [-2.6, 1.0, 4.2], target: [-0.1, 0.9, 0], fov: 42 } },
+  { id: 'scifi/jetpack', name: 'Jetpack', category: 'scifi', loop: true, duration: 2, body: true, stage: { sky: 'dusk', bloom: 0.4, view: { pos: [-2.6, 1.0, 4.2], target: [-0.1, 0.9, 0], fov: 42 } },
     build(fx) {
       const HY = (t) => 0.55 + 0.06 * Math.sin(TAU * t / 2);
       const pack = new THREE.Group(); const m = metal('#5a626e', 0.35, 0.9);
@@ -124,11 +124,11 @@ export default [
       // pack is built relative to y(0.55 hover) body offset; body gets same lift
       fx.on((t) => { fx.body.position.y = HY(t) - 0.55 + 0.55 - 0.0; fx.parts[0] && 0; });
       fx.decal({ kind: 'glow', pos: [-0.25, 0.01, 0], r: [1.6, 1.6], ramp: [[0, '#000'], [0.4, '#6a2000'], [1, '#ffa040']], intensity: 0.9, alpha: 0.7 });
-      fx.light({ color: '#ff9a40', intensity: 40, pos: [-0.3, 0.3, 0.3], range: 8, flicker: 0.3, rate: 24 });
+      fx.light({ color: '#ff9a40', intensity: 28, pos: [-0.3, 0.3, 0.3], range: 8, flicker: 0.3, rate: 24 });
       [-0.1, 0.1].forEach((z, i) => {
         const P = (t) => HY(t) + 0.37 - 0.55 + 0.0;
-        fx.emitter({ count: 26, kind: 'flame', shape: 'point', pos: [-0.24, 0.77 + 0.55 - 0.55, z], dir: [0, -1, 0], spread: 0.06, speed: [1.2, 2.2], life: [0.18, 0.3], size: [0.4, 0.15], aspect: -2.4, ramp: [[0, '#fff6e0', 1], [0.3, '#8ac8ff', 0.9], [0.65, '#ff8a28', 0.6], [1, '#400', 0]], intensity: 1.3, follow: (m, a, t) => m.position.y = 0.77 + (HY(t) - 0.55) + 0.55 - 0.55 + 0.55 - 0.55 });
-        fx.emitter({ count: 20, kind: 'spark', shape: 'point', pos: [-0.24, 0.77, z], dir: [0, -1, 0], spread: 0.3, speed: [2, 5], life: [0.2, 0.5], gravity: [0, -3, 0], size: [0.05, 0.015], stretch: 1.2, ramp: [[0, '#fff'], [0.4, '#ffc050'], [1, '#800', 0]], intensity: 4, bounce: 0.3, follow: (m, a, t) => m.position.y = 0.77 + (HY(t) - 0.55) });
+        fx.emitter({ count: 26, kind: 'flame', shape: 'point', pos: [-0.24, 0.77 + 0.55 - 0.55, z], dir: [0, -1, 0], spread: 0.06, speed: [1.2, 2.2], life: [0.18, 0.3], size: [0.4, 0.15], aspect: -2.4, ramp: [[0, '#d8ecff', 1], [0.25, '#7ab8ff', 0.9], [0.55, '#ff9a3a', 0.7], [1, '#401000', 0]], intensity: 0.7, follow: (m, a, t) => m.position.y = 0.77 + (HY(t) - 0.55) + 0.55 - 0.55 + 0.55 - 0.55 });
+        fx.emitter({ count: 20, kind: 'spark', shape: 'point', pos: [-0.24, 0.77, z], dir: [0, -1, 0], spread: 0.3, speed: [2, 5], life: [0.2, 0.5], gravity: [0, -3, 0], size: [0.05, 0.015], stretch: 1.2, ramp: [[0, '#fff'], [0.4, '#ffc050'], [1, '#800', 0]], intensity: 2.5, bounce: 0.3, follow: (m, a, t) => m.position.y = 0.77 + (HY(t) - 0.55) });
         fx.emitter({ count: 22, kind: 'smoke', blend: 'normal', shape: 'point', pos: [-0.24, 0.5, z], dir: [0, -1, 0], spread: 0.3, speed: [0.6, 1.4], life: [0.7, 1.1], size: [0.15, 0.6], ramp: [[0, '#66625e', 0], [0.2, '#58544f', 0.35], [1, '#2a2826', 0]], lit: 1, order: -1, turb: [0.2, 1], follow: (m, a, t) => m.position.y = 0.55 + (HY(t) - 0.55) });
       });
       fx.emitter({ count: 40, kind: 'dust', blend: 'normal', shape: 'disc', radius: 0.2, pos: [-0.24, 0.05, 0], dir: [0, 0.15, 0], spread: 0.4, radial: 1, speed: [1.2, 2.6], drag: 1, life: [0.6, 1.0], size: [0.3, 0.9], ramp: [[0, '#8a7f72', 0], [0.2, '#756c60', 0.4], [1, '#3a352f', 0]], lit: 1, order: -1 });

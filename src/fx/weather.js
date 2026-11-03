@@ -46,7 +46,7 @@ const RAIN = (n, o = {}) => ({ count: n, kind: 'streak', shape: 'box', shapeSize
 export default [
   /* ================================================================ AURORA */
   { id: 'weather/aurora', name: 'Aurora', category: 'weather', loop: true, duration: 12,
-    stage: { sky: 'night', ground: false, bloom: 0.7, exposure: 1.15, view: { pos: [0, 1.4, 8], target: [0, 9, -30], fov: 66 } },
+    stage: { sky: 'night', ground: false, bloom: 0.45, exposure: 1.0, view: { pos: [0, 1.4, 8], target: [0, 9, -30], fov: 66 } },
     build(fx) {
       land(fx, '#0b121a', 200, 1);
       lake(fx, 0, -22, 34, '#04141a');
@@ -80,14 +80,14 @@ export default [
               vec3 green=vec3(.1,1.,.45), teal=vec3(.1,.8,.8), vio=vec3(.65,.2,1.), pink=vec3(1.,.25,.6);
               vec3 c=mix(green,teal,smoothstep(.1,.4,v)); c=mix(c,vio,smoothstep(.35,.75,v)); c=mix(c,pink,smoothstep(.8,1.,v)*.6);
               c=mix(c,vec3(.6,1.,.5),edge*.35);
-              gl_FragColor=vec4(c*I*1.7*smoothstep(1.,.85,v)*smoothstep(0.,.03,v),1.); }`,
+              gl_FragColor=vec4(c*I*1.05*smoothstep(1.,.85,v)*smoothstep(0.,.03,v),1.); }`,
           fog: false });
         const o = new THREE.Mesh(g, m); o.position.set(0, y0, z); o.frustumCulled = false; o.renderOrder = 5;
         fx.mesh(o, (t) => { u.uPh.value = (t / 12) * TAU; }, { dur: 99 }); return o;
       };
       mk(1.3, -48, 7, 24, 170, 10); mk(5.1, -66, 11, 28, 220, 14); mk(8.7, -38, 5, 18, 140, 7);
       // a few twinkling bright stars
-      fx.emitter({ count: 14, kind: 'glint', shape: 'box', shapeSize: [60, 22, 2], pos: [0, 36, -90], size: [2.2, 2.2], sizeVar: 0.6, life: [2, 5], speed: 0, ramp: [[0, '#cfe', 0], [0.5, '#fff', 1], [1, '#cfe', 0]], intensity: 2.2 });
+      fx.emitter({ count: 14, kind: 'glint', shape: 'box', shapeSize: [60, 22, 2], pos: [0, 36, -90], size: [1.6, 1.6], sizeVar: 0.6, life: [2, 5], speed: 0, ramp: [[0, '#cfe', 0], [0.5, '#fff', 1], [1, '#cfe', 0]], intensity: 1.3 });
       fx.light({ color: '#40ffa0', intensity: 14, pos: [0, 10, -10], range: 40, env: (t) => 0.8 + 0.2 * Math.sin((t / 12) * TAU) });
     } },
 

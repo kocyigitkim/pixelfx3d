@@ -172,20 +172,20 @@ export default [
 
   /* ===================================================================== collect-burst */
   { id: 'pickups/collect-burst', name: 'Collect burst', category: 'pickups', loop: false, duration: 1.35,
-    stage: { sky: 'dusk', bloom: 0.55, view: { pos: [1.2, 1.4, 4.0], target: [0, 0.85, 0], fov: 38 } },
+    stage: { sky: 'dusk', bloom: 0.45, view: { pos: [1.2, 1.4, 4.0], target: [0, 0.85, 0], fov: 38 } },
     build(fx) {
       const c = new THREE.Mesh(coinGeo(), metal('#f4b92c', 0.22)); const g = new THREE.Group(); const inner = new THREE.Group(); inner.rotation.x = Math.PI / 2; inner.add(c); g.add(inner); g.scale.setScalar(1.3);
       fx.mesh(g, (t) => { const u = clamp(t / 0.36); g.position.set(0, 0.5 + 0.55 * Math.min(1, u) + 0.2 * u * u, 0); g.rotation.y = t * 14; g.scale.setScalar(1.3 * (t < 0.36 ? 1 + 0.2 * u : Math.max(0.001, 1 - (t - 0.36) / 0.12) * 1.2)); g.visible = t < 0.5; }, { dur: 0.6 });
       const P = [0, 0.95, 0];
       fx.flash(0.36, 0.15, '#fff0c0', 0.18); fx.shake(0.36, 0.2, 0.02);
-      fx.light({ color: '#ffd070', intensity: 50, pos: P, range: 6, t0: 0.34, dur: 1, env: (t) => Math.exp(-t * 3.2), norm: 60 });
-      fx.ring({ t0: 0.36, dur: 0.7, r: [0.1, 1.0], width: [0.14, 0.03], normal: 'cam', pos: P, intensity: 2.2, ramp: [[0, '#fff'], [0.5, '#ffe08a'], [1, '#e90']] });
-      fx.ring({ t0: 0.4, dur: 0.8, r: [0.1, 1.5], width: [0.16, 0.04], normal: 'up', y: 0.02, intensity: 1.6, ramp: [[0, '#fff'], [1, '#d90']] });
-      fx.emitter({ count: 1, kind: 'glint', pos: P, size: [1.2, 0.4], life: [0.32, 0.32], intensity: 3, delay: 0.36, ramp: [[0, '#fff'], [1, '#fc6', 0]] });
-      fx.emitter({ count: 1, kind: 'soft', pos: P, size: [0.5, 0.15], life: [0.4, 0.4], intensity: 0.8, delay: 0.36, ramp: [[0, '#fff'], [1, '#fb4', 0]] });
-      fx.emitter({ count: 60, kind: 'spark', shape: 'point', pos: P, dir: [0, 1, 0], spread: 3.14, speed: [1.5, 4.5], life: [0.4, 0.95], gravity: [0, -3.2, 0], drag: 1.2, size: [0.06, 0.015], stretch: 0.9, intensity: 4, delay: 0.36, ramp: [[0, '#fff'], [0.4, '#ffc840'], [1, '#c60', 0]] });
+      fx.light({ color: '#ffd070', intensity: 35, pos: P, range: 6, t0: 0.34, dur: 1, env: (t) => Math.exp(-t * 3.2), norm: 60 });
+      fx.ring({ t0: 0.36, dur: 0.7, r: [0.1, 1.0], width: [0.14, 0.03], normal: 'cam', pos: P, intensity: 1.2, ramp: [[0, '#fff0c0'], [0.5, '#ffd060'], [1, '#e90']] });
+      fx.ring({ t0: 0.4, dur: 0.8, r: [0.1, 1.5], width: [0.16, 0.04], normal: 'up', y: 0.02, intensity: 1.0, ramp: [[0, '#fff'], [1, '#d90']] });
+      fx.emitter({ count: 1, kind: 'glint', pos: P, size: [0.8, 0.3], life: [0.32, 0.32], intensity: 1.6, delay: 0.36, ramp: [[0, '#fff'], [1, '#fc6', 0]] });
+      fx.emitter({ count: 1, kind: 'soft', pos: P, size: [0.5, 0.15], life: [0.4, 0.4], intensity: 0.5, delay: 0.36, ramp: [[0, '#fff'], [1, '#fb4', 0]] });
+      fx.emitter({ count: 60, kind: 'spark', shape: 'point', pos: P, dir: [0, 1, 0], spread: 3.14, speed: [1.5, 4.5], life: [0.4, 0.95], gravity: [0, -3.2, 0], drag: 1.2, size: [0.06, 0.015], stretch: 0.9, intensity: 2.5, delay: 0.36, ramp: [[0, '#fff4c8'], [0.4, '#ffc840'], [1, '#c60', 0]] });
       sparkles(fx, '#ffe090', P, 0.7, 12, { delay: 0.38, emit: 0.25, life: [0.5, 1.0], size: [0.3, 0.06], speed: [0.1, 0.6], radial: 0.3 });
-      fx.emitter({ count: 24, kind: 'soft', shape: 'sphere', radius: 0.6, pos: P, speed: [-1.8, -1.0], radial: 1, life: [0.3, 0.34], size: [0.07, 0.02], intensity: 3, t0: 0, t1: 0.36, emit: 0.3, ramp: [[0, '#ffd070', 0], [0.4, '#fff', 1], [1, '#ffd070', 0]] });
+      fx.emitter({ count: 24, kind: 'soft', shape: 'sphere', radius: 0.6, pos: P, speed: [-1.8, -1.0], radial: 1, life: [0.3, 0.34], size: [0.07, 0.02], intensity: 1.8, t0: 0, t1: 0.36, emit: 0.3, ramp: [[0, '#ffd070', 0], [0.4, '#ffe8a0', 1], [1, '#ffd070', 0]] });
     } },
 
   /* ===================================================================== crystal-shard */

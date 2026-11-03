@@ -98,22 +98,22 @@ vec3 trans(vec2 uv, vec3 c, float p, float t, float a){
   vec3 img=texture2D(tDiffuse,clamp(s,0.,1.)).rgb;
   // phosphor mask + scanlines
   float sl=.82+.18*sin(s.y*540.*3.14159); vec3 mask=.85+.15*vec3(sin(s.x*960.*3.14159*1.),sin(s.x*960.*3.14159+2.09),sin(s.x*960.*3.14159+4.18));
-  img*=sl*mask*(1.+off*1.2/ max(sqrt(hs),.06)*.35);
+  img*=sl*mask*(1.+min(off*1.2/max(sqrt(hs),.06)*.35,1.2));
   img+=vec3(.35,.5,.45)*off*.12; // blue-green tube tint
   vec3 col=img*inside;
   // bright horizontal line + phosphor bloom
   float ay=abs(q.y); float lineW=.0022+.012*hs; float core=exp(-pow(ay/lineW,2.));
   float span=smoothstep(ws*.5+.02,ws*.5-.02,abs(q.x));
   vec3 ph1=vec3(.75,.95,1.);
-  col+=ph1*core*span*(1.5+3.*ez((off-.55)/.45))*step(.45,off);
+  col+=ph1*core*span*(0.9+1.4*ez((off-.55)/.45))*step(.45,off);
   col+=ph1*exp(-ay*32.)*span*.35*smoothstep(.35,.9,off)*step(.02,off);
   // final dot
-  float r=length(vec2(q.x*a,q.y)); float dotG=exp(-r*r*4000.)*2.5+exp(-r*r*400.)*.5+exp(-r*r*60.)*.12;
+  float r=length(vec2(q.x*a,q.y)); float dotG=exp(-r*r*4000.)*1.4+exp(-r*r*400.)*.5+exp(-r*r*60.)*.12;
   col+=ph1*dotG*ez((off-.85)/.15);
   // afterglow when fully off decays, power-on flicker
   col=mix(col,vec3(0.),step(.995,off)*0.);
   float fl=1.+.25*sin(t*90.)*smoothstep(.0,.4,off)*(1.-smoothstep(.4,.7,off))*ph;
-  return col*fl; }`),
+  col*=fl; return min(col,vec3(.8))+(1.-exp(-max(col-.8,0.)*5.))*.2; }`),
 
   /* ================================================================ DIAMOND WIPE */
   T('diamond-wipe', 'Diamond Wipe', 2.0, 4, /* glsl */ `

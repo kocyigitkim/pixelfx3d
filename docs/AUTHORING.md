@@ -64,6 +64,12 @@ Acts run the mannequin from `-windup` s before t=0 (wind-up) to the recovery; hi
 7. Performance (must run on integrated GPUs): ≤ ~900 total particles, ≤ 3 orbs/shells, ≤ 2 voronoi decals per effect, no per-frame allocations in hot callbacks.
 8. Determinism: never use `Math.random`; use `fx.rng`. No network, no images — everything procedural.
 9. If you need a different shape of particle, build it from `fx.mesh` + custom `THREE.ShaderMaterial`; keep material code inside your category file.
+10. **FIRE ramp** (`src/fx/fire.js`, reuse it for fire-like flames): `[[0,'#ffe2a0',1],[0.2,'#ffa030',0.95],[0.55,'#e0480c',0.7],[0.85,'#6a1606',0.3],[1,'#1a0602',0]]`. Cool blue-white flame ramps (jetpack) use the same shape: hot core, then orange tip, then a dark ember.
+11. Global bloom is `0.8 × stage.bloom`, and visible bloom grows with strength², so keep `stage.bloom` ≤ 0.5.
+12. Full-screen flash is capped at 0.6 (`stage.flashMax`); use ≤ 0.3 and prefer lights.
+13. Custom additive materials: use `blendSrcAlpha: Zero, blendDstAlpha: One` (Stage patches this in transparent mode).
+14. Loops: callbacks must use `t` (not `tAbs`/`ta`) and periodic frequencies `2π·n/duration`; prims are already loop-safe.
+15. Do not hide things under y=0 by relying on the ground; it is clipped in transparent mode.
 
 ## Test loop
 Server is already running on :8123 (`node tools/serve.mjs 8123`; start it if not). Render frames of any effect(s):
@@ -74,3 +80,4 @@ node tools/sheet.mjs /tmp/w/shots/<yourname>/sheet.png /tmp/w/shots/<yourname>/f
 `shots.mjs` prints every console error/warning (shader compile errors included) — fix them all. LOOK at screenshots at ≥3 times per effect (start/peak/end; loops: 2 phases)
 and iterate until it reads like the effect described in the catalog (`https://github.com/patch-gg/pixelfx/blob/main/docs/CATALOG.md`).
 Reference recipes: `src/fx/fire.js` (campfire), `src/fx/explosions.js` (small-explosion), `src/fx/melee.js` (sword-slash with act).
+Loop check: `node tools/determinism-test.mjs cat:<category>` (same seed = same pixels; frame 0 ~= frame duration). Export: `node tools/sheets.mjs <outDir> <id> 24 256`.

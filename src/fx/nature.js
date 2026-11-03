@@ -92,15 +92,15 @@ export default [
       const main = new THREE.Mesh(spikeGeo(0.55, 2.3, fx.rng, 7, 0.3), mat); g.add(main);
       const side = [[0.5, 0.2, 1.1, 0.5], [-0.45, 0.6, 0.9, 0.7], [0.2, 2.4, 1.3, -0.6], [-0.1, 4.0, 0.8, -0.3], [0.1, 5.2, 0.9, 0.9]].map((q, i) => { const m = new THREE.Mesh(spikeGeo(0.24, q[2], fx.rng, 5, 0.3), mat); m.position.set(Math.cos(q[1]) * 0.3, 0, Math.sin(q[1]) * 0.3); m.rotation.set(Math.sin(q[1]) * 0.55 + q[3] * 0.1, 0, -Math.cos(q[1]) * 0.55); m.userData = { d: i * 0.04 }; g.add(m); return m; });
       fx.mesh(g, (t, pr, f, w, o) => {
-        const up = eob((t - 0.65) / 0.22), down = sm(2.3, 3.0, t), k = up * (1 - down); o.visible = t > 0.64 && k > 0.01; const jit = t > 2.2 && t < 3.0 ? Math.sin(t * 80) * 0.01 * (1 - down) : 0;
-        main.scale.set(1, Math.max(0.01, k), 1); main.rotation.z = 0.04; o.position.x = jit; side.forEach((m) => { const kk = cl(eob((t - 0.7 - m.userData.d) / 0.25)) * (1 - down); m.scale.set(1, Math.max(0.01, kk), 1); });
+        const up = eob((t - 0.65) / 0.22), down = sm(2.3, 3.0, t); o.visible = t > 0.64 && down < 0.999; const jit = t > 2.2 && t < 3.0 ? Math.sin(t * 80) * 0.01 * (1 - down) : 0;
+        main.scale.set(1, Math.max(0.01, up), 1); main.rotation.z = 0.04; o.position.x = jit; o.position.y = -down * 2.6; side.forEach((m) => { const kk = cl(eob((t - 0.7 - m.userData.d) / 0.25)); m.scale.set(1, Math.max(0.01, kk), 1); });
       }, { dur: 99 });
       fx.decal({ kind: 'cracks', t0: 0.05, dur: 3.3, r: [1.8, 2.1], fade: [0.1, 1.4], reveal: 0.6, cells: 5, heat: [0.15, 0], growSpeed: 3, ramp: [[0, '#100a05'], [0.5, '#6a4a2a'], [1, '#d8a860']] });
       fx.shake(0.05, 0.6, 0.03); fx.shake(0.64, 0.6, 0.1);
       fx.emitter({ count: 40, kind: 'dust', blend: 'normal', shape: 'disc', radius: 0.7, pos: [0, 0.05, 0], dir: [0, 1, 0], spread: 0.5, speed: [0.2, 0.8], life: [0.8, 1.4], size: [0.2, 0.6], ramp: DUST(0.35), lit: 1, delay: 0.15, emit: 0.5, order: -1 });
       fx.emitter({ count: 80, kind: 'rock', blend: 'normal', shape: 'disc', radius: 0.4, pos: [0, 0.1, 0], dir: [0, 1, 0], spread: 0.9, speed: [2, 6], life: [1, 1.7], gravity: [0, -10, 0], size: [0.12, 0.08], ramp: ROCKRAMP('#7a6a58'), lit: 1, bounce: 0.3, rot: 6, delay: 0.64 });
       fx.emitter({ count: 70, kind: 'dust', blend: 'normal', shape: 'ring', radius: 0.5, pos: [0, 0.1, 0], dir: [0, 0.3, 0], spread: 1.3, speed: [1.5, 3.5], life: [1, 1.8], size: [0.4, 1.4], ramp: DUST(0.5), lit: 1, delay: 0.64, drag: 1.5, radial: 1, order: -1 });
-      fx.ring({ t0: 0.64, dur: 0.6, r: [0.2, 3.2], width: [0.3, 0.06], normal: 'up', intensity: 0.4, ramp: [[0, '#fff'], [1, '#8a7a60']] });
+      fx.ring({ t0: 0.64, dur: 0.6, r: [0.2, 3.2], width: [0.3, 0.06], normal: 'up', intensity: 0.35, ramp: [[0, '#e8d8b8'], [1, '#8a7a60']] });
       fx.emitter({ count: 70, kind: 'rock', blend: 'normal', shape: 'box', shapeSize: [0.35, 1.0, 0.35], pos: [0, 1.2, 0], dir: [0, 0, 0], spread: 1.5, speed: [0.3, 1.5], life: [1, 1.5], gravity: [0, -9, 0], size: [0.11, 0.07], ramp: ROCKRAMP('#7a6a58'), lit: 1, bounce: 0.3, rot: 5, delay: 2.4, emit: 0.6, radial: 0.4 });
       fx.emitter({ count: 50, kind: 'dust', blend: 'normal', shape: 'box', shapeSize: [0.3, 1.0, 0.3], pos: [0, 1.2, 0], dir: [0, 0, 0], spread: 1.5, speed: [0.3, 1], life: [1, 1.6], size: [0.3, 1.0], ramp: DUST(0.45), lit: 1, delay: 2.4, emit: 0.7, drag: 1, radial: 0.8, gravity: [0, -0.3, 0], order: -1 });
       fx.light({ color: '#ffc890', intensity: 20, pos: [1.2, 1.5, 1.5], range: 7 });

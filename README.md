@@ -43,6 +43,38 @@ See [docs/AUTHORING.md](docs/AUTHORING.md). A recipe is ~10 lines of builders (`
   } }
 ```
 
+## transparent compositing
+`new Stage(el, { transparent: true })` renders over whatever is behind the canvas. Alpha = max(scene alpha, glow brightness), output is premultiplied. Sky, ground and fog are off, and anything under y < 0 is clipped. The gallery has a `transparent` switch (also `?transparent=1`).
+
+## export
+```
+node tools/sheets.mjs out fire/campfire 24 256
+```
+Writes transparent PNG frames, a sprite sheet and a JSON per effect. JSON fields: `frameW, frameH, frames, fps, loop, cols, rows, duration`.
+
+## quality
+`quality: 'low' | 'medium' | 'high'` on `Stage`. Without `Stage`, use `createFx(id, { countScale })` to scale particle counts. Lower counts are dimmer by design (additive overlap).
+
+## look options
+Stage options: `bloomScale` (default 0.8), `flashMax` (default 0.6), `toneMapping` (`aces | agx | neutral | none`), `threshold`, `radius`, `bloom`, `exposure`.
+
+## tests
+```
+node tools/determinism-test.mjs all      # same seed = same pixels; loops: frame 0 ~= frame duration
+node tools/alpha-test.mjs                # needs the baseline worktree on port 8124 (BASE_PORT)
+node tools/shots.mjs /tmp/w/shots/me all 0.5
+```
+
+## types and entry points
+TypeScript types ship in `index.d.ts` (and `fx.d.ts` for effect files). Per-category imports:
+```js
+import fire from 'pixelfx3d/fx/fire';
+fire.forEach(register);
+```
+Bundlers resolve `three` and `three/addons/*`. Only plain browsers need an import map. `three` (>= 0.160) is a peer dependency; `@types/three` is needed for the types.
+
+License: MIT, see NOTICE.md for the catalog credits (patch-gg/pixelfx, Hugo Duprez) and three.js.
+
 ## layout
 ```
 src/core   emitter (GPU particles) · prims (orb/ring/shell/beam/ribbon/bolt/decal/water/light/text) · dummy (mannequin + acts) · stage
