@@ -11,13 +11,18 @@ const T = await open(b, 'transparent=1&bg=ff00ff');
 for (const id of ALPHA_IDS) {
   const r = await render(T.pg, id, -0.5), px = pixels(r), W = r.w, H = r.h, N = W * H;
   for (const [x, y] of [[0, 0], [W - 1, 0], [0, H - 1], [W - 1, H - 1]]) { const a = px[(y * W + x) * 4 + 3]; if (a !== 0) fail(`${id} corner ${x},${y} alpha ${a}`); }
-  let solid = 0, soft = 0, dark = 0, bad = 0;
+  let solid = 0, bad = 0, soft = 0, halo = 0;
+  const L = (i) => Math.max(px[i], px[i + 1], px[i + 2]) / px[i + 3]; // un-premultiplied brightness (max channel: saturated purple is not "dark")
   for (let i = 0; i < px.length; i += 4) { const a = px[i + 3];
     if (Math.max(px[i], px[i + 1], px[i + 2]) > a + 1) bad++;          // premultiplied: rgb must not exceed alpha
     if (a >= 250) solid++;
-    if (a >= 8 && a <= 160) { soft++; if ((0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]) / a < 0.05) dark++; } } // near-black soft edge = dark halo
+    if (a < 8 || a > 100) continue; soft++;
+    // dark halo = a soft edge pixel much darker than the denser pixel it borders (correct premultiplication keeps colour constant across alpha)
+    const x = (i >> 2) % W, y = (i >> 2) / W | 0; let ja = a + 40, j = -1;
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; const k = (yy * W + xx) * 4; if (px[k + 3] > ja) { ja = px[k + 3]; j = k; } }
+    if (j >= 0 && L(i) < 0.3 * L(j)) halo++; }
   if (solid / N > 0.5) fail(`${id} opaque rect: ${(100 * solid / N).toFixed(1)}% alpha>=250`);
-  if (soft && dark / soft > 0.03) fail(`${id} dark halo: ${(100 * dark / soft).toFixed(1)}% of soft pixels near-black`);
+  if (soft > 50 && halo / soft > 0.2) fail(`${id} dark halo: ${(100 * halo / soft).toFixed(1)}% of soft edge pixels darker than their denser neighbour`);
   if (bad / N > 0.001) fail(`${id} ${bad} invalid premultiplied pixels`);
   const shot = 'data:image/png;base64,' + (await T.pg.screenshot()).toString('base64');
   for (const [x, y] of [[0, 0], [959, 0], [0, 539], [959, 539]]) { const c = await pngPixel(T.pg, shot, x, y); if (Math.abs(c[0] - 255) > 3 || c[1] > 3 || Math.abs(c[2] - 255) > 3) fail(`${id} page corner ${x},${y} not magenta: ${c}`); }

@@ -30,7 +30,7 @@ const TONE = { aces: THREE.ACESFilmicToneMapping, agx: THREE.AgXToneMapping, neu
 
 const MAIN_OPAQUE = 'vec3 c=texture2D(tDiffuse,vUv).rgb; if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=mix(c,uFlashCol,clamp(uFlash,0.,1.)); vec2 q=vUv-.5; c*=1.-uVig*dot(q,q)*1.6; gl_FragColor=vec4(c,1.);';
 // transparent: keep scene alpha; glow adds coverage = its brightness, so rgb <= a (valid premultiplied). No vignette (would darken edges).
-const MAIN_ALPHA = 'vec4 s=texture2D(tDiffuse,vUv); vec3 c=s.rgb; if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=clamp(c,0.,1.); float a=clamp(max(s.a,max(c.r,max(c.g,c.b))),0.,1.); c=mix(c,uFlashCol*a,clamp(uFlash,0.,1.)); gl_FragColor=vec4(c,a);';
+const MAIN_ALPHA = 'vec4 s=texture2D(tDiffuse,vUv); vec3 c=s.rgb; if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=clamp(c,0.,1.); float g=max(c.r,max(c.g,c.b)); float k=mix(smoothstep(.03,.1,g),1.,s.a); c*=k; float a=clamp(max(s.a,g*k),0.,1.); c=mix(c,uFlashCol*a,clamp(uFlash,0.,1.)); gl_FragColor=vec4(c,a);';
 function finalShader(fn, tr) {
   return { uniforms: { tDiffuse: { value: null }, uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 1, 1) }, uP: { value: 0 }, uTime: { value: 0 }, uAspect: { value: 1 }, uVig: { value: 0.35 }, uOn: { value: 0 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
@@ -87,7 +87,7 @@ export class Stage {
     const q = QUALITY[this.opts.quality]; const fx = def instanceof Fx ? def : createFx(def, q ? { countScale: q.count, ...opts } : opts); this.fx = fx; this.scene.add(fx); const st = fx.def.stage || {};
     this.setSky(st.sky || 'night'); this.ground.visible = !this.transparent && st.ground !== false; this.bloom.strength = (st.bloom ?? this.opts.bloom ?? 0.45) * this.bloomScale; this.bloom.threshold = st.threshold ?? this.opts.threshold ?? 1.0; this.bloom.radius = st.radius ?? this.opts.radius ?? 0.5; this.renderer.toneMappingExposure = st.exposure ?? this.opts.exposure ?? 1;
     const v = st.view || {}; this.camera.fov = v.fov ?? 40; this.camera.updateProjectionMatrix(); this.camera.position.set(...(v.pos || [4.6, 2.3, 5.4])); this.controls.target.set(...(v.target || [0, 1.0, 0])); this.controls.update();
-    this.hemi.intensity *= st.ambient ?? 1; if (this.transparent) fixAlpha(fx); this.setupScreen(fx); this._rest = 0; return fx;
+    this.hemi.intensity *= st.ambient ?? 1; if (this.transparent) { fixAlpha(fx); fx.lu.uAmbient.value.setScalar(this.opts.ambient ?? 0.5); } // no sky to light smoke: brighter lit-particle ambient this.setupScreen(fx); this._rest = 0; return fx;
   }
   setupScreen(fx) {
     const sc = fx.def.screen; const idx = this.composer.passes.indexOf(this.finalPass); this.finalPass = new ShaderPass(finalShader(sc ? sc.glsl : null, this.transparent)); this.composer.passes[idx] = this.finalPass; this.finalPass.uniforms.uAspect.value = this.camera.aspect; this.finalPass.uniforms.uOn.value = sc ? 1 : 0; this.finalPass.renderToScreen = true;
