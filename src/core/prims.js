@@ -39,7 +39,7 @@ ${PER}
 void main(){
   vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP);
   if(uMode==4){ N=normalize(cross(dFdx(vWP),dFdy(vWP))); if(dot(N,V)<0.) N=-N; }
-  float ndv=abs(dot(N,V)); float fres=pow(1.-ndv,uPow);
+  float ndv=abs(dot(N,V)); float fres=pow(max(1.-ndv,0.),uPow);
   if(uMode==0||uMode==1||uMode==5){
     float h=fbmT(vP*uNS*1.4,vec3(0.,-uScroll*1.6,uScroll*.5)); float heat=clamp(h*1.35+(1.-fres)*.2-.12,0.,1.);
     if(uMode==1) heat=clamp(abs(sin(h*9.+ph(uScroll*3.)))*.5+(1.-fres)*.6,0.,1.);
@@ -47,7 +47,7 @@ void main(){
     vec4 c=texture2D(uRamp,vec2(heat,.5)); float a=smoothstep(.1,.45,heat+.15*(1.-fres))*uAlpha;
     gl_FragColor=vec4(c.rgb*uInt*a,a);
   } else if(uMode==2){
-    float rim=pow(1.-ndv,uPow); float sw=fbmT(vP*uNS,vec3(0.,uScroll,0.)); vec4 c=texture2D(uRamp,vec2(clamp(rim+sw*.2,0.,1.),.5));
+    float rim=pow(max(1.-ndv,0.),uPow); float sw=fbmT(vP*uNS,vec3(0.,uScroll,0.)); vec4 c=texture2D(uRamp,vec2(clamp(rim+sw*.2,0.,1.),.5));
     gl_FragColor=vec4(c.rgb*uInt*rim*(.5+sw)*uAlpha,uAlpha);
   } else {
     vec3 L=normalize(uLightPos-vWP); vec3 H=normalize(L+V); float spec=pow(max(dot(N,H),0.),120.)*2.5;
@@ -105,7 +105,7 @@ const SHELL_F = `${NOISE}
 uniform float uTime, uInt, uPow, uCells, uA, uImpT, uHemi, uNoise; uniform vec3 uImpDir; uniform sampler2D uRamp; varying vec3 vN, vWP, vP;
 ${PER}
 void main(){ if(uHemi>.5 && vP.y<-.02) discard;
-  vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP); float f=pow(1.-abs(dot(N,V)),uPow);
+  vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP); float f=pow(max(1.-abs(dot(N,V)),0.),uPow);
   float edge=0.; if(uCells>0.){ vec2 vo=voronoi(vP*uCells+vec3(0.,uTime*.05,0.)); edge=smoothstep(.09,.0,vo.y)*.9+(1.-smoothstep(0.,.4,vo.x))*.12*vnoise(vP*uCells*2.+uTime*2.); }
   float n=fbmT(vP*3.,vec3(0.,.4,0.))*uNoise;
   float imp=0.; if(uImpT>=0.){ float ang=acos(clamp(dot(normalize(vP),uImpDir),-1.,1.)); float x=ang-uImpT*2.2; imp=exp(-x*x*40.)*exp(-uImpT*2.2)*1.6+exp(-ang*ang*30.)*exp(-uImpT*8.)*2.; }

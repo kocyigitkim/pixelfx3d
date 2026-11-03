@@ -35,7 +35,7 @@ uniform sampler2D uRamp;
 varying vec2 vUv; varying float vU; varying vec4 vRnd; varying vec4 vCol; varying float vSp; varying float vL;
 
 vec3 shapePos(vec4 r, vec4 r2){
-  if(uShape==1){ float th=r.x*6.2831853, z=r.y*2.-1.; float s=sqrt(1.-z*z); vec3 d=vec3(s*cos(th),z,s*sin(th)); return d*mix(uShapeSize.y,uShapeSize.x,pow(r2.x,.3333)); }
+  if(uShape==1){ float th=r.x*6.2831853, z=r.y*2.-1.; float s=sqrt(1.-z*z); vec3 d=vec3(s*cos(th),z,s*sin(th)); return d*mix(uShapeSize.y,uShapeSize.x,pow(max(r2.x,0.),.3333)); }
   if(uShape==2){ float th=r.x*6.2831853; return vec3(cos(th),0.,sin(th))*mix(uShapeSize.y,uShapeSize.x,sqrt(r2.x)); }
   if(uShape==3){ float th=r.x*6.2831853; return vec3(cos(th),0.,sin(th))*mix(uShapeSize.y,uShapeSize.x,r2.x); }
   if(uShape==4){ return (vec3(r.x,r2.x,r2.y)*2.-1.)*uShapeSize; }
@@ -115,7 +115,7 @@ void main(){
   else if(uKind==3){
     float x=p.x, y=vUv.y;
     float n=fbm(vec3(x*2.2,y*2.6-vU*3.,seed)); float n2=fbm(vec3(x*4.+3.,y*5.-vU*4.5,seed+7.));
-    float w=.9*pow(1.-y,.6)*smoothstep(0.,.18,y+.06); float wob=(n-.5)*1.8*y;   // teardrop: round base, thin noisy tip
+    float w=.9*pow(max(1.-y,0.),.6)*smoothstep(0.,.18,y+.06); float wob=(n-.5)*1.8*y;   // teardrop: round base, thin noisy tip
     float m=smoothstep(.1,-.4,abs(x+wob)-w)*smoothstep(1.,.45,y)*smoothstep(-.05,.12,y);
     m*=smoothstep(.3,.75,n2+m*.5);                                                  // noise erosion: no straight edges
     float core=pow(m,2.2)*(1.-y*.8); float fl=.85+.3*sin(vU*31.+seed*7.);

@@ -28,9 +28,9 @@ const SKIES = {
 const QUALITY = { low: { pr: 0.75, count: 0.5, samples: 0 }, medium: { pr: 1, count: 0.75, samples: 2 }, high: { pr: 1.5, count: 1, samples: 4 } };
 const TONE = { aces: THREE.ACESFilmicToneMapping, agx: THREE.AgXToneMapping, neutral: THREE.NeutralToneMapping, none: THREE.NoToneMapping };
 
-const MAIN_OPAQUE = 'vec3 c=texture2D(tDiffuse,vUv).rgb; if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=mix(c,uFlashCol,clamp(uFlash,0.,1.)); vec2 q=vUv-.5; c*=1.-uVig*dot(q,q)*1.6; gl_FragColor=vec4(c,1.);';
+const MAIN_OPAQUE = 'vec3 c=texture2D(tDiffuse,vUv).rgb; if(any(isnan(c))||any(isinf(c))) c=vec3(0.); if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=mix(c,uFlashCol,clamp(uFlash,0.,1.)); vec2 q=vUv-.5; c*=1.-uVig*dot(q,q)*1.6; gl_FragColor=vec4(c,1.);';
 // transparent: keep scene alpha; glow adds coverage = its brightness, so rgb <= a (valid premultiplied). No vignette (would darken edges).
-const MAIN_ALPHA = 'vec4 s=texture2D(tDiffuse,vUv); vec3 c=s.rgb; if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=clamp(c,0.,1.); float g=max(c.r,max(c.g,c.b)); float k=mix(smoothstep(.03,.1,g),1.,s.a); c*=k; float a=clamp(max(s.a,g*k),0.,1.); c=mix(c,uFlashCol*a,clamp(uFlash,0.,1.)); gl_FragColor=vec4(c,a);';
+const MAIN_ALPHA = 'vec4 s=texture2D(tDiffuse,vUv); if(any(isnan(s))||any(isinf(s))) s=vec4(0.); vec3 c=s.rgb; if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=clamp(c,0.,1.); float g=max(c.r,max(c.g,c.b)); float k=mix(smoothstep(.03,.1,g),1.,s.a); c*=k; float a=clamp(max(s.a,g*k),0.,1.); c=mix(c,uFlashCol*a,clamp(uFlash,0.,1.)); gl_FragColor=vec4(c,a);';
 function finalShader(fn, tr) {
   return { uniforms: { tDiffuse: { value: null }, uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 1, 1) }, uP: { value: 0 }, uTime: { value: 0 }, uAspect: { value: 1 }, uVig: { value: 0.35 }, uOn: { value: 0 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
@@ -65,6 +65,7 @@ export class Stage {
     this.makeGround(); this.setSky(o.sky || 'night');
     const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: q ? q.samples : 4 }); this.composer = new EffectComposer(this.renderer, rt); this.composer.addPass(new RenderPass(this.scene, this.camera));
     this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), o.bloom ?? 0.45, 0.5, 1.0); this.composer.addPass(this.bloom); this.composer.addPass(new OutputPass());
+    { const hp = this.bloom.materialHighPassFilter; hp.fragmentShader = hp.fragmentShader.replace('vec4 texel = texture2D( tDiffuse, vUv );', 'vec4 texel = texture2D( tDiffuse, vUv ); if(any(isnan(texel))||any(isinf(texel))) texel=vec4(0.);'); hp.needsUpdate = true; } // one NaN pixel must not blank the frame via bloom (Metal propagates NaN)
     if (this.transparent) Object.assign(this.bloom.blendMaterial, { blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor }); // same RGB as AdditiveBlending, keeps scene alpha
     this.finalPass = new ShaderPass(finalShader(null, this.transparent)); this.composer.addPass(this.finalPass); this.fx = null; this.clock = new THREE.Clock(); this.running = false; this.replayDelay = 1.2; this._rest = 0;
     this.resize(); this._ro = new ResizeObserver(() => this.resize()); this._ro.observe(container);
