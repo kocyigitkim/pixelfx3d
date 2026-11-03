@@ -12,12 +12,13 @@ export default [
   SKILL('dune/sandspout', 'Sandspout', m(['earth', 'air', 'dune'], 'tornado-moving', 0.6, 16, 6, 'circle'), 3.0, {
     view: 'wide',
     act: act('castup', 0.8, 3.2, { hits: [{ t: 0.8, stop: 0.06, shake: 0.3, amp: 0.04, push: 1.6 }, { t: 1.4, stop: 0.04, shake: 0.2, amp: 0.03, push: 0 }, { t: 2.0, stop: 0.04, shake: 0.2, amp: 0.03, push: 0 }] }),
-    // P3=531
+    // P3=761
     build(fx, o) {
       const k = kit(fx, o, DUNE);
       const X = (t) => 2 + 1.2 * sm(0, 2.4, t);
       const fol = (mm, ta, t) => mm.position.set(X(t), 0, 0);
-      k.em({ count: 220, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'disc', radius: 0.3, pos: [2, 0, 0], dir: [0, 1, 0], radial: 0.5, swirl: 6, speed: [2, 4], life: [1.5, 2.5], size: [0.3, 0.6], emit: 2.4, follow: fol }); // 220
+      [[0.15, 0.25], [0.7, 0.4], [1.3, 0.6], [1.9, 0.85], [2.5, 1.15]].forEach(([y, r], i) => k.em({ count: 60, kind: 'dust', shape: 'ring', radius: r, radiusIn: r * 0.8, pos: [2, y, 0], dir: [0, 1, 0], spread: 0.15, speed: [0.5, 1.0], life: [0.5, 0.9], size: [0.3 - i * 0.02, 0.12], ramp: SAND, blend: 'normal', lit: 1, swirl: 7 - i * 0.6, turb: [0.3, 2], delay: 0, emit: 2.4, t0: -0.02, follow: fol })); // 300
+      k.smoke({ ramp: SAND, count: 150, shape: 'ring', radius: 0.25, radiusIn: 0.15, pos: [2, 0.1, 0], dir: [0, 1, 0], spread: 0.1, speed: [1.4, 2.0], life: [1.3, 1.8], size: [0.35, 1.1], swirl: 7, radial: 0.35, turb: [0.2, 1.2], delay: 0, emit: 2.4, follow: fol }); // 150 funnel body
       k.em({ count: 60, kind: 'streak', shape: 'disc', radius: 0.5, pos: [2, 0.5, 0], dir: [0, 1, 0], speed: [2, 4], life: [0.5, 1], size: [0.04, 0.02], stretch: 1.5, intensity: 0.5, emit: 2.4, follow: fol }); // 60
       k.smoke({ count: 50, ramp: SAND, shape: 'ring', radius: 0.6, pos: [2, 0, 0], dir: [0, 1, 0], radial: 1, speed: [0.5, 1.5], life: [1.5, 2.5], size: [0.8, 1.4], emit: 2.4 }); // 50
       k.em({ count: 20, kind: 'rock', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.4, pos: [2, 0.2, 0], dir: [0, 1, 0], spread: 1.2, speed: [2, 5], life: [1.2, 1.9], gravity: [0, -10, 0], size: [0.2, 0.12], bounce: 0.35, rot: 6, emit: 0.8 }); // 20
@@ -98,12 +99,15 @@ export default [
   SKILL('dune/dune-wave', 'Dune wave', m(['earth', 'air', 'dune'], 'sand-wave', 0.6, 14, 7, 'line'), 3.0, {
     view: 'long',
     act: act('sideslash', 1.0, 4),
-    // P3=543
+    // P3=753
     build(fx, o) {
       const k = kit(fx, o, DUNE);
       const X = (t) => 0.8 + 3.7 * sm(0, 1.4, t), fol = (mm, ta, t) => mm.position.set(X(t), 0.6, 0);
       k.em({ count: 220, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'line', shapeSize: [1.6, 0, 0], rot3: [0, Math.PI / 2, 0], pos: [0.8, 0.6, 0], dir: [0.5, 1, 0], speed: [1.5, 3], life: [1, 1.8], size: [0.3, 0.6], emit: 1.4, follow: fol }); // 220
       k.em({ count: 60, kind: 'streak', shape: 'line', shapeSize: [1.6, 0, 0], rot3: [0, Math.PI / 2, 0], pos: [0.8, 0.6, 0], dir: [1, 0.3, 0], speed: [3, 6], life: [0.4, 0.8], size: [0.05, 0.02], stretch: 1.5, intensity: 0.6, emit: 1.4, follow: fol }); // 60
+      k.smoke({ count: 120, ramp: SAND, shape: 'box', shapeSize: [1.6, 0, 2.6], pos: [0.8, 0.6, 0], dir: [0.5, 1, 0], speed: [0.5, 1.5], life: [1.5, 2.5], size: [0.8, 2.0], emit: 1.4, follow: fol }); // 120
+      k.em({ count: 90, kind: 'dust', shape: 'box', shapeSize: [0.3, 0.3, 2.4], dir: [1, 0.6, 0], spread: 0.4, speed: [1.5, 3], gravity: [0, -4, 0], life: [0.5, 0.9], size: [0.15, 0.05], ramp: SAND, blend: 'normal', lit: 1, intensity: 0.9, delay: 0, emit: 1.4, t0: -0.02, follow: fol }); // 90
+      k.ribbon({ points: (t) => { const x = X(t); return [[x - 1, 0.2, 0], [x, 0.9, 0], [x + 0.4, 0.3, 0]]; }, n: 2, width: 0.4, intensity: 0.9, head: () => 1.001, fade: [0.05, 0.3], t0: 0, dur: 1.4 });
       k.em({ count: 30, kind: 'rock', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.3, pos: [3, 0.2, 0], dir: [0, 1, 0], spread: 1, speed: [2, 4], life: [1, 1.6], gravity: [0, -10, 0], size: [0.15, 0.1], bounce: 0.3, rot: 4, delay: 0.3, emit: 0.8 }); // 30
       k.ribbon({ points: (t) => { const x = X(t); return [[x - 1, 0.2, 0], [x, 0.9, 0], [x + 0.4, 0.3, 0]]; }, n: 2, width: 0.12, head: () => 1.001, fade: [0.05, 0.3], t0: 0, dur: 1.4 });
       k.ring({ t0: 0.9, dur: 0.6, r: [0.2, 2.5], normal: 'up', pos: [4, 0.02, 0] });
