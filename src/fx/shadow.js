@@ -70,16 +70,16 @@ export default [
       const geo = new THREE.RingGeometry(0.5, 2.1, 160, 6); geo.rotateX(-Math.PI / 2);
       const dm = new THREE.ShaderMaterial({ ...ADD, side: THREE.DoubleSide, uniforms: { uTime: { value: 0 }, uA: { value: 1 } }, vertexShader: 'varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
         fragmentShader: `${NOISE} uniform float uTime,uA; varying vec3 vP;
-        void main(){ vec2 p=vP.xz; float r=length(p), a=atan(p.y,p.x); float sw=uTime*1.57*(1.6/(r*r+.25)); // 4s loop: integer turns not guaranteed => use noise on rotating coords only
+        void main(){ vec2 p=vP.xz; float r=length(p), a=atan(p.y,p.x); float sw=uTime/4.*6.2831853; // shortcut: rigid spin, 1 turn per loop (differential spin is not periodic)
           float aa=a-sw; vec3 q=vec3(cos(aa)*r*2.6,sin(aa)*r*2.6,r*3.); float n=fbm(q); float bands=.5+.5*sin(r*46.+n*7.);
           float heat=1.-smoothstep(.5,2.05,r); float dop=.55+.45*sin(a+1.2);
           vec3 col=mix(vec3(.45,.12,.95),vec3(1.,.5,.15),smoothstep(.15,.6,heat)); col=mix(col,vec3(1.,.93,.8),smoothstep(.72,1.,heat));
           float al=smoothstep(.5,.66,r)*(1.-smoothstep(1.55,2.1,r))*(.25+.9*bands)*(.35+n*1.1); gl_FragColor=vec4(col*al*dop*(.35+heat*1.1)*uA,al); }` });
       const disk = new THREE.Mesh(geo, dm); disk.renderOrder = 18; g.add(disk);
-      fx.mesh(g, (t, pr, f, w, o, ta) => { dm.uniforms.uTime.value = (ta % 4); dm.uniforms.uA.value = w; }, { dur: 99 });
+      fx.mesh(g, (t, pr, f, w, o, ta) => { dm.uniforms.uTime.value = (t % 4); dm.uniforms.uA.value = w; }, { dur: 99 });
       const occ = new THREE.Mesh(new THREE.SphereGeometry(0.47, 32, 24), new THREE.MeshBasicMaterial({ color: '#000' })); occ.position.set(...C); fx.mesh(occ, null, { dur: 99 });
       fx.orb({ kind: 'void', r: 0.56, pos: C, noise: 2, scroll: 0.5, disp: 0.05, power: 3, intensity: 0.8, ramp: [[0, '#000'], [0.5, '#6b3fb5'], [1, '#e8dcff']] });
-      fx.ring({ normal: 'cam', pos: C, r: [0.62, 0.62], width: [0.05, 0.05], intensity: 0.55, decay: 0, breakup: 0.3, ramp: [[0, '#fff'], [0.5, '#ffbe7a'], [1, '#8a40ff']] });
+      fx.ring({ normal: 'cam', pos: C, r: [0.62, 0.62], width: [0.05, 0.05], intensity: 0.55, decay: 0, breakup: 0, ramp: [[0, '#fff'], [0.5, '#ffbe7a'], [1, '#8a40ff']] });
       for (const [rr, ct] of [[2.3, 70], [1.7, 50]]) fx.emitter({ count: ct, kind: 'spark', shape: 'ring', radius: rr, radiusIn: rr - 0.5, radial: 1, speed: [-0.85, -0.5], life: [2.2, 3.2], swirl: 2.4, size: [0.05, 0.015], stretch: 0.9, ramp: [[0, '#ffd9a0', 0], [0.2, '#ffb060', 1], [0.8, '#a050ff', 0.8], [1, '#201040', 0]], intensity: 2.5, pos: C, rot3: tilt });
       fx.emitter({ count: 24, kind: 'soft', shape: 'ring', radius: 2.2, radiusIn: 1.2, radial: 1, speed: [-0.7, -0.4], life: [2.5, 3.5], swirl: 2, size: [0.28, 0.04], ramp: [[0, '#6020c0', 0], [0.3, '#8a40ff', 0.5], [1, '#000', 0]], intensity: 0.7, pos: C, rot3: tilt });
       fx.light({ color: '#9a5aff', intensity: 40, pos: [0, 1.6, 0.6], range: 9, flicker: 0.1 });
@@ -233,7 +233,7 @@ export default [
       for (let i = 0; i < NS; i++) {
         const sk = skull(G, 2); sk.scale.setScalar(0.34); const eg = halo(G, 0.5, 0.6); sk.add(eg); eg.scale.setScalar(1.9); eg.position.z = -0.2;
         fx.mesh(sk, (t, pr, f, w, o, ta) => { orbitPos(i, t, tmp); o.position.copy(tmp); orbitPos(i, t + 0.05, nx); nx.sub(tmp); o.rotation.set(0, Math.atan2(nx.x, nx.z), 0); sk.userData.jaw.rotation.x = 0.15 + 0.2 * Math.sin((t / 3) * Math.PI * 6 + i * 2); }, { dur: 99 });
-        fx.trail({ path: (t) => { orbitPos(i, t, tmp); return [tmp.x, tmp.y - 0.02, tmp.z]; }, len: 0.55, width: 0.08, n: 28, intensity: 0.8, ramp: [[0, '#9effb0'], [0.3, '#2fd060'], [1, '#021408']] });
+        fx.trail({ path: (t) => { orbitPos(i, t, tmp); return [tmp.x, tmp.y - 0.02, tmp.z]; }, t0: -3, dur: 6, len: 0.55, width: 0.08, n: 28, intensity: 0.8, ramp: [[0, '#9effb0'], [0.3, '#2fd060'], [1, '#021408']] });
       }
       fx.emitter({ count: 40, kind: 'smoke', blend: 'normal', shape: 'ring', radius: Rr, radiusIn: Rr - 0.2, dir: [0, 0.4, 0], spread: 0.4, speed: [0.05, 0.3], life: [1.2, 2.2], size: [0.25, 0.7], ramp: [[0, '#1a4a2c', 0], [0.3, '#2a6a40', 0.25], [1, '#04100a', 0]], lit: 1, rot3: [0.45, 0, 0.25], pos: Cn, order: -1 });
       fx.light({ color: '#4dff7a', intensity: 40, pos: [0, 1.2, 0], range: 7, flicker: 0.3 });
@@ -281,11 +281,11 @@ export default [
       const soulPos = (i, t) => { const s = (((t / P) + i / NS) % 1 + 1) % 1, e = Math.pow(s, 1.7), rr = 1.5 * Math.pow(1 - e, 1.3) + 0.04, a = i * 1.7 + e * 8.5; return [Math.cos(a) * rr, y0 + (y1 - y0) * e, Math.sin(a) * rr]; };
       const cr = new THREE.Group(), cm = new THREE.MeshPhysicalMaterial({ color: '#08040f', roughness: 0.12, metalness: 0.4, clearcoat: 1, emissive: '#6a20d0', emissiveIntensity: 0.1 });
       const body = new THREE.Mesh(new THREE.OctahedronGeometry(0.4, 0), cm); body.scale.set(0.8, 1.45, 0.8); cr.add(body); const hl = halo('#9a5cff', 1.6, 1.0); cr.add(hl);
-      fx.mesh(cr, (t, pr, f, w, o, ta) => { let fl = 0; for (let i = 0; i < NS; i++) { const since = ((((t / P) + i / NS) % 1) + 1) % 1 * P; fl = Math.max(fl, Math.exp(-since * 5)); } o.position.set(0, 0.95 + Math.sin(ta * 1.96) * 0.04, 0); body.rotation.y = ta * 0.8; cm.emissiveIntensity = 0.15 + fl * 3; body.scale.set(0.8 + fl * 0.15, 1.45 + fl * 0.1, 0.8 + fl * 0.15); hl.material.opacity = 0.25 + fl * 0.9; hl.scale.setScalar(1.3 + fl * 1.0); }, { dur: 99 });
+      fx.mesh(cr, (t, pr, f, w, o, ta) => { let fl = 0; for (let i = 0; i < NS; i++) { const s = ((((t / P) + i / NS) % 1) + 1) % 1; fl = Math.max(fl, Math.exp(-s * P * 5) * sm(0, 0.06, s)); } o.position.set(0, 0.95 + Math.sin((t / 3.2) * Math.PI * 2) * 0.04, 0); body.rotation.y = (t / 3.2) * Math.PI * 2; cm.emissiveIntensity = 0.15 + fl * 3; body.scale.set(0.8 + fl * 0.15, 1.45 + fl * 0.1, 0.8 + fl * 0.15); hl.material.opacity = 0.25 + fl * 0.9; hl.scale.setScalar(1.3 + fl * 1.0); }, { dur: 99 });
       for (let i = 0; i < NS; i++) {
         const sp = halo('#d8f4ff', 0.2, 1.2), body2 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 10), new THREE.MeshBasicMaterial({ color: new THREE.Color('#e8fbff').multiplyScalar(1.6), toneMapped: false })); const g = new THREE.Group(); g.add(sp, body2);
         fx.mesh(g, (t, pr, f, w, o) => { const p = soulPos(i, t), s = (((t / P) + i / NS) % 1 + 1) % 1; o.position.set(p[0], p[1], p[2]); const k = sm(0, 0.06, s) * (1 - sm(0.93, 1, s)); o.scale.setScalar(0.5 + 0.9 * k); sp.material.opacity = k; body2.visible = k > 0.1; }, { dur: 99 });
-        fx.trail({ path: (t) => soulPos(i, t), len: 0.7, width: 0.08, n: 36, intensity: 0.8, ramp: [[0, '#f4fcff'], [0.3, '#8fd0ff'], [1, '#101840']] });
+        fx.trail({ path: (t) => soulPos(i, t), t0: -3.2, dur: 6.4, len: 0.7, width: 0.08, n: 36, intensity: 0.8, ramp: [[0, '#f4fcff'], [0.3, '#8fd0ff'], [1, '#101840']] });
       }
       fx.emitter({ count: 44, kind: 'soft', shape: 'ring', radius: 1.5, radiusIn: 0.4, dir: [0, -1, 0], spread: 0.1, speed: [0.5, 1.4], life: [1.4, 2.2], swirl: 2.2, size: [0.12, 0.01], ramp: [[0, '#a0d8ff', 0], [0.3, '#a0d8ff', 0.6], [1, '#305090', 0]], intensity: 0.9, pos: [0, 3.3, 0], turb: [0.2, 1] });
       fx.emitter({ count: 60, kind: 'spark', shape: 'sphere', radius: 0.2, dir: [0, 1, 0], spread: 1.5, speed: [0.5, 1.6], life: [0.5, 1], size: [0.05, 0.01], stretch: 0.6, ramp: [[0, '#fff'], [0.4, '#b080ff'], [1, '#301060', 0]], intensity: 2.5, pos: [0, 0.95, 0], emit: 3.0 });
@@ -299,10 +299,10 @@ export default [
   { id: 'shadow/void-orb', name: 'Void orb', category: 'shadow', loop: true, duration: 3.2, stage: { sky: 'void', bloom: 0.3, view: { pos: [2.6, 1.6, 3.4], target: [0, 1.1, 0], fov: 38 } },
     build(fx) {
       const C = [0, 1.1, 0];
-      const occ = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 24), new THREE.MeshBasicMaterial({ color: '#000' })); occ.position.set(...C); fx.mesh(occ, (t, pr, f, w, o, ta) => o.scale.setScalar(1 + 0.04 * Math.sin(ta * 1.96 * 2)), { dur: 99 });
-      fx.orb({ kind: 'void', r: 0.55, pos: C, pulse: [0.04, 3.9], noise: 2.4, scroll: 0.8, disp: 0.08, power: 2.6, intensity: 2.4, ramp: [[0, '#000'], [0.35, '#6a58d0'], [0.7, '#c8d8ff'], [1, '#fff']] });
+      const occ = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 24), new THREE.MeshBasicMaterial({ color: '#000' })); occ.position.set(...C); fx.mesh(occ, (t, pr, f, w, o, ta) => o.scale.setScalar(1 + 0.04 * Math.sin((t / 3.2) * Math.PI * 4)), { dur: 99 });
+      fx.orb({ kind: 'void', r: 0.55, pos: C, pulse: [0.04, 3.927], noise: 2.4, scroll: 0.8, disp: 0.08, power: 2.6, intensity: 2.4, ramp: [[0, '#000'], [0.35, '#6a58d0'], [0.7, '#c8d8ff'], [1, '#fff']] });
       fx.ring({ normal: 'cam', pos: C, r: [0.57, 0.57], width: [0.03, 0.03], decay: 0, intensity: 0.9, breakup: 0.25, ramp: [[0, '#fff'], [0.5, '#bcd0ff'], [1, '#6a50d0']] });
-      for (let k = 0; k < 2; k++) fx.ring({ t0: k * 1.6, dur: 1.6, r: [0.6, 2.0], width: [0.2, 0.04], decay: 1, normal: 'cam', pos: C, intensity: 0.25, breakup: 0.5, ramp: [[0, '#cfd8ff'], [1, '#403090']] });
+      for (let k = 0; k < 2; k++) fx.ring({ t0: k * 1.6, dur: 1.6, fade: [0.1, 0], r: [0.6, 2.0], width: [0.2, 0.04], decay: 1, normal: 'cam', pos: C, intensity: 0.25, breakup: 0.5, ramp: [[0, '#cfd8ff'], [1, '#403090']] });
       fx.emitter({ count: 90, kind: 'spark', shape: 'sphere', radius: 2.0, radiusIn: 1.2, radial: 1, speed: [-1.8, -1.0], life: [0.7, 1.1], size: [0.08, 0.01], stretch: 1.3, ramp: [[0, '#8090ff', 0], [0.25, '#c8d0ff', 1], [1, '#fff', 0.2]], intensity: 3, pos: C, swirl: 1.2, drag: -0.0 });
       fx.emitter({ count: 50, kind: 'soft', shape: 'sphere', radius: 1.6, radiusIn: 0.9, radial: 1, speed: [-1.2, -0.7], life: [1.1, 1.6], size: [0.06, 0.01], ramp: [[0, '#a0a8ff', 0], [0.3, '#d8dcff', 1], [1, '#fff', 0]], intensity: 2, pos: C, swirl: 1.5 });
       fx.emitter({ count: 26, kind: 'smoke', blend: 'normal', shape: 'sphere', radius: 1.2, radiusIn: 0.8, radial: 1, speed: [-0.6, -0.3], life: [1.4, 2.2], size: [0.5, 0.15], ramp: [[0, '#1a1038', 0], [0.3, '#1a1038', 0.4], [1, '#000', 0]], pos: C, swirl: 1.5, order: -1 });

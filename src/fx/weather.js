@@ -229,7 +229,7 @@ export default [
       // puddles with rain ripples
       const rp = []; for (let i = 0; i < 8; i++) rp.push({ t: 0, x: 0, z: 0, amp: 0.02 });
       const pud = fx.water({ r: 3.2, deep: '#0a1118', shallow: '#26323c', sky: '#4a5a6a', horizon: '#6a7a8a', pos: [-1, 0, -1], y: 0.014, waves: 0.4, ripples: [] });
-      pud.p.ripples = (t) => { const a = []; for (let i = 0; i < 8; i++) { const ph = (t * 1.6 + i / 8) % 1; a.push({ t: t - ph * 0.7, x: Math.sin(i * 12.9 + Math.floor(t * 1.6 + i / 8) * 7.3) * 2.4, z: Math.cos(i * 7.7 + Math.floor(t * 1.6 + i / 8) * 3.1) * 2.4, amp: 0.045 }); } return a; };
+      pud.p.ripples = (t) => { const a = []; for (let i = 0; i < 8; i++) { const ph = (t * 1.5 + i / 8) % 1; a.push({ t: t - ph * 0.7, x: Math.sin(i * 12.9 + (Math.floor(t * 1.5 + i / 8) % 12) * 7.3) * 2.4, z: Math.cos(i * 7.7 + (Math.floor(t * 1.5 + i / 8) % 12) * 3.1) * 2.4, amp: 0.045 }); } return a; };
       for (let i = 0; i < 10; i++) tree(fx, -14 + i * 3.1 + (fx.rng() - 0.5) * 2, -9 - fx.rng() * 8, { h: 4, s: 1.1, leaf: '#1c3324', leafCol2: '#22402c', blobs: 36, spread: 2 });
       // street lamp w/ warm light
       const lamp = new THREE.Group(); const pm = new THREE.MeshStandardMaterial({ color: '#15181c', metalness: 0.6, roughness: 0.5 });

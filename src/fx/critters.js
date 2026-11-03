@@ -35,7 +35,7 @@ function dustTrail(fx, pathFn, { n = 40, life = 1.6, color = '#ffe9a0', size = 1
     fragmentShader: 'uniform vec3 uC; varying float vA; void main(){ float d=length(gl_PointCoord-.5)*2.; float a=smoothstep(1.,0.,d); a*=a; gl_FragColor=vec4(uC*a*vA*2.2,a*vA); }' });
   const pts = new THREE.Points(g, m); pts.frustumCulled = false; pts.renderOrder = 30;
   fx.mesh(pts, (t) => { for (let i = 0; i < n; i++) { const s = seeds[i], age = ((t / life + s[0]) % 1) * life, u = age / life, p = pathFn(t - age);
-    pos[i * 3] = p[0] + s[1] * drift * u * 2; pos[i * 3 + 1] = p[1] + gravity * age + s[2] * drift * u; pos[i * 3 + 2] = p[2] + s[3] * drift * u * 2; al[i] = Math.sin(u * PI) * (0.6 + 0.4 * Math.sin(t * 9 + i)); } g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; });
+    pos[i * 3] = p[0] + s[1] * drift * u * 2; pos[i * 3 + 1] = p[1] + gravity * age + s[2] * drift * u; pos[i * 3 + 2] = p[2] + s[3] * drift * u * 2; al[i] = Math.sin(u * PI) * (0.6 + 0.4 * Math.sin(t * 9.817 + i)); } g.attributes.position.needsUpdate = true; g.attributes.aA.needsUpdate = true; });
 }
 
 /* ------------------------------------------------------------ underwater environment helpers (fish, jellyfish) */
@@ -489,11 +489,11 @@ export default [
       const ramp = [[0, '#021218'], [0.3, '#0a7a90'], [0.62, '#5ff0ff'], [0.9, '#e8ffff'], [1, '#fff']];
       fx.orb({ kind: 'fire', r: [0.13, 0.13], ramp, intensity: 0.7, noise: 3.2, scroll: 2.8, disp: 0.55, alpha: 0.9, follow: (o, ta, t) => o.position.set(...path(t)) });
       fx.orb({ kind: 'plasma', r: [0.06, 0.06], ramp: [[0, '#8ff'], [1, '#fff']], intensity: 0.9, noise: 4, scroll: 4, disp: 0.3, follow: (o, ta, t) => o.position.set(...path(t)) });
-      fx.trail({ path, len: 1.1, width: 0.1, n: 80, intensity: 0.8, core: 3, ramp: [[0, '#f0ffff'], [0.25, '#5ff0ff'], [0.6, '#0a8a9a'], [1, '#012a30']] });
-      fx.trail({ path: (t) => { const p = path(t - 0.12); return [p[0], p[1] + 0.03, p[2]]; }, len: 0.9, width: 0.035, n: 60, intensity: 0.8, core: 4, ramp: [[0, '#fff'], [1, '#2ab8c8']] });
+      fx.trail({ path, t0: -3.2, dur: 6.4, len: 1.1, width: 0.1, n: 80, intensity: 0.8, core: 3, ramp: [[0, '#f0ffff'], [0.25, '#5ff0ff'], [0.6, '#0a8a9a'], [1, '#012a30']] });
+      fx.trail({ path: (t) => { const p = path(t - 0.12); return [p[0], p[1] + 0.03, p[2]]; }, t0: -3.2, dur: 6.4, len: 0.9, width: 0.035, n: 60, intensity: 0.8, core: 4, ramp: [[0, '#fff'], [1, '#2ab8c8']] });
       fx.emitter({ count: 36, kind: 'flame', shape: 'disc', radius: 0.05, dir: [0, 1, 0], spread: 0.3, speed: [0.2, 0.6], life: [0.4, 0.8], size: [0.35, 0.08], aspect: 2.0, intensity: 0.35, turb: [0.15, 2], ramp: [[0, '#e8ffff', 1], [0.25, '#4fe8ff', 0.9], [0.7, '#0a7090', 0.5], [1, '#012', 0]], follow: (m, ta, t) => m.position.set(...path(t)) });
       fx.emitter({ count: 40, kind: 'spark', shape: 'sphere', radius: 0.08, dir: [0, 1, 0], spread: 2, speed: [0.1, 0.5], life: [0.8, 1.8], gravity: [0, 0.2, 0], size: [0.03, 0.008], stretch: 0.5, intensity: 3, ramp: [[0, '#fff'], [0.4, '#5ff0ff'], [1, '#046', 0]], follow: (m, ta, t) => m.position.set(...path(t)) });
-      dustTrail(fx, path, { n: 40, life: 1.4, color: '#7ff4ff', size: 1.2, drift: 0.18, gravity: 0.1 });
+      dustTrail(fx, path, { n: 40, life: 1.6, color: '#7ff4ff', size: 1.2, drift: 0.18, gravity: 0.1 });
       const lp = fx.light({ color: '#4fe8ff', intensity: 22, pos: [0, 0.7, 0], range: 8, flicker: 0.2, rate: 6 }); fx.on((t) => lp.l.position.set(...path(t)));
       floorBlob(fx, 0.9, '#2ad8f0', true, (t) => { const p = path(t); return { x: p[0], z: p[2], s: 1 + (1 - Math.min(1, p[1])) * 0.2, a: 0.5 }; });
       fx.emitter({ count: 14, kind: 'smoke', blend: 'normal', lit: 1, shape: 'box', shapeSize: [1.3, 0.02, 0.8], pos: [0, 0.05, -0.1], dir: [0, 1, 0], spread: 0.4, speed: [0.03, 0.1], life: [2, 3], size: [0.5, 0.9], ramp: [[0, '#0a3a44', 0], [0.3, '#1a6a78', 0.12], [1, '#082a30', 0]], order: -1 });
