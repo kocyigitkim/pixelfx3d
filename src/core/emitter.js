@@ -114,9 +114,11 @@ void main(){
   }
   else if(uKind==3){
     float x=p.x, y=vUv.y; float w=(1.-y)*.95;
-    float n=fbm(vec3(x*1.7,y*2.2-vU*2.2-uTime*.8,seed)); float wob=(n-.5)*.9*y;
+    float n=fbm(vec3(x*1.7,y*2.2-vU*3.,seed)); float wob=(n-.5)*.9*y;
     float m=smoothstep(w+.12,w-.3,abs(x+wob))*smoothstep(0.,.14,y)*smoothstep(1.,.5,y);
-    float core=pow(m,2.2)*(1.-y*.8); a=m*(.55+.45*n); col*=.45+1.2*core+n*.25;
+    float core=pow(m,2.2)*(1.-y*.8); float fl=.85+.3*sin(vU*31.+seed*7.);
+    vec3 deep=col*col/max(max(col.r,max(col.g,col.b)),1e-3);
+    a=m*(.55+.45*n); col=mix(deep*.55,col*1.3,clamp(core*1.6+n*.25,0.,1.))*fl;
   }
   else if(uKind==4){ float rr=abs(d-.78); a=exp(-rr*rr*160.)*(.6+.5*vnoise(vec3(atan(p.y,p.x)*3.,seed,uTime*2.))); }
   else if(uKind==5){ // faceted shard
@@ -143,7 +145,7 @@ export class Emitter {
   /** fx: owning Fx (for shared light uniforms, rng). p: params (see DEF). */
   constructor(fx, p = {}) {
     p = { ...DEF, ...p }; this.p = p; this.fx = fx;
-    const rng = fx.rng; const n = Math.max(1, p.count | 0);
+    const rng = fx.rng; const n = Math.max(1, Math.round((p.count | 0) * (fx.o.countScale ?? 1)));
     const base = new THREE.PlaneGeometry(1, 1); const g = new THREE.InstancedBufferGeometry(); g.index = base.index;
     g.setAttribute('position', base.getAttribute('position')); g.setAttribute('uv', base.getAttribute('uv'));
     const r1 = new Float32Array(n * 4), r2 = new Float32Array(n * 4);
@@ -170,7 +172,7 @@ export class Emitter {
     };
     const add = p.blend === 'add';
     const mat = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: this.u, transparent: true, depthWrite: false, blending: THREE.CustomBlending,
-      blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor });
+      blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: add ? THREE.ZeroFactor : THREE.OneFactor, blendDstAlpha: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor });
     this.mesh = new THREE.Mesh(g, mat); this.mesh.frustumCulled = false; this.mesh.renderOrder = (add ? 20 : 10) + p.order;
     if (p.pos) this.mesh.position.set(...p.pos);
     if (p.rot3) this.mesh.rotation.set(...p.rot3);

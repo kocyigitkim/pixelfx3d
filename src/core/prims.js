@@ -7,7 +7,13 @@ import { win, clamp, lerp, easeOut } from './rng.js';
 
 const V3 = (a, d = [0, 0, 0]) => new THREE.Vector3(...(a || d));
 const A = (x) => (Array.isArray(x) ? x : [x, x]);
-const bl = (add) => ({ transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor });
+const bl = (add) => ({ transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: add ? THREE.ZeroFactor : THREE.OneFactor, blendDstAlpha: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor });
+// loop-safe time noise: uPeriod>0 crossfades two copies one period apart so frame(t) == frame(t+uPeriod). Needs uTime declared before.
+const PER = /* glsl */ `uniform float uPeriod;
+float fbmT(vec3 p, vec3 v){ if(uPeriod<=0.) return fbm(p+v*uTime); float m=mod(uTime,uPeriod); return mix(fbm(p+v*m),fbm(p+v*(m-uPeriod)),m/uPeriod); }
+float fbm3T(vec3 p, vec3 v){ if(uPeriod<=0.) return fbm3(p+v*uTime); float m=mod(uTime,uPeriod); return mix(fbm3(p+v*m),fbm3(p+v*(m-uPeriod)),m/uPeriod); }
+float ph(float s){ if(uPeriod<=0.) return uTime*s; float k=max(1.,floor(abs(s)*uPeriod/6.2831853+.5))*sign(s); return 6.2831853*k*mod(uTime,uPeriod)/uPeriod; }`;
+const per = (fx) => ({ uPeriod: { value: fx.loop ? fx.duration : 0 } });
 const lightU = (fx) => ({ uLightPos: fx.lu.uLightPos, uLightCol: fx.lu.uLightCol });
 const DEFR = [[0, '#fff', 1], [1, '#fff', 1]];
 
@@ -23,27 +29,29 @@ const fxAdd = (fx, o) => fx.add(o);
 /* ------------------------------------------------------------------ ORB */
 const ORB_V = `${NOISE}
 uniform float uTime, uNS, uScroll, uDisp; varying vec3 vN, vWP, vP;
-void main(){ float n=fbm3(position*uNS+vec3(0.,-uTime*uScroll,uTime*.3*uScroll)); vec3 pp=position*(1.+(n-.5)*uDisp); vP=position;
+${PER}
+void main(){ float n=fbm3T(position*uNS,vec3(0.,-uScroll,.3*uScroll)); vec3 pp=position*(1.+(n-.5)*uDisp); vP=position;
   vec4 wp=modelMatrix*vec4(pp,1.); vWP=wp.xyz; vN=normalize(mat3(modelMatrix)*normal); gl_Position=projectionMatrix*viewMatrix*wp; }`;
 const ORB_F = `${NOISE}
 uniform float uTime, uNS, uScroll, uInt, uAlpha, uPow; uniform int uMode; uniform sampler2D uRamp; uniform vec3 uLightPos, uLightCol;
 varying vec3 vN, vWP, vP;
+${PER}
 void main(){
   vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP);
   if(uMode==4){ N=normalize(cross(dFdx(vWP),dFdy(vWP))); if(dot(N,V)<0.) N=-N; }
   float ndv=abs(dot(N,V)); float fres=pow(1.-ndv,uPow);
   if(uMode==0||uMode==1||uMode==5){
-    float h=fbm(vP*uNS*1.4+vec3(0.,-uTime*uScroll*1.6,uTime*uScroll*.5)); float heat=clamp(h*1.35+(1.-fres)*.2-.12,0.,1.);
-    if(uMode==1) heat=clamp(abs(sin(h*9.+uTime*uScroll*3.))*.5+(1.-fres)*.6,0.,1.);
-    if(uMode==5) heat=clamp((1.-fres)*.9+.3*sin(h*12.-uTime*uScroll*4.),0.,1.);
+    float h=fbmT(vP*uNS*1.4,vec3(0.,-uScroll*1.6,uScroll*.5)); float heat=clamp(h*1.35+(1.-fres)*.2-.12,0.,1.);
+    if(uMode==1) heat=clamp(abs(sin(h*9.+ph(uScroll*3.)))*.5+(1.-fres)*.6,0.,1.);
+    if(uMode==5) heat=clamp((1.-fres)*.9+.3*sin(h*12.-ph(uScroll*4.)),0.,1.);
     vec4 c=texture2D(uRamp,vec2(heat,.5)); float a=smoothstep(.1,.45,heat+.15*(1.-fres))*uAlpha;
     gl_FragColor=vec4(c.rgb*uInt*a,a);
   } else if(uMode==2){
-    float rim=pow(1.-ndv,uPow); float sw=fbm(vec3(vP*uNS+vec3(0.,uTime*uScroll,0.))); vec4 c=texture2D(uRamp,vec2(clamp(rim+sw*.2,0.,1.),.5));
+    float rim=pow(1.-ndv,uPow); float sw=fbmT(vP*uNS,vec3(0.,uScroll,0.)); vec4 c=texture2D(uRamp,vec2(clamp(rim+sw*.2,0.,1.),.5));
     gl_FragColor=vec4(c.rgb*uInt*rim*(.5+sw)*uAlpha,uAlpha);
   } else {
     vec3 L=normalize(uLightPos-vWP); vec3 H=normalize(L+V); float spec=pow(max(dot(N,H),0.),120.)*2.5;
-    float n=fbm(vP*uNS+vec3(0.,uTime*uScroll*.3,0.)); vec3 tint=texture2D(uRamp,vec2(.5,.5)).rgb; vec3 rimc=texture2D(uRamp,vec2(clamp(fres,0.,1.),.5)).rgb;
+    float n=fbmT(vP*uNS,vec3(0.,uScroll*.3,0.)); vec3 tint=texture2D(uRamp,vec2(.5,.5)).rgb; vec3 rimc=texture2D(uRamp,vec2(clamp(fres,0.,1.),.5)).rgb;
     float facet=(uMode==4)?.25+.75*dot(N,normalize(vec3(.3,.8,.5)))*.5+.25:1.;
     vec3 col=tint*(.2+.5*n)*facet+rimc*fres*uInt+spec*uLightCol; float a=clamp(.16+fres*.8+spec*.4,0.,1.)*uAlpha;
     gl_FragColor=vec4(col*uAlpha,a);
@@ -54,7 +62,7 @@ export class Orb extends Prim {
   constructor(fx, p) {
     super(fx, p); const mode = MODES[p.kind || 'fire'];
     this.u = { uTime: { value: 0 }, uNS: { value: p.noise ?? 2.2 }, uScroll: { value: p.scroll ?? 1.2 }, uDisp: { value: p.disp ?? 0.25 }, uInt: { value: p.intensity ?? 1.6 }, uAlpha: { value: 1 }, uPow: { value: p.power ?? 2.2 },
-      uMode: { value: mode }, uRamp: { value: makeRamp(p.ramp || [[0, '#300'], [.35, '#e30'], [.7, '#fb3'], [1, '#fff']]) }, ...lightU(fx) };
+      uMode: { value: mode }, ...per(fx), uRamp: { value: makeRamp(p.ramp || [[0, '#300'], [.35, '#e30'], [.7, '#fb3'], [1, '#fff']]) }, ...lightU(fx) };
     const m = new THREE.ShaderMaterial({ vertexShader: ORB_V, fragmentShader: ORB_F, uniforms: this.u, ...bl(mode === 0 || mode === 1 || mode === 5), side: mode === 3 || mode === 4 ? THREE.FrontSide : THREE.FrontSide });
     const o = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), m); o.renderOrder = mode < 2 || mode === 5 ? 25 : 12; this.place(o);
   }
@@ -95,16 +103,17 @@ export class Ring extends Prim {
 /* ------------------------------------------------------------------ SHELL (dome / shield / bubble) */
 const SHELL_F = `${NOISE}
 uniform float uTime, uInt, uPow, uCells, uA, uImpT, uHemi, uNoise; uniform vec3 uImpDir; uniform sampler2D uRamp; varying vec3 vN, vWP, vP;
+${PER}
 void main(){ if(uHemi>.5 && vP.y<-.02) discard;
   vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP); float f=pow(1.-abs(dot(N,V)),uPow);
   float edge=0.; if(uCells>0.){ vec2 vo=voronoi(vP*uCells+vec3(0.,uTime*.05,0.)); edge=smoothstep(.09,.0,vo.y)*.9+(1.-smoothstep(0.,.4,vo.x))*.12*vnoise(vP*uCells*2.+uTime*2.); }
-  float n=fbm(vP*3.+vec3(0.,uTime*.4,0.))*uNoise;
+  float n=fbmT(vP*3.,vec3(0.,.4,0.))*uNoise;
   float imp=0.; if(uImpT>=0.){ float ang=acos(clamp(dot(normalize(vP),uImpDir),-1.,1.)); float x=ang-uImpT*2.2; imp=exp(-x*x*40.)*exp(-uImpT*2.2)*1.6+exp(-ang*ang*30.)*exp(-uImpT*8.)*2.; }
   float s=clamp(f*.9+edge*(.35+f)+n*.25+imp*(.6+edge*2.),0.,2.); vec3 c=texture2D(uRamp,vec2(clamp(s*.5,0.,1.),.5)).rgb;
   float a=(f*.8+edge*.5+n*.1+imp*.6)*uA; gl_FragColor=vec4(c*uInt*a,a); }`;
 export class Shell extends Prim {
   constructor(fx, p) {
-    super(fx, p); this.u = { uTime: { value: 0 }, uInt: { value: p.intensity ?? 1.5 }, uPow: { value: p.power ?? 2.5 }, uCells: { value: p.cells ?? 0 }, uA: { value: 1 }, uImpT: { value: -1 }, uHemi: { value: p.hemi ? 1 : 0 }, uNoise: { value: p.noise ?? 0.5 },
+    super(fx, p); this.u = { ...per(fx), uTime: { value: 0 }, uInt: { value: p.intensity ?? 1.5 }, uPow: { value: p.power ?? 2.5 }, uCells: { value: p.cells ?? 0 }, uA: { value: 1 }, uImpT: { value: -1 }, uHemi: { value: p.hemi ? 1 : 0 }, uNoise: { value: p.noise ?? 0.5 },
       uImpDir: { value: new THREE.Vector3(1, 0.3, 0).normalize() }, uRamp: { value: makeRamp(p.ramp || [[0, '#012'], [.4, '#4af'], [1, '#fff']]) } };
     const v = `varying vec3 vN, vWP, vP; void main(){ vP=position; vec4 wp=modelMatrix*vec4(position,1.); vWP=wp.xyz; vN=normalize(mat3(modelMatrix)*normal); gl_Position=projectionMatrix*viewMatrix*wp; }`;
     const o = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), new THREE.ShaderMaterial({ vertexShader: v, fragmentShader: SHELL_F, uniforms: this.u, ...bl(true), side: THREE.DoubleSide })); o.renderOrder = 24; this.place(o);
@@ -121,14 +130,15 @@ export class Shell extends Prim {
 const BEAM_V = `varying vec3 vN, vWP; varying vec2 vUv; void main(){ vUv=uv; vec4 wp=modelMatrix*vec4(position,1.); vWP=wp.xyz; vN=normalize(mat3(modelMatrix)*normal); gl_Position=projectionMatrix*viewMatrix*wp; }`;
 const BEAM_F = `${NOISE}
 uniform float uTime, uInt, uA, uFreq, uSpeed, uPulse, uEdge, uNoiseA, uEndFade; uniform sampler2D uRamp; varying vec3 vN, vWP; varying vec2 vUv;
+${PER}
 void main(){ vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP); float c=pow(abs(dot(N,V)),uEdge);
-  float y=vUv.y; float n=fbm(vec3(vUv.x*6.2831*1.5,y*uFreq-uTime*uSpeed,uTime*.3)); float bands=mix(1.,.45+1.1*n,uNoiseA);
-  float pulse=1.+uPulse*sin(y*uFreq*2.-uTime*uSpeed*3.); float ends=smoothstep(0.,uEndFade,y)*smoothstep(1.,1.-uEndFade,y);
+  float y=vUv.y; float an=vUv.x*6.2831853; float n=fbmT(vec3(cos(an)*1.5,sin(an)*1.5,y*uFreq),vec3(.3,0.,-uSpeed)); float bands=mix(1.,.45+1.1*n,uNoiseA);
+  float pulse=1.+uPulse*sin(y*uFreq*2.-ph(uSpeed*3.)); float ends=smoothstep(0.,uEndFade,y)*smoothstep(1.,1.-uEndFade,y);
   float a=c*bands*pulse*ends*uA; vec3 col=texture2D(uRamp,vec2(clamp(1.-c*bands,0.,1.),.5)).rgb; gl_FragColor=vec4(col*uInt*a,a); }`;
 export class Beam extends Prim {
   constructor(fx, p) {
     super(fx, p); const [rb, rt] = A(p.r ?? 0.1);
-    this.u = { uTime: { value: 0 }, uInt: { value: p.intensity ?? 2 }, uA: { value: 1 }, uFreq: { value: p.freq ?? 3 }, uSpeed: { value: p.speed ?? 2 }, uPulse: { value: p.pulse ?? 0.2 }, uEdge: { value: p.edge ?? 1.6 }, uNoiseA: { value: p.noise ?? 0.6 }, uEndFade: { value: p.endFade ?? 0.12 },
+    this.u = { ...per(fx), uTime: { value: 0 }, uInt: { value: p.intensity ?? 2 }, uA: { value: 1 }, uFreq: { value: p.freq ?? 3 }, uSpeed: { value: p.speed ?? 2 }, uPulse: { value: p.pulse ?? 0.2 }, uEdge: { value: p.edge ?? 1.6 }, uNoiseA: { value: p.noise ?? 0.6 }, uEndFade: { value: p.endFade ?? 0.12 },
       uRamp: { value: makeRamp(p.ramp || [[0, '#fff'], [.5, '#8cf'], [1, '#13a']]) } };
     const g = new THREE.CylinderGeometry(rt, rb, 1, 32, 1, true); g.translate(0, 0.5, 0);
     const o = new THREE.Mesh(g, new THREE.ShaderMaterial({ vertexShader: BEAM_V, fragmentShader: BEAM_F, uniforms: this.u, ...bl(true), side: THREE.DoubleSide })); o.renderOrder = 23; this.fromTo = p.from && p.to; this.place(o);
@@ -203,7 +213,7 @@ export class Bolt extends Prim {
     this.obj = new THREE.Group(); this.last = -1;
   }
   gen(slot) {
-    const p = this.p; const rng = (this._r ||= (() => { let s = (this.seed * 1000) | 0; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; })());
+    const p = this.p; let s = (Math.imul((this.seed * 1000) | 0, 7919) + Math.imul(slot, 0x9e3779b1)) >>> 0; const rng = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; // pure fn of slot: replay/loop-safe
     const a = typeof p.from === 'function' ? p.from(slot) : p.from, b = typeof p.to === 'function' ? p.to(slot) : p.to; const pts = jagged(rng, a, b, p.jag ?? 0.22, 5); this.main.setPoints(pts, p.width ?? 0.06);
     this.br.forEach((r) => { const i = Math.floor(rng() * (pts.length - 6)); const s = pts[i]; const dir = [(rng() - 0.5) * 2, (rng() - 0.7) * 1.5, (rng() - 0.5) * 2]; const L = (p.branchLen ?? 0.35) * Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
       const e = [s[0] + dir[0] * L, s[1] + dir[1] * L, s[2] + dir[2] * L]; r.setPoints(jagged(rng, s, e, 0.3, 4), (p.width ?? 0.06) * 0.45); });
@@ -221,6 +231,7 @@ const p_flick = (p, slot) => { const f = p.flicker ?? 0.35; return 1 - f * (((Ma
 const DECAL_KINDS = { scorch: 0, cracks: 1, glow: 2, rune: 3, frost: 4, rings: 5 };
 const DEC_F = `${NOISE}
 uniform int uKind; uniform float uTime, uInt, uA, uProg, uHeat, uCell, uSeed, uSpin, uGlyphs, uPoly; uniform sampler2D uRamp; varying vec2 vUv;
+${PER}
 float rune(vec2 p){ float r=length(p); float ang=atan(p.y,p.x)+uSpin; float seg=fract(ang/6.2831853+.5); float rv=smoothstep(uProg*1.02,uProg*.98,seg+.0)*1.;
   float ring1=exp(-pow((r-.96)*70.,2.)); float ring2=exp(-pow((r-.88)*110.,2.)); float ring3=exp(-pow((r-.5)*80.,2.))*.8; float ring4=exp(-pow((r-.58)*160.,2.))*.5;
   float cell=floor(seg*uGlyphs); float f=fract(seg*uGlyphs); float h=hash11(cell+uSeed); float gx=(f-.5)*uGlyphs*.0+((f-.5)*6.2831853*.76/uGlyphs)/.07; float gy=(r-.74)/.07;
@@ -231,11 +242,11 @@ float rune(vec2 p){ float r=length(p); float ang=atan(p.y,p.x)+uSpin; float seg=
   float tick=step(.5,fract(ang*36./6.2831853))*exp(-pow((r-.92)*45.,2.))*.4;
   return (ring1+ring2*.7+ring3+ring4+g*1.3+poly+tick)*rv*step(r,1.02); }
 void main(){ vec2 p=vUv*2.-1.; float r=length(p); vec3 col=vec3(0.); float a=0.; bool add=true;
-  if(uKind==0){ float n=fbm(vec3(p*3.+uSeed,0.)); float m=smoothstep(1.,.25,r+(n-.5)*.7); float em=smoothstep(.5,.75,fbm(vec3(p*8.+uSeed,uTime*.3)))*uHeat*smoothstep(.9,.15,r);
+  if(uKind==0){ float n=fbm(vec3(p*3.+uSeed,0.)); float m=smoothstep(1.,.25,r+(n-.5)*.7); float em=smoothstep(.5,.75,fbmT(vec3(p*8.+uSeed,0.),vec3(0.,0.,.3)))*uHeat*smoothstep(.9,.15,r);
     vec3 c=texture2D(uRamp,vec2(em,.5)).rgb*uInt; gl_FragColor=vec4((vec3(.012)*m+c*em)*uA,m*.92*uA); return; }
   if(uKind==1){ vec2 vo=voronoi(vec3(p*uCell+uSeed,0.)); float line=smoothstep(.08,.0,vo.y)*smoothstep(1.,.25,r)*(.55+.45*vnoise(vec3(p*6.,uTime*.7)))*smoothstep(uProg+.03,uProg-.03,r);
     float s=line*(.4+uHeat*.9); col=texture2D(uRamp,vec2(clamp(s,0.,1.),.5)).rgb*uInt; a=line; }
-  else if(uKind==2){ float g=exp(-r*r*3.)*(.65+.7*fbm(vec3(p*3.,uTime*.4)))*smoothstep(1.,.7,r); col=texture2D(uRamp,vec2(clamp(g,0.,1.),.5)).rgb*uInt; a=g; }
+  else if(uKind==2){ float g=exp(-r*r*3.)*(.65+.7*fbmT(vec3(p*3.,0.),vec3(0.,0.,.4)))*smoothstep(1.,.7,r); col=texture2D(uRamp,vec2(clamp(g,0.,1.),.5)).rgb*uInt; a=g; }
   else if(uKind==3){ float s=rune(p); col=texture2D(uRamp,vec2(clamp(s*.6,0.,1.),.5)).rgb*uInt; a=s; }
   else if(uKind==4){ vec2 vo=voronoi(vec3(p*uCell,uSeed)); float cr=smoothstep(.14,.0,vo.y); float f=fbm(vec3(p*5.,uSeed)); float m=smoothstep(uProg*1.05,uProg*.7,r+(f-.5)*.5)*smoothstep(1.,.85,r);
     vec3 c=mix(vec3(.45,.75,1.),vec3(1.),cr)*(.45+.55*f)*uInt; float aa=m*(.45+.5*cr)*uA; gl_FragColor=vec4(c*aa,aa); return; }
@@ -243,7 +254,7 @@ void main(){ vec2 p=vUv*2.-1.; float r=length(p); vec3 col=vec3(0.); float a=0.;
   float o=a*uA; gl_FragColor=vec4(col*o,o); }`;
 export class Decal extends Prim {
   constructor(fx, p) {
-    super(fx, p); this.u = { uKind: { value: DECAL_KINDS[p.kind || 'glow'] }, uTime: { value: 0 }, uInt: { value: p.intensity ?? 2 }, uA: { value: 1 }, uProg: { value: 1 }, uHeat: { value: 1 }, uCell: { value: p.cells ?? 5 }, uSeed: { value: this.seed },
+    super(fx, p); this.u = { ...per(fx), uKind: { value: DECAL_KINDS[p.kind || 'glow'] }, uTime: { value: 0 }, uInt: { value: p.intensity ?? 2 }, uA: { value: 1 }, uProg: { value: 1 }, uHeat: { value: 1 }, uCell: { value: p.cells ?? 5 }, uSeed: { value: this.seed },
       uSpin: { value: 0 }, uGlyphs: { value: p.glyphs ?? 16 }, uPoly: { value: p.poly ?? 5 }, uRamp: { value: makeRamp(p.ramp || [[0, '#200'], [.4, '#f50'], [1, '#ffd']]) } };
     const add = p.kind !== 'scorch' && p.kind !== 'frost';
     const o = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ vertexShader: PLANE_V, fragmentShader: DEC_F, uniforms: this.u, ...bl(add), side: THREE.DoubleSide }));
@@ -290,7 +301,8 @@ export class Light extends Prim {
     this.rate = p.rate ?? 9; this.seed2 = this.seed;
   }
   update(tAbs, t) {
-    const w = this.w(t); const p = this.p; const fl = p.flicker ? 1 + p.flicker * (Math.sin(tAbs * this.rate + this.seed2) * 0.5 + Math.sin(tAbs * this.rate * 2.3 + this.seed2 * 2) * 0.35 + Math.sin(tAbs * this.rate * 5.1) * 0.15) : 1;
+    const w = this.w(t); const p = this.p; const P = this.fx.loop ? this.fx.duration : 0, r = P ? (2 * Math.PI / P) * Math.max(1, Math.round(this.rate * P / (2 * Math.PI))) : this.rate, k2 = P ? 2 : 2.3, k5 = P ? 5 : 5.1; // loops: integer harmonics of the period
+    const fl = p.flicker ? 1 + p.flicker * (Math.sin(tAbs * r + this.seed2) * 0.5 + Math.sin(tAbs * r * k2 + this.seed2 * 2) * 0.35 + Math.sin(tAbs * r * k5) * 0.15) : 1;
     const env = p.env ? p.env(t, this.prog(t)) : 1; const I = this.i0 * w * fl * env; this.l.intensity = I; this.l.color.copy(this.color); if (p.colorFn) p.colorFn(this.l.color, t);
     if (p.main !== false && w > 0.001) { const lu = this.fx.lu; lu.uLightPos.value.copy(this.l.position).applyMatrix4(this.fx.matrixWorld); lu.uLightCol.value.copy(this.l.color).multiplyScalar(Math.min(2.5, I / ((p.norm ?? 18) * 0.09))); lu.uLightRange.value = (p.range ?? 12) * 0.35; }
   }

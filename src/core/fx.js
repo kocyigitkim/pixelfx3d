@@ -78,8 +78,9 @@ export class Fx extends THREE.Group {
       if (e.type === 'shake') { const u = (t - e.t0) / e.dur; if (u >= 0 && u <= 1) { const k = e.amp * (1 - u) * (1 - u); const s = Math.floor(t * 60); this.shakeV.add(_v(Math.sin(s * 12.9898) * k, Math.sin(s * 78.233) * k, 0)); } }
       if (e.type === 'flash') { const u = (t - e.t0) / e.dur; if (u >= 0 && u <= 1) { this.flashAmt = Math.max(this.flashAmt, e.amt * (1 - u) * (1 - u)); this.flashColor.copy(e.color); } }
     }
-    for (const p of this.parts) p.update(tAbs, t); for (const f of this.onFrame) f(t, tAbs, this);
-    if (this.body) { this.body.u.uTime.value = tAbs; if (this.keys) this.body.setPose(evalKeys(this.keys, tAbs)); }
+    const tp = this.loop ? t : tAbs; // loops: parts see wrapped time, so frame(t) == frame(t + duration); identical inside the first period
+    for (const p of this.parts) p.update(tp, t); for (const f of this.onFrame) f(t, tAbs, this);
+    if (this.body) { this.body.u.uTime.value = tp; if (this.keys) this.body.setPose(evalKeys(this.keys, tAbs)); }
   }
   dispose() { this.parts.forEach((p) => p.dispose?.()); this.removeFromParent(); }
 }
