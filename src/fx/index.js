@@ -9,4 +9,5 @@ import dark from './dark.js';
 import pyro from './pyro.js';
 import hydro from './hydro.js';
 import geo from './geo.js';
-export const CATEGORIES = { moves, fire, explosions, water, ice, lightning, scifi, melee, impacts, projectiles, spawn, arcane, holy, shadow, status, nature, weather, ui, pickups, transitions, critters, warrior, rogue, archer, mage, priest, shaman, dark, pyro, hydro, geo };
+import aero from './aero.js';
+export const CATEGORIES = { moves, fire, explosions, water, ice, lightning, scifi, melee, impacts, projectiles, spawn, arcane, holy, shadow, status, nature, weather, ui, pickups, transitions, critters, warrior, rogue, archer, mage, priest, shaman, dark, pyro, hydro, geo, aero };
