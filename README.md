@@ -4,6 +4,8 @@ Realistic **3D, shader-driven** re-imagining of [patch-gg/pixelfx](https://githu
 
 No images, no sprite sheets: particles, flames, smoke, water, shields, lightning and decals are GLSL; every random number is seeded, so frame N is always identical.
 
+**406 effects in 43 categories**: 244 classic effects plus 162 MMORPG skills in 22 skill categories (warrior, rogue, archer, mage, priest, shaman, dark, pyro, hydro, geo, aero, steam, lava, storm, frost, swamp, dune, plasma, cryo, nano, ion, quantum). Each skill has 3 grades: `stage.play(id, { grade: 1 | 2 | 3 })`, and a `meta` block (class, elements, tier, archetype, castTime, cooldown, range, shape). The gallery filters by tier/element and has a grade selector.
+
 ## run the gallery
 ```
 npm i                         # three
@@ -63,6 +65,7 @@ Stage options: `bloomScale` (default 0.8), `flashMax` (default 0.6), `toneMappin
 node tools/determinism-test.mjs all      # same seed = same pixels; loops: frame 0 ~= frame duration
 node tools/alpha-test.mjs                # needs the baseline worktree on port 8124 (BASE_PORT)
 node tools/shots.mjs /tmp/w/shots/me all 0.5
+node tools/gpu-scan.mjs all 0.1,0.5,-0.9   # real-GPU blank-frame / console-error scan (headed Chromium)
 ```
 
 ## types and entry points

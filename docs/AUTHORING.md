@@ -81,3 +81,23 @@ node tools/sheet.mjs /tmp/w/shots/<yourname>/sheet.png /tmp/w/shots/<yourname>/f
 and iterate until it reads like the effect described in the catalog (`https://github.com/patch-gg/pixelfx/blob/main/docs/CATALOG.md`).
 Reference recipes: `src/fx/fire.js` (campfire), `src/fx/explosions.js` (small-explosion), `src/fx/melee.js` (sword-slash with act).
 Loop check: `node tools/determinism-test.mjs cat:<category>` (same seed = same pixels; frame 0 ~= frame duration). Export: `node tools/sheets.mjs <outDir> <id> 24 256`.
+
+## Skills (src/fx/_skill.js)
+The 162 MMORPG skills (22 `src/fx/<category>.js` files) are built from shared helpers in `src/fx/_skill.js`. Import from there; do not re-declare them.
+
+* `SKILL(id, name, meta, dur, def)` – factory returning the effect definition. `def` supplies `build`, `act`, `sky`, `view` (a key of `VIEW`); the factory fills `category`, `loop: false`, `duration`, `meta` and `stage`.
+* `meta(category, tier)` – returns `(elements, archetype, castTime, cooldown, range, shape) => meta object`. Used for the `meta` block.
+* `kit(fx, o, RAMP)` – returns `k`, a layer kit with grade applied. `o` is the user options (must carry `grade`); `RAMP` is the skill's element ramp.
+  * `k.g` grade (1-3), `k.s` size multiplier, `k.b` brightness multiplier. Both `s` and `b` are `1 / 1.15 / 1.3` for grades 1 / 2 / 3.
+  * `k.col(i)` palette colour of ramp stop `i`; `k.ramp` the palette-aware ramp.
+  * Layer builders (each applies `k.s` / `k.b` and the ramp by default): `k.em`, `k.smoke`, `k.ring`, `k.orb`, `k.shell`, `k.beam`, `k.ribbon`, `k.slash`, `k.trail`, `k.bolt`, `k.decal`, `k.light`.
+  * Composites: `k.gather(pos, t0, dur, R, n, follow)`, `k.impact(pos, t, n, r)` (sparks, glint, ring, light, shake), `k.sparks(pos, t, n, p)`, `k.glint(pos, t, size)`, `k.extras(pos, t)` (grade layers, see below).
+  * `k.pop(obj, t0, t1, t2, t3, fn)` – scales a mesh in and out (`t0..t1` grow, `t2..t3` shrink).
+  * `k.at(side)` – returns a mover that places an object at the hand (`'armR'` by default).
+  * `k.ghost(pose, pos, t0, dur, a)` – holographic mannequin ghost.
+* Grade rules: `grade()` clamps to 1-3. Grade 2 adds one layer inside `if (k.g >= 2)` (a flash). Grade 3 adds two layers inside `if (k.g === 3)` (an extra ring plus sparks, glint and light). `k.light` also gets x1.3 intensity at grade 3.
+* Element ramps (exported): `FIRE, WATER, EARTH, AIR, STEAM, LAVA, STORM, FROST, SWAMP, DUNE, PLASMA, CRYO, NANO, ION, QUANTUM`. Also exported for other skills: `STEEL, BLOOD, POISON, HOLY, VOID, ARCANE, SPIRIT, NATURE`.
+* Look ramps (normal blend, alpha rises then falls): `SMOKE, DUST, VAPOR, MUD, SAND`.
+* Helpers: `up(ramp)` reverses a ramp for orbs, shells and decals (dark to bright), `metal()`, `rock()`, `addMat()`, `act()`, `VIEW`, `sm`, `clamp`, `TAU`, `POSES`.
+* Particle budget: each skill's `build` carries a `// P3=<n>` comment recording its particle count. Keep it updated when you change the counts.
+* GLSL rule: never call `pow(x, y)` in GLSL with a base that can be negative. Wrap it as `pow(max(x, 0.), y)`. Metal returns NaN, and one NaN pixel blanks the whole frame.
