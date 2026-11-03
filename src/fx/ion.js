@@ -66,18 +66,19 @@ export default [
   SKILL('ion/static-drone', 'Static drone', m(['air', 'ion'], 'drone-chain', 0.6, 14, 8, 'chain'), 2.6, {
     view: 'wide', sky: 'dark',
     act: act('cast', 0.8, 3.4, { hits: [1.2, 1.6].map((t) => ({ t, stop: 0.04, shake: 0.2, amp: 0.03, push: 1 })) }),
-    // P3=116
+    // P3=118
     build(fx, o) {
       const k = kit(fx, o, ION), H = [0.6, 1.38, 0.2], DH = [2.2, 2, 0.6], P2 = [3.8, 0.1, 1.2], P3 = [4.2, 0.1, -1];
       const drone = (hov, t0) => {
-        const g = new THREE.Group();
+        const g = new THREE.Group(); g.scale.setScalar(2.5);
         g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.06, 6), metal('#5a626c', k.col(1), 0.3)));
         const rotor = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.01, 6, 16), addMat(k.col(1), 2)); rotor.rotation.x = Math.PI / 2; rotor.position.y = 0.05; g.add(rotor);
         const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 4), addMat(k.col(1), 3)); lamp.position.set(0.15, 0, 0); g.add(lamp);
         fx.mesh(g, (t) => { const u = sm(t0, t0 + 0.8, t), bob = 0.05 * Math.sin((TAU * t) / 1.2); g.position.set(H[0] + (hov[0] - H[0]) * u, H[1] + (hov[1] - H[1]) * u + bob, H[2] + (hov[2] - H[2]) * u); rotor.rotation.z = t * 30; }, { t0: t0 - 0.3, dur: 2.6 });
+        k.em({ count: 1, kind: 'soft', shape: 'point', size: [0.5, 0.5], intensity: 1.4, life: [2.6, 2.6], delay: t0 - 0.3, emit: 0.001, t0: t0 - 0.3, t1: t0 + 2.3, follow: (m) => m.position.copy(g.position) });
       };
       drone(DH, 0);
-      k.bolt({ from: DH, to: T, jag: 0.05, width: 0.02, rate: 12, t0: 0.8, dur: 0.4 });
+      for (const ta of [0.8, 0.9, 1.0]) k.bolt({ from: DH, to: T, jag: 0.05, width: 0.05, rate: 30, intensity: 2.6, t0: ta, dur: 0.4 });
       k.bolt({ from: T, to: P2, jag: 0.05, width: 0.02, rate: 12, t0: 1.2, dur: 0.4 });
       k.bolt({ from: P2, to: P3, jag: 0.05, width: 0.02, rate: 12, t0: 1.6, dur: 0.4 });
       k.sparks(T, 0.8, 25);
@@ -96,7 +97,7 @@ export default [
   SKILL('ion/vacuum-grenade', 'Vacuum grenade', m(['air', 'ion'], 'implode-shock', 0.4, 14, 7, 'circle'), 2.2, {
     view: 'wide', sky: 'dark',
     act: act('throw', 1.0, 3.2),
-    // P3=281
+    // P3=481
     build(fx, o) {
       const k = kit(fx, o, ION), A = [0.6, 1.38, 0.2], G = [3, 0, 0], BP = [3, 0.4, 0];
       const P = (t) => { const u = clamp(t / 0.5), h = 1.0 * Math.sin(Math.PI * u); return [A[0] + (G[0] - A[0]) * u, A[1] + (G[1] - A[1]) * u + h, A[2] + (G[2] - A[2]) * u]; };
@@ -111,9 +112,14 @@ export default [
       k.decal({ kind: 'rune', r: [1.2, 1.2], pos: G, t0: 0.5, dur: 1.6, glyphs: 6, poly: 6 });
       k.em({ count: 120, kind: 'streak', shape: 'sphere', radius: 0.95, radiusIn: 0.5, pos: G, radial: 1, speed: [-4, -3], life: [0.3, 0.5], size: [0.04, 0.02], intensity: 1.5, delay: 0.5, emit: 0.45 });
       k.ring({ t0: 0.5, dur: 0.45, r: [1.5, 0.2], normal: 'cam', pos: [3, 0.8, 0] });
+      k.em({ count: 120, kind: 'streak', shape: 'sphere', radius: 1.6, radial: 1, pos: G, speed: [-4, -2.5], life: [0.3, 0.45], stretch: 2, intensity: 1.6, delay: 0.5, emit: 0.45 });
+      k.ring({ t0: 0.5, dur: 0.3, r: [2.4, 0.2], normal: 'cam', pos: [3, 0.8, 0] });
       k.shell({ r: [1.6, 0.1], cells: 6, pos: G, t0: 0.5, dur: 0.5, fade: [0.05, 0.3], intensity: 0.8 });
       k.orb({ kind: 'energy', r: [0.1, 0.8], pos: [3, 0.5, 0], t0: 0.5, dur: 0.5, fade: [0.05, 0.3] });
       k.ring({ t0: 1.0, dur: 0.6, r: [0.2, 5], normal: 'up', pos: [3, 0.02, 0] });
+      k.shell({ r: [0.2, 2.2], cells: 6, pos: G, t0: 1.0, dur: 0.5, fade: [0.05, 0.3], intensity: 0.8 });
+      k.ring({ t0: 1.0, dur: 0.6, r: [0.2, 4], normal: 'up', pos: [3, 0.02, 0] });
+      k.sparks(BP, 1.0, 80);
       k.ring({ t0: 1.0, dur: 0.4, r: [0.2, 2], normal: 'cam', pos: BP });
       k.sparks(BP, 1.0, 80);
       k.smoke({ ramp: DUST, count: 40, shape: 'disc', radius: 0.4, pos: BP, radial: 1, speed: [0.5, 1.5], life: [1, 1.6], size: [0.4, 0.8], delay: 1.0, emit: 0.2 });
@@ -187,7 +193,7 @@ export default [
   SKILL('ion/orbital-beam', 'Orbital beam', m(['air', 'ion'], 'sky-strike', 0.8, 20, 8, 'point'), 2.4, {
     view: 'sky', sky: 'dark',
     act: act('castup', 0.9, 2.6, { hits: [{ t: 0.9, stop: 0.1, shake: 0.5, amp: 0.07, push: 2 }] }),
-    // P3=211
+    // P3=271
     build(fx, o) {
       const k = kit(fx, o, ION), P = [2.6, 0, 0];
       for (let i = 0; i < 3; i++) {
@@ -196,9 +202,12 @@ export default [
         fx.mesh(plate, () => {}, { t0: -0.3, dur: 2.2 });
         k.beam({ from: [P[0] + (i - 1) * 0.8, 6, -2], to: mk, r: [0.01, 0.01], intensity: 1.5, t0: -0.3, dur: 0.9, fade: [0.05, 0.2] });
       }
-      k.beam({ pos: P, height: 15, r: [0.6, 0.6], intensity: 0.9, t0: 0.9, dur: 0.8, fade: [0.05, 0.3] });
-      k.beam({ pos: P, height: 15, r: [0.15, 0.15], intensity: 2.5, t0: 0.9, dur: 0.8, fade: [0.05, 0.3] });
+      k.beam({ pos: P, height: 15, r: [0.35, 0.45], intensity: 2.2, t0: 0.9, dur: 0.8, fade: [0.05, 0.3] });
+      k.beam({ pos: P, height: 15, r: [0.12, 0.14], intensity: 3, t0: 0.9, dur: 0.8, fade: [0.05, 0.3] });
       k.ring({ t0: 0.9, dur: 0.6, r: [0.2, 4], normal: 'up', pos: [2.6, 0.02, 0] });
+      k.ring({ t0: 0.9, dur: 0.5, r: [0.3, 3], normal: 'cam', pos: P, intensity: 1.8 });
+      k.decal({ kind: 'glow', r: [2.2, 2.2], pos: P, t0: 0.9, dur: 1.2 });
+      k.sparks(P, 0.9, 60);
       k.sparks(P, 0.9, 100);
       k.smoke({ ramp: VAPOR, count: 40, shape: 'disc', radius: 0.3, pos: P, radial: 1, speed: [0.5, 1.5], life: [1, 1.6], size: [0.4, 0.9], delay: 0.9, emit: 0.1 });
       k.decal({ kind: 'scorch', r: [1, 1], pos: P, t0: 0.9, dur: 2.0 });

@@ -190,7 +190,7 @@ export default [
   SKILL('nano/mine-grid', 'Mine grid', m(['earth', 'nano'], 'trap-chain', 0.6, 18, 6, 'grid'), 2.4, {
     view: 'high', sky: 'dark',
     act: act('throw', 1.2, 3.4),
-    // P3=290
+    // P3=299
     build(fx, o) {
       const k = kit(fx, o, NANO), A = [0.6, 1.38, 0.2], CN = [3, 0, 0], pts = [], tds = [];
       for (let i = 0; i < 9; i++) {
@@ -199,11 +199,15 @@ export default [
         const mine = new THREE.Group();
         mine.add(new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.04, 8), metal('#5a626c')));
         const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 4), addMat(k.col(1), 3)); lamp.position.y = 0.03; mine.add(lamp);
+        const top = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.01, 8), addMat(k.col(1), 1.6, 0.9)); top.position.y = 0.025; mine.add(top);
         fx.mesh(mine, (t) => { mine.position.set(...P(t)); lamp.material.opacity = t > d + 0.3 ? (Math.floor(t * 2) % 2 ? 1 : 0.15) : 0.5; }, { t0: 0, dur: 2.4 });
         pts.push(E); tds.push(td);
         k.ring({ t0: td, dur: 0.4, r: [0.1, 1.0], normal: 'up', pos: [gx, 0.02, gz] });
         k.sparks([gx, 0.1, gz], td, 20);
         k.glint([gx, 0.1, gz], td, 1.5);
+        k.em({ count: 1, kind: 'glint', shape: 'point', pos: [gx, 0.1, gz], size: [0.14, 0.08], life: [0.3, 0.3], intensity: 3, loop: true, period: 0.4, delay: d + 0.3, emit: 0.001, t0: d + 0.3, t1: 2.4 });
+        k.ring({ t0: td, dur: 0.4, r: [0.2, 1.4], normal: 'cam', pos: [gx, 0.3, gz], intensity: 1.6 });
+        fx.flash(td, 0.06, k.col(0), 0.12);
       }
       for (let i = 0; i < 8; i++) k.bolt({ from: pts[i], to: pts[i + 1], jag: 0.03, width: 0.02, rate: 10, t0: tds[i + 1] - 0.05, dur: 0.3 });
       for (let j = 0; j < 3; j++) {
@@ -223,9 +227,9 @@ export default [
   SKILL('nano/turret-assembler', 'Turret assembler', m(['earth', 'nano'], 'summon-turret', 1.2, 30, 8, 'point'), 3.2, {
     view: 'wide', sky: 'dark',
     act: act('castup', 2.0, 4, { hits: [2.3, 2.6].map((t) => ({ t, stop: 0.05, shake: 0.25, amp: 0.03, push: 1 })) }),
-    // P3=266
+    // P3=270
     build(fx, o) {
-      const k = kit(fx, o, NANO), B = [3, 0, 0], M = [3.25, 0.72, 0], TG = [3.8, 1.2, 0];
+      const k = kit(fx, o, NANO), B = [3, 0, 0], M = [3.5, 1.44, 0], TG = [3.8, 1.2, 0];
       const parts = [
         [new THREE.CylinderGeometry(0.25, 0.3, 0.2, 8), [B[0], 0.1, 0], 'metal'],
         [new THREE.BoxGeometry(0.12, 0.4, 0.12), [B[0], 0.4, 0], 'metal'],
@@ -237,15 +241,17 @@ export default [
       parts.forEach(([geo, p, kind], i) => {
         const tt = 0.2 + 0.2 * i, mesh = new THREE.Mesh(geo, kind === 'sensor' ? addMat(k.col(1), 3) : metal('#8a929c'));
         if (kind === 'barrel') mesh.rotation.z = Math.PI / 2;
-        mesh.position.set(...p);
-        k.pop(mesh, tt, tt + 0.2, 3.0, 3.2);
-        k.sparks(p, tt, 15);
+        mesh.position.set(B[0] + 2 * (p[0] - B[0]), 2 * p[1], 2 * p[2]);
+        k.pop(mesh, tt, tt + 0.2, 3.0, 3.2, () => mesh.scale.multiplyScalar(2));
+        k.sparks(mesh.position.toArray(), tt, 15);
       });
       const bp = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.3), new THREE.MeshBasicMaterial({ color: k.col(1), wireframe: true, transparent: true, opacity: 0.5 }));
       bp.position.set(B[0], 0.45, 0);
       fx.mesh(bp, (t) => { bp.material.opacity = 0.5 * (1 - sm(1.0, 1.4, t)); }, { t0: 0, dur: 1.4 });
       for (const ti of [1.8, 2.2, 2.6]) {
         k.beam({ from: M, to: TG, r: [0.04, 0.04], intensity: 2, t0: ti, dur: 0.2, fade: [0.02, 0.1] });
+        k.em({ count: 1, kind: 'glint', shape: 'point', pos: M, size: [0.3, 0.1], life: [0.22, 0.22], intensity: 3, delay: ti, t0: ti - 0.02, emit: 0.001 });
+        k.trail({ path: (t) => [0, 1, 2].map((j) => M[j] + (TG[j] - M[j]) * clamp((t - ti) / 0.2)), t0: ti, dur: 0.2, width: 0.04, intensity: 2.4 });
         k.sparks(M, ti, 10);
         k.sparks(TG, ti + 0.02, 20);
       }
@@ -258,6 +264,8 @@ export default [
       }
       if (k.g === 3) {
         k.beam({ from: M, to: TG, r: [0.06, 0.06], intensity: 2.5, t0: 3.0, dur: 0.2, fade: [0.02, 0.1] });
+        k.em({ count: 1, kind: 'glint', shape: 'point', pos: M, size: [0.3, 0.1], life: [0.22, 0.22], intensity: 3, delay: 3.0, t0: 2.98, emit: 0.001 });
+        k.trail({ path: (t) => [0, 1, 2].map((j) => M[j] + (TG[j] - M[j]) * clamp((t - 3.0) / 0.2)), t0: 3.0, dur: 0.2, width: 0.04, intensity: 2.4 });
         k.sparks(M, 3.0, 10);
         k.sparks(TG, 3.02, 20);
         k.ring({ t0: 3.0, dur: 0.4, r: [0.2, 1.6], normal: 'cam', pos: TG });

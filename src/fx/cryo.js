@@ -114,7 +114,7 @@ export default [
   SKILL('cryo/ice-drone-swarm', 'Ice drone swarm', m(['water', 'cryo'], 'orbit-ram', 0.6, 14, 7, 'point'), 2.6, {
     view: 'wide', sky: 'night',
     act: act('cast', null, 3.6, { hits: [1.6, 1.8, 1.9].map((t) => ({ t, stop: 0.05, shake: 0.2, amp: 0.03, push: 1 })) }),
-    // P3=104
+    // P3=112
     build(fx, o) {
       const k = kit(fx, o, CRYO), TG = [3.6, 1.2, 0], TF = 1.4, F = 0.4, N = k.g >= 2 ? 8 : 6;
       const orbit = (a0, t) => { const a = a0 + (TAU * t) / 1.6; return [0.5 + 1.1 * Math.cos(a), 1.2 + 0.25 * Math.sin(2 * a), 1.1 * Math.sin(a)]; };
@@ -130,9 +130,10 @@ export default [
         const f1 = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.01, 0.03), metal('#5a626c')); f1.position.x = 0.09;
         const f2 = f1.clone(); f2.position.x = -0.09;
         const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 4), addMat(k.col(0), 3)); lamp.position.y = 0.08;
-        d.add(core, ring, f1, f2, lamp);
+        d.add(core, ring, f1, f2, lamp); d.scale.setScalar(2.2);
         fx.mesh(d, (t) => d.position.set(...P(t)), { t0: -0.1, dur: TF + F + 0.15 });
-        k.trail({ path: P, t0: TF, dur: F + 0.05, len: 0.2, width: 0.04 });
+        k.em({ count: 1, kind: 'glint', shape: 'point', size: [0.18, 0.1], life: [TF + F, TF + F], intensity: 3, delay: 0, emit: 0.001, t0: -0.1, t1: TF + F + 0.15, follow: (m) => m.position.copy(d.position) });
+        k.trail({ path: P, t0: TF, dur: F + 0.05, len: 0.3, width: 0.05, intensity: 1.6 });
       }
       for (const h of [1.6, 1.8, 1.9]) {
         k.em({ count: 15, kind: 'shard', shape: 'sphere', radius: 0.15, pos: TG, radial: 1, speed: [2, 4], life: [0.4, 0.8], size: [0.08, 0.04], gravity: [0, -6, 0], delay: h, emit: 0.001 });

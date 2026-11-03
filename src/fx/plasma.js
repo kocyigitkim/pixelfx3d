@@ -90,8 +90,8 @@ export default [
       k.ring({ t0: 0.7, dur: 0.5, r: [0.1, 3], normal: 'cam', pos: BP });
       k.ring({ t0: 0.7, dur: 0.7, r: [0.2, 4], normal: 'up', pos: [3, 0.02, 0], width: [0.3, 0.05] });
       k.sparks(BP, 0.7, 120);
-      k.light({ pos: [3, 1, 0.5], t0: 0.7, dur: 0.4, fade: [0.01, 0.3], flicker: 0, intensity: 300 });
-      fx.flash(0.7, 0.12, k.col(0), 0.3);
+      k.light({ pos: [3, 1, 0.5], t0: 0.7, dur: 0.4, fade: [0.01, 0.3], flicker: 0, intensity: 150 });
+      fx.flash(0.7, 0.1, k.col(0), 0.18);
       k.decal({ kind: 'scorch', r: [1.2, 1.2], pos: [3, 0, 0], t0: 0.7, dur: 2.0 });
       k.decal({ kind: 'rune', r: [1, 1], pos: [3, 0, 0], t0: 0.7, dur: 0.8, glyphs: 6, poly: 6, spin: 0.6 });
       k.smoke({ ramp: VAPOR, count: 30, shape: 'sphere', radius: 0.3, pos: BP, radial: 1, speed: [0.5, 1.5], life: [1, 1.6], size: [0.4, 0.9], delay: 0.7, emit: 0.2 });
