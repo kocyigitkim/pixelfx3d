@@ -1,0 +1,11 @@
+{
+  "name": "pixelfx3d",
+  "version": "0.1.0",
+  "description": "Realistic 3D, shader-driven VFX library for three.js (WebGL2). 3D reimagining of patch-gg/pixelfx.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": { ".": "./src/index.js", "./fx/*": "./src/fx/*.js" },
+  "peerDependencies": { "three": ">=0.160.0" },
+  "devDependencies": { "three": "0.170.0", "playwright": "*" },
+  "license": "MIT"
+}

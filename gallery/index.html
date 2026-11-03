@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>pixelfx3d — realistic 3D shader effects</title>
+<style>
+  :root{--bg:#0b0d12;--panel:#12151c;--line:#232835;--fg:#e8ecf4;--dim:#8b94a7;--acc:#ff8a3d}
+  *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:13px/1.4 ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif}
+  body{display:grid;grid-template-columns:290px 1fr;height:100vh;overflow:hidden}
+  aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+  h1{margin:0;padding:16px 16px 6px;font-size:19px;letter-spacing:.2px}h1 b{color:var(--acc)}
+  .sub{padding:0 16px 10px;color:var(--dim);font-size:12px}
+  #q{margin:0 12px 8px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#0c0f15;color:var(--fg);outline:none}
+  #q:focus{border-color:var(--acc)}
+  #cats{display:flex;flex-wrap:wrap;gap:5px;padding:0 12px 10px}
+  .chip{padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--dim);cursor:pointer;font-size:12px;user-select:none}
+  .chip:hover{color:var(--fg)}.chip.on{background:var(--acc);border-color:var(--acc);color:#1a0d02;font-weight:600}
+  #list{overflow:auto;flex:1;padding:0 6px 12px}
+  .it{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:7px;cursor:pointer;color:#c9d0de}
+  .it small{color:var(--dim);white-space:nowrap}.it:hover{background:#1a1f2b}.it.on{background:#242b3b;color:#fff;box-shadow:inset 2px 0 var(--acc)}
+  main{position:relative;min-width:0;min-height:0}
+  #view{position:absolute;inset:0}#view canvas{width:100%;height:100%;display:block}
+  #hud{position:absolute;left:18px;top:14px;pointer-events:none;text-shadow:0 1px 8px #000}
+  #hud h2{margin:0;font-size:20px}#hud div{color:#aab3c6;font-size:12px;margin-top:2px}
+  #bar{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 24px);
+    background:#0b0d12c8;backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+  button,select,input[type=number]{background:#1a1f2b;border:1px solid var(--line);color:var(--fg);border-radius:7px;padding:5px 10px;font:inherit;cursor:pointer}
+  button:hover{border-color:var(--acc)}label{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:12px}input[type=range]{accent-color:var(--acc);width:90px}
+  #err{position:absolute;right:14px;top:14px;max-width:420px;background:#3a1216;border:1px solid #7a2630;color:#ffb3bb;border-radius:8px;padding:8px 12px;display:none;font:12px ui-monospace,monospace;white-space:pre-wrap}
+  #prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffffff14}#prog i{display:block;height:100%;width:0;background:var(--acc)}
+  @media(max-width:760px){body{grid-template-columns:1fr;grid-template-rows:230px 1fr}aside{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<aside>
+  <h1>pixelfx<b>3d</b></h1>
+  <div class="sub" id="count">loading…</div>
+  <input id="q" placeholder="search effects…  ( / )" autocomplete="off">
+  <div id="cats"></div>
+  <div id="list"></div>
+</aside>
+<main>
+  <div id="view"></div>
+  <div id="hud"><h2 id="nm"></h2><div id="meta"></div></div>
+  <div id="err"></div>
+  <div id="bar">
+    <button id="rep" title="R">↻ Replay</button>
+    <button id="pau" title="Space">⏸ Pause</button>
+    <label>speed <input id="spd" type="range" min="0.1" max="2" step="0.05" value="1"><span id="spv">1×</span></label>
+    <label>bloom <input id="blm" type="range" min="0" max="1.5" step="0.05" value="0.45"></label>
+    <label>palette <select id="pal"></select></label>
+    <label>seed <input id="seed" type="number" value="1337" style="width:72px"></label>
+    <label><input id="flip" type="checkbox"> mirror</label>
+    <button id="tour" title="T">▶ Tour</button>
+    <button id="shot" title="P">▣ PNG</button>
+  </div>
+  <div id="prog"><i></i></div>
+</main>
+<script>
+  const local = /localhost|127\.0\.0\.1|^$/.test(location.hostname) || location.search.includes('local');
+  const base = local ? '../node_modules/three/' : 'https://cdn.jsdelivr.net/npm/three@0.170.0/';
+  document.head.appendChild(Object.assign(document.createElement('script'), { type: 'importmap', textContent: JSON.stringify({ imports: { three: base + 'build/three.module.js', 'three/addons/': base + 'examples/jsm/' } }) }));
+</script>
+<script type="module">
+import { Stage, registerAll, registry, CATEGORIES } from '../src/index.js';
+registerAll();
+const $ = (s) => document.querySelector(s);
+const PALETTES = { default: null, 'blue flame': ['#001133', '#0a3fd0', '#38a8ff', '#bfe8ff', '#ffffff'], 'toxic green': ['#031a05', '#0c6b18', '#43d63a', '#c8ff8a', '#ffffff'], 'violet': ['#12002a', '#4b0fa8', '#a24cff', '#e2b8ff', '#ffffff'], 'pink': ['#200018', '#a0156b', '#ff4fa8', '#ffc0e0', '#ffffff'], 'gold': ['#2a1600', '#a86a00', '#ffc533', '#fff0a8', '#ffffff'], 'ice': ['#041526', '#1a5f9e', '#58b8ff', '#c8f0ff', '#ffffff'] };
+for (const k of Object.keys(PALETTES)) $('#pal').add(new Option(k, k));
+const stage = new Stage($('#view'), { preserve: true }); stage.start(); window.stage = stage;
+const cats = Object.keys(CATEGORIES).filter((c) => CATEGORIES[c].length);
+let cat = 'all', cur = null, paused = false, tour = false, tourT = 0, tourList = [];
+const total = [...registry.values()].length; $('#count').textContent = `${total} effects · ${cats.length} categories · three.js WebGL2`;
+const chip = (name, label) => { const e = document.createElement('div'); e.className = 'chip' + (name === cat ? ' on' : ''); e.textContent = label ?? name; e.onclick = () => { cat = name; drawCats(); drawList(); }; return e; };
+function drawCats() { const c = $('#cats'); c.innerHTML = ''; c.append(chip('all', `all ${total}`)); for (const k of cats) c.append(chip(k, `${k} ${CATEGORIES[k].length}`)); }
+function visible() { const q = $('#q').value.trim().toLowerCase(); return [...registry.values()].filter((d) => (cat === 'all' || d.category === cat) && (!q || d.id.includes(q) || (d.name || '').toLowerCase().includes(q))); }
+function drawList() {
+  const l = $('#list'); l.innerHTML = ''; for (const d of visible()) { const e = document.createElement('div'); e.className = 'it' + (cur === d.id ? ' on' : ''); e.dataset.id = d.id; e.innerHTML = `<span>${d.name || d.id}</span><small>${d.loop ? '↻ loop' : 'once'} ${d.duration}s</small>`; e.onclick = () => select(d.id); l.append(e); }
+}
+function opts() { const p = PALETTES[$('#pal').value]; return { seed: +$('#seed').value || 1, palette: p || undefined, flip: $('#flip').checked }; }
+function select(id, keepHash) {
+  const d = registry.get(id); if (!d) return; cur = id; $('#err').style.display = 'none';
+  try { stage.autoReplay = true; stage.play(d, opts()); stage.fx.timeScale = +$('#spd').value; stage.bloom.strength = +$('#blm').value * ((d.stage?.bloom ?? 0.45) / 0.45); } catch (e) { console.error(e); const el = $('#err'); el.textContent = `${id}\n${e.message}`; el.style.display = 'block'; }
+  $('#nm').textContent = d.name || d.id; $('#meta').textContent = `${d.id} · ${d.loop ? 'loop' : 'one-shot'} · ${d.duration}s${d.act ? ' · acted' : ''}${d.screen ? ' · screen pass' : ''}`;
+  if (!keepHash) history.replaceState(null, '', '#' + id); document.querySelectorAll('.it').forEach((e) => e.classList.toggle('on', e.dataset.id === id)); document.querySelector('.it.on')?.scrollIntoView({ block: 'nearest' }); paused = false; $('#pau').textContent = '⏸ Pause';
+}
+$('#q').oninput = drawList; $('#rep').onclick = () => stage.fx?.reset();
+$('#pau').onclick = () => { paused = !paused; if (stage.fx) stage.fx.timeScale = paused ? 0 : +$('#spd').value; $('#pau').textContent = paused ? '▶ Play' : '⏸ Pause'; };
+$('#spd').oninput = (e) => { $('#spv').textContent = (+e.target.value).toFixed(2).replace(/0$/, '') + '×'; if (stage.fx && !paused) stage.fx.timeScale = +e.target.value; };
+$('#blm').oninput = (e) => { stage.bloom.strength = +e.target.value; };
+for (const id of ['pal', 'seed', 'flip']) $('#' + id).onchange = () => cur && select(cur, true);
+$('#tour').onclick = () => { tour = !tour; $('#tour').textContent = tour ? '■ Stop' : '▶ Tour'; tourList = visible().map((d) => d.id); tourT = 0; if (tour && tourList.length) select(tourList[0]); };
+$('#shot').onclick = () => { stage.frame(0); const a = document.createElement('a'); a.download = (cur || 'fx').replace('/', '_') + '.png'; a.href = stage.canvas.toDataURL('image/png'); a.click(); };
+addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT') { if (e.key === 'Escape') e.target.blur(); return; } const k = e.key.toLowerCase();
+  if (k === '/') { e.preventDefault(); $('#q').focus(); } else if (k === 'r') $('#rep').click(); else if (k === ' ') { e.preventDefault(); $('#pau').click(); } else if (k === 't') $('#tour').click(); else if (k === 'p') $('#shot').click();
+  else if (k === 'arrowdown' || k === 'arrowup') { const v = visible(); const i = v.findIndex((d) => d.id === cur); const n = v[(i + (k === 'arrowdown' ? 1 : v.length - 1)) % v.length]; if (n) select(n.id); } });
+// tour + progress bar
+setInterval(() => { const fx = stage.fx; if (!fx) return; $('#prog i').style.width = (fx.loop ? (fx.t / fx.duration) : Math.min(1, Math.max(0, fx.time / fx.duration))) * 100 + '%';
+  if (tour) { const seen = fx.loop ? fx.time : fx.time; const lim = fx.loop ? fx.duration * 1.5 + 1 : fx.duration + 1.2; if (seen > lim) { const i = tourList.indexOf(cur); select(tourList[(i + 1) % tourList.length]); } } }, 100);
+drawCats(); drawList(); const first = location.hash.slice(1); select(registry.has(first) ? first : (registry.has('fire/campfire') ? 'fire/campfire' : [...registry.keys()][0]), !!first);
+addEventListener('hashchange', () => { const id = location.hash.slice(1); if (registry.has(id)) select(id, true); });
+</script>
+</body>
+</html>

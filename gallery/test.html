@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#000"><div id="v" style="width:960px;height:540px"></div>
+<script type="importmap">{"imports":{"three":"../node_modules/three/build/three.module.js","three/addons/":"../node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import { Stage, registerAll, registry } from '../src/index.js';
+registerAll();
+const stage = new Stage(document.getElementById('v'), { preserve: true, maxPixelRatio: 1 });
+window.__stage = stage; window.__ids = [...registry.keys()];
+window.__play = (id, opts) => { stage.autoReplay = false; stage.play(id, opts); return stage.fx.duration; };
+window.__seek = (t) => { stage.seek(t); return true; };
+window.__ready = true;
+</script>
