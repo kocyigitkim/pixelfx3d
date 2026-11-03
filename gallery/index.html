@@ -40,6 +40,7 @@
   <div class="sub" id="count">loading…</div>
   <input id="q" placeholder="search effects…  ( / )" autocomplete="off">
   <div id="cats"></div>
+  <div id="filt" style="display:flex;gap:6px;padding:0 12px 10px"><select id="tier"></select><select id="elem"></select></div>
   <div id="list"></div>
 </aside>
 <main>
@@ -52,6 +53,7 @@
     <label>speed <input id="spd" type="range" min="0.1" max="2" step="0.05" value="1"><span id="spv">1×</span></label>
     <label>bloom <input id="blm" type="range" min="0" max="1.5" step="0.05" value="0.45"></label>
     <label>palette <select id="pal"></select></label>
+    <label>grade <select id="grade"><option>1</option><option>2</option><option>3</option></select></label>
     <label>seed <input id="seed" type="number" value="1337" style="width:72px"></label>
     <label><input id="flip" type="checkbox"> mirror</label>
     <label><input id="trn" type="checkbox"> transparent</label>
@@ -77,24 +79,27 @@ const stage = new Stage($('#view'), { preserve: true, transparent: TR }); stage.
 const cats = Object.keys(CATEGORIES).filter((c) => CATEGORIES[c].length);
 let cat = 'all', cur = null, paused = false, tour = false, tourT = 0, tourList = [];
 const total = [...registry.values()].length; $('#count').textContent = `${total} effects · ${cats.length} categories · three.js WebGL2`;
+const defs = [...registry.values()], fill = (sel, label, vals) => { sel.add(new Option(label, '')); for (const v of [...new Set(vals)].sort()) sel.add(new Option(v, v)); };
+fill($('#tier'), 'all tiers', defs.map((d) => d.meta?.tier).filter(Boolean)); fill($('#elem'), 'all elements', defs.flatMap((d) => d.meta?.elements || []));
 const chip = (name, label) => { const e = document.createElement('div'); e.className = 'chip' + (name === cat ? ' on' : ''); e.textContent = label ?? name; e.onclick = () => { cat = name; drawCats(); drawList(); }; return e; };
 function drawCats() { const c = $('#cats'); c.innerHTML = ''; c.append(chip('all', `all ${total}`)); for (const k of cats) c.append(chip(k, `${k} ${CATEGORIES[k].length}`)); }
-function visible() { const q = $('#q').value.trim().toLowerCase(); return [...registry.values()].filter((d) => (cat === 'all' || d.category === cat) && (!q || d.id.includes(q) || (d.name || '').toLowerCase().includes(q))); }
+function visible() { const q = $('#q').value.trim().toLowerCase(); return [...registry.values()].filter((d) => (cat === 'all' || d.category === cat) && (!$('#tier').value || d.meta?.tier === $('#tier').value) && (!$('#elem').value || (d.meta?.elements || []).includes($('#elem').value)) && (!q || d.id.includes(q) || (d.name || '').toLowerCase().includes(q))); }
 function drawList() {
   const l = $('#list'); l.innerHTML = ''; for (const d of visible()) { const e = document.createElement('div'); e.className = 'it' + (cur === d.id ? ' on' : ''); e.dataset.id = d.id; e.innerHTML = `<span>${d.name || d.id}</span><small>${d.loop ? '↻ loop' : 'once'} ${d.duration}s</small>`; e.onclick = () => select(d.id); l.append(e); }
 }
-function opts() { const p = PALETTES[$('#pal').value]; return { seed: +$('#seed').value || 1, palette: p || undefined, flip: $('#flip').checked }; }
+function opts() { const p = PALETTES[$('#pal').value]; return { seed: +$('#seed').value || 1, palette: p || undefined, flip: $('#flip').checked, grade: +$('#grade').value }; }
 function select(id, keepHash) {
   const d = registry.get(id); if (!d) return; cur = id; $('#err').style.display = 'none';
   try { stage.autoReplay = true; stage.play(d, opts()); stage.fx.timeScale = +$('#spd').value; stage.bloom.strength = +$('#blm').value * ((d.stage?.bloom ?? 0.45) / 0.45) * stage.bloomScale; } catch (e) { console.error(e); const el = $('#err'); el.textContent = `${id}\n${e.message}`; el.style.display = 'block'; }
   $('#nm').textContent = d.name || d.id; $('#meta').textContent = `${d.id} · ${d.loop ? 'loop' : 'one-shot'} · ${d.duration}s${d.act ? ' · acted' : ''}${d.screen ? ' · screen pass' : ''}`;
+  if (d.meta) $('#meta').textContent += ` · ${d.meta.class} · ${d.meta.elements.join(', ')} · cast ${d.meta.castTime}s · cd ${d.meta.cooldown}s`;
   if (!keepHash) history.replaceState(null, '', '#' + id); document.querySelectorAll('.it').forEach((e) => e.classList.toggle('on', e.dataset.id === id)); document.querySelector('.it.on')?.scrollIntoView({ block: 'nearest' }); paused = false; $('#pau').textContent = '⏸ Pause';
 }
-$('#q').oninput = drawList; $('#rep').onclick = () => stage.fx?.reset();
+$('#q').oninput = $('#tier').onchange = $('#elem').onchange = drawList; $('#rep').onclick = () => stage.fx?.reset();
 $('#pau').onclick = () => { paused = !paused; if (stage.fx) stage.fx.timeScale = paused ? 0 : +$('#spd').value; $('#pau').textContent = paused ? '▶ Play' : '⏸ Pause'; };
 $('#spd').oninput = (e) => { $('#spv').textContent = (+e.target.value).toFixed(2).replace(/0$/, '') + '×'; if (stage.fx && !paused) stage.fx.timeScale = +e.target.value; };
 $('#blm').oninput = (e) => { stage.bloom.strength = +e.target.value * stage.bloomScale; };
-for (const id of ['pal', 'seed', 'flip']) $('#' + id).onchange = () => cur && select(cur, true);
+for (const id of ['pal', 'seed', 'flip', 'grade']) $('#' + id).onchange = () => cur && select(cur, true);
 $('#tour').onclick = () => { tour = !tour; $('#tour').textContent = tour ? '■ Stop' : '▶ Tour'; tourList = visible().map((d) => d.id); tourT = 0; if (tour && tourList.length) select(tourList[0]); };
 $('#shot').onclick = () => { stage.frame(0); const a = document.createElement('a'); a.download = (cur || 'fx').replace('/', '_') + '.png'; a.href = stage.canvas.toDataURL('image/png'); a.click(); };
 addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT') { if (e.key === 'Escape') e.target.blur(); return; } const k = e.key.toLowerCase();

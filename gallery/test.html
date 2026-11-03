@@ -11,7 +11,7 @@ const o = { preserve: true, maxPixelRatio: 1, transparent: q.has('transparent'),
 if (q.has('legacy')) Object.assign(o, { bloomScale: 1, flashMax: 1 });
 const stage = new Stage(v, o);
 window.__stage = stage; window.__ids = [...registry.keys()];
-window.__play = (id, opts) => { stage.autoReplay = false; stage.play(id, opts); return stage.fx.duration; };
+window.__play = (id, opts = q.has('grade') ? { grade: +q.get('grade') } : {}) => { stage.autoReplay = false; stage.play(id, opts); return stage.fx.duration; };
 window.__seek = (t) => { stage.seek(t); return true; };
 window.__ready = true;
 </script>

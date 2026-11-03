@@ -54,6 +54,7 @@ export const POSES = {
   daggerA: P({ aR: 70, eR: 70, aL: 40, eL: 80, twist: -25, lean: -8, py: 0.86, x: 0.2, tR: 30, kR: -45 }), daggerB: P({ aR: 40, eR: 20, aL: 35, eL: 80, twist: 28, lean: -14, py: 0.85, x: 0.28, tR: 30, kR: -45 }),
   sweepBack: P({ aR: 50, eR: 6, rR: 40, aL: 40, eL: 70, twist: -62, lean: -14, py: 0.64, tR: 70, kR: -120, tL: 60, kL: -110, x: 0.05 }), sweepCut: P({ aR: 50, eR: 4, rR: 0, aL: 30, eL: 60, twist: 58, lean: -16, py: 0.62, tR: 66, kR: -112, tL: 64, kL: -118, x: 0.25 }),
   thrustBack: P({ aR: -5, eR: 95, aL: 30, eL: 80, twist: -35, lean: 6, py: 0.86, tR: -8, kR: -30, tL: 20, kL: -30 }), smashGround: P({ aR: 24, eR: 4, aL: 24, eL: 4, lean: -20, py: 0.8, tR: 38, kR: -55, tL: -14, kL: -26, x: 0.25 }),
+  roar: P({ aR: 35, eR: 30, aL: 35, eL: 30, lean: 14, head: 14, py: 0.9, tR: 16, kR: -28, tL: -16, kL: -24 }), armsWide: P({ aR: 125, eR: 8, rR: 40, aL: 125, eL: 8, rL: 40, lean: 6, py: 0.95 }),
   hurt: P({ lean: 20, aR: -20, eR: 20, aL: -20, eL: 20, py: 0.9, head: -12 }),
 };
 const ACTS = {

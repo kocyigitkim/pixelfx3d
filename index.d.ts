@@ -95,7 +95,7 @@ export interface TextParams extends Timed {
 /* ---------- options and definitions ---------- */
 export interface FxOptions {
   seed?: number; position?: Vec3; scale?: number; flip?: boolean; angle?: number;
-  palette?: unknown; speed?: number; countScale?: number;
+  palette?: unknown; speed?: number; countScale?: number; grade?: 1 | 2 | 3;
 }
 
 export interface Part { obj?: THREE.Object3D; update?: (t: number, tAbs: number, fx: Fx) => void; [k: string]: unknown; }
@@ -113,6 +113,7 @@ export interface ActDef {
 
 export interface EffectDef {
   id: string; name: string; category: string; loop: boolean; duration: number;
+  meta?: { class: string; tier: 'class' | 'base' | 'derived' | 'tech' | 'quantum'; elements: string[]; archetype: string; castTime: number; cooldown: number; range: number; shape: string };
   stage?: StageDef; act?: ActDef; body?: boolean; screen?: { glsl: string };
   build(fx: Fx, o: FxOptions & Record<string, unknown>): void;
 }
