@@ -14,4 +14,5 @@ import steam from './steam.js'; import lava from './lava.js';
 import storm from './storm.js'; import frost from './frost.js';
 import swamp from './swamp.js'; import dune from './dune.js';
 import plasma from './plasma.js'; import cryo from './cryo.js';
-export const CATEGORIES = { moves, fire, explosions, water, ice, lightning, scifi, melee, impacts, projectiles, spawn, arcane, holy, shadow, status, nature, weather, ui, pickups, transitions, critters, warrior, rogue, archer, mage, priest, shaman, dark, pyro, hydro, geo, aero, steam, lava, storm, frost, swamp, dune, plasma, cryo };
+import nano from './nano.js'; import ion from './ion.js';
+export const CATEGORIES = { moves, fire, explosions, water, ice, lightning, scifi, melee, impacts, projectiles, spawn, arcane, holy, shadow, status, nature, weather, ui, pickups, transitions, critters, warrior, rogue, archer, mage, priest, shaman, dark, pyro, hydro, geo, aero, steam, lava, storm, frost, swamp, dune, plasma, cryo, nano, ion };
