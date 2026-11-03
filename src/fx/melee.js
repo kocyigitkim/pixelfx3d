@@ -63,12 +63,12 @@ export default [
   { id: 'melee/claw-swipe', name: 'Claw swipe', category: 'melee', loop: false, duration: 0.9, stage: { sky: 'dusk', view: VIEW },
     act: { kind: 'sideslash', target: [1.6, 0, 0], windup: 0.4, hits: [{ t: 0.05, stop: 0.07, shake: 0.2, amp: 0.035, push: 1.6 }] },
     build(fx) {
-      const hot = [[0, '#ffffff'], [0.3, '#ffb060'], [1, '#c01808']];
+      const hot = [[0, '#ffe0c0'], [0.3, '#ff8a40'], [1, '#a01008']];
       for (let k = -1; k <= 1; k++) {
         const pts = []; for (let i = 0; i <= 20; i++) { const u = i / 20; pts.push([1.15 + 0.2 * k + 0.62 * u, 1.9 - 0.08 * k - 1.3 * u + 0.1 * Math.sin(Math.PI * u), 0.32 + 0.1 * k]); }
-        const w = (u) => 0.08 * Math.pow(Math.sin(Math.PI * Math.min(1, u * 0.96 + 0.02)), 0.6);
-        fx.ribbon({ points: pts, n: 20, width: w, t0: 0.0 + 0.025 * (k + 1), dur: 0.2, sweep: [0, 1.5], ease: 'out', tail: 0.9, intensity: 3.2, ramp: hot });
-        fx.ribbon({ points: pts, n: 20, width: (u) => w(u) * 0.55, head: () => 1.2, tail: 3.5, t0: 0.05 + 0.025 * (k + 1), dur: 0.75, fade: [0.03, 0.6], intensity: 1.5, ramp: [[0, '#ff7a30'], [0.5, '#d01808'], [1, '#500']] });
+        const w = (u) => 0.06 * Math.pow(Math.sin(Math.PI * Math.min(1, u * 0.96 + 0.02)), 0.6);
+        fx.ribbon({ points: pts, n: 20, width: w, t0: 0.0 + 0.025 * (k + 1), dur: 0.2, sweep: [0, 1.5], ease: 'out', tail: 0.9, intensity: 1.8, ramp: hot });
+        fx.ribbon({ points: pts, n: 20, width: (u) => w(u) * 0.55, head: () => 1.2, tail: 3.5, t0: 0.05 + 0.025 * (k + 1), dur: 0.75, fade: [0.03, 0.6], intensity: 0.8, ramp: [[0, '#ff7a30'], [0.5, '#d01808'], [1, '#500']] });
       }
       swing(fx, { t0: -0.08, t1: 0.14, len: 0.1, inner: 0.0, outer: 0.28, c0: '#ffe0c0', c1: '#ff7040', c2: '#600', intensity: 1.2, edgeW: 0.03 });
       contact(fx, [1.5, 1.2, 0.4], 0.05, { light: '#ff6a3a', mid: '#ff9050', cold: '#800', sparks: 40, glintCol: '#f84', glint: 0.7 });
@@ -140,13 +140,13 @@ export default [
       hits: [{ t: 0.16, stop: 0.12, shake: 0.3, amp: 0.04, push: 1.2 }] },
     build(fx) {
       const O = bladeTable(fx, -0.35, 0.4, 1.4);
-      sweepSurface(fx, bladeTable(fx, -0.35, 0.4, 1.0), bladeTable(fx, -0.35, 0.4, 1.7), { t0: -0.35, t1: 0.4, len: 0.45, n: 40, normal: true, c0: '#5a30a8', c1: '#40208a', c2: '#2a1060', intensity: 2.2, edge: 0.8 });
-      sweepSurface(fx, bladeTable(fx, -0.35, 0.4, 1.0), bladeTable(fx, -0.35, 0.4, 1.7), { t0: -0.35, t1: 0.4, len: 0.45, n: 40, c0: '#e8f4ff', c1: '#9a70e0', c2: '#2a1060', intensity: 1.0, edge: 6 });
-      fx.trail({ path: bladeTable(fx, -0.35, 0.4, 1.7), len: 0.4, n: 40, width: 0.03, t0: -0.35, dur: 1.3, fade: [0, 0.6], intensity: 3, ramp: [[0, '#fff'], [0.5, '#c8d8ff'], [1, '#6040a0']] });
+      sweepSurface(fx, bladeTable(fx, -0.35, 0.4, 1.0), bladeTable(fx, -0.35, 0.4, 1.7), { t0: -0.35, t1: 0.4, len: 0.45, n: 40, normal: true, c0: '#7a48d0', c1: '#4a2898', c2: '#1a0840', intensity: 0.9, edge: 0.8 });
+      sweepSurface(fx, bladeTable(fx, -0.35, 0.4, 1.0), bladeTable(fx, -0.35, 0.4, 1.7), { t0: -0.35, t1: 0.4, len: 0.45, n: 40, c0: '#e8f4ff', c1: '#9a70e0', c2: '#2a1060', intensity: 0.8, edge: 6 });
+      fx.trail({ path: bladeTable(fx, -0.35, 0.4, 1.7), len: 0.4, n: 40, width: 0.03, t0: -0.35, dur: 1.3, fade: [0, 0.6], intensity: 1.8, ramp: [[0, '#e8e0ff'], [0.5, '#a888ff'], [1, '#4020a0']] });
       for (let i = 0; i < 7; i++) {
         const ts = -0.1 + i * 0.07, p = O(ts);
         fx.emitter({ count: 12, kind: 'smoke', blend: 'normal', shape: 'sphere', radius: 0.12, pos: p, dir: [0.2, 0.6, -0.2], spread: 1.3, speed: [0.2, 0.8], life: [1.0, 1.9], size: [0.3, 0.9], ramp: [[0, '#2a1048', 0], [0.2, '#1a0a2e', 0.55], [1, '#0a0412', 0]], lit: 0.5, drag: 1.2, turb: [0.5, 1.0], delay: ts + 0.35, t0: ts + 0.34, emit: 0.1, order: -1 });
-        fx.emitter({ count: 8, kind: 'soft', shape: 'sphere', radius: 0.1, pos: p, dir: [0.2, 1, 0], spread: 1.2, speed: [0.2, 1.0], life: [0.8, 1.6], size: [0.1, 0.02], ramp: [[0, '#d8e8ff'], [0.4, '#8a60e0'], [1, '#201050', 0]], intensity: 1.6, drag: 1.0, turb: [0.8, 1.4], gravity: [0, 0.5, 0], delay: ts + 0.35, t0: ts + 0.34, emit: 0.1 });
+        fx.emitter({ count: 8, kind: 'soft', shape: 'sphere', radius: 0.1, pos: p, dir: [0.2, 1, 0], spread: 1.2, speed: [0.2, 1.0], life: [0.8, 1.6], size: [0.1, 0.02], ramp: [[0, '#d8e8ff'], [0.4, '#8a60e0'], [1, '#201050', 0]], intensity: 1.2, drag: 1.0, turb: [0.8, 1.4], gravity: [0, 0.5, 0], delay: ts + 0.35, t0: ts + 0.34, emit: 0.1 });
       }
       contact(fx, [1.7, 1.2, 0.15], 0.16, { hot: '#eef', mid: '#a080ff', cold: '#204', light: '#9070ff', sparks: 30, speed: 5, glintCol: '#a8f', lightI: 50 });
     } },

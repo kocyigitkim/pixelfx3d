@@ -186,7 +186,7 @@ export default [
         const u = (t - TC) / 1.0; return { xc: -0.5 + 1.8 * Math.min(1, u), H: Math.max(0.05, 2.35 * (1 - Math.min(1, u * 1.1)) * (1 - Math.min(1, u * 1.1))), curl: Math.max(0.1, 1 - u * 2) };
       };
       const pts = []; for (let i = 0; i < NU; i++) pts.push([0, 0]);
-      fx.mesh(wave, (t) => {
+      fx.mesh(wave, (t, pr, f, w) => { wm.opacity = 0.93 * w;
         const { xc, H, curl } = prof(t), R = H * 0.42, al = curl * Math.PI * 0.92; const N1 = 28, N2 = 24, N3 = NU - N1 - N2;
         for (let i = 0; i < N1; i++) { const f = i / N1; pts[i][0] = xc - 6 * (1 - f) * (1 - f * 0.2) - (1 - f) * 0; pts[i][1] = H * Math.pow(Math.sin(f * Math.PI / 2), 2.2); }
         for (let k = 0; k < N2; k++) { const a = (k / (N2 - 1)) * al, i = N1 + k; pts[i][0] = xc + R * Math.sin(a); pts[i][1] = H - R + R * Math.cos(a); }
@@ -194,17 +194,17 @@ export default [
         for (let k = 0; k < N3; k++) { const f = (k + 1) / N3, i = N1 + N2 + k, e = f * f * (3 - 2 * f); pts[i][0] = ex + (xc + R * 1.2 - ex) * e + 0.15 * R * Math.sin(f * 3.14); pts[i][1] = ey * (1 - e); }
         for (let i = 0; i < NU; i++) for (let j = 0; j < NZ; j++) { const z = (j / (NZ - 1) - 0.5) * 2 * W, tw = 0.12 * Math.sin(z * 2.1 + i * 0.1) * H * (i > N1 ? 1 : 0.3); const o = (i * NZ + j) * 3; pos[o] = pts[i][0] + tw * 0.5; pos[o + 1] = Math.max(0.01, pts[i][1] + tw * 0.3); pos[o + 2] = z; }
         geo.attributes.position.needsUpdate = true; geo.computeVertexNormals();
-      }, { dur: TC + 0.5 });
+      }, { dur: TC + 0.5, fade: [0, 0.35] });
       fx.water({ r: 7, y: 0.0, deep: '#0f6a82', shallow: '#3ab0c0', waves: 1.2, ripples: [], speed: 1.4, decay: 0.8 });
       const sand = new THREE.Mesh(new THREE.PlaneGeometry(6, 8), mat('#c8b080', 1)); sand.rotation.set(-Math.PI / 2 + 0.06, 0, 0); sand.rotation.order = 'ZXY'; sand.rotation.z = 0; sand.position.set(0, 0, 0);
       const beach = new THREE.Mesh(new THREE.BoxGeometry(6, 0.3, 9), mat('#cbb283', 1)); beach.position.set(5.2, -0.1, 0); beach.rotation.z = 0.07; fx.mesh(beach, null, { dur: 99 });
       fx.light({ color: '#ffeedd', intensity: 14, pos: [2, 4, 5], norm: 14 });
       fx.shake(TC, 0.5, 0.05);
       const fl = (o) => ({ shape: 'line', shapeSize: [0, 0, 3.4], ...o });
-      fx.emitter(fl({ count: 60, kind: 'smoke', blend: 'normal', lit: 1, dir: [0.7, 0.4, 0], spread: 0.5, speed: [0.4, 1.6], life: [0.8, 1.4], size: [0.5, 1.2], ramp: [[0, '#fff', 0], [0.2, '#ffffff', 0.9], [1, '#cde6ee', 0]], t0: TC - 0.7, delay: TC - 0.7, emit: 0.7, pos: [-0.1, 2.0, 0] }));
-      fx.emitter(fl({ count: 160, kind: 'smoke', blend: 'normal', lit: 1, dir: [0.8, 0.3, 0], spread: 0.6, speed: [0.5, 2.8], life: [1.0, 1.8], size: [0.7, 1.9], ramp: [[0, '#fff', 0], [0.15, '#ffffff', 0.95], [1, '#d5eaf0', 0]], delay: TC, emit: 0.6, drag: 1, pos: [0.4, 0.3, 0], radial: 0 }));
+      fx.emitter(fl({ count: 60, kind: 'smoke', blend: 'normal', lit: 1, dir: [0.7, 0.4, 0], spread: 0.5, speed: [0.4, 1.6], life: [0.8, 1.4], size: [0.5, 1.2], ramp: [[0, '#eef6f8', 0], [0.2, '#e2eef2', 0.75], [1, '#c0d8e2', 0]], t0: TC - 0.7, delay: TC - 0.7, emit: 0.7, pos: [-0.1, 2.0, 0] }));
+      fx.emitter(fl({ count: 110, kind: 'smoke', blend: 'normal', lit: 1, dir: [0.8, 0.3, 0], spread: 0.6, speed: [0.5, 2.8], life: [1.0, 1.8], size: [0.7, 1.9], ramp: [[0, '#e8f4f8', 0], [0.15, '#dcecf2', 0.7], [1, '#b8d4de', 0]], delay: TC, emit: 0.6, drag: 1, pos: [0.4, 0.3, 0], radial: 0 }));
       fx.emitter(fl({ count: 220, kind: 'drop', dir: [0.4, 1, 0], spread: 0.7, speed: [2, 7], life: [0.7, 1.4], size: [0.05, 0.025], gravity: [0, -9.8, 0], ramp: DROP, delay: TC, emit: 0.4, pos: [0.4, 0.2, 0] }));
-      fx.emitter(fl({ count: 90, kind: 'smoke', blend: 'normal', lit: 1, dir: [1, 0.05, 0], spread: 0.2, speed: [2.2, 3.6], life: [1.2, 1.6], size: [0.8, 1.6], ramp: [[0, '#fff', 0], [0.2, '#ffffff', 0.85], [1, '#cde6ee', 0]], delay: TC + 0.3, emit: 0.8, drag: 1.2, pos: [0.8, 0.08, 0] }));
+      fx.emitter(fl({ count: 90, kind: 'smoke', blend: 'normal', lit: 1, dir: [1, 0.05, 0], spread: 0.2, speed: [2.2, 3.6], life: [1.2, 1.6], size: [0.8, 1.6], ramp: [[0, '#eef6f8', 0], [0.2, '#dceaf0', 0.65], [1, '#bcd4de', 0]], delay: TC + 0.3, emit: 0.8, drag: 1.2, pos: [0.8, 0.08, 0] }));
       fx.emitter(fl({ count: 70, kind: 'smoke', blend: 'normal', lit: 1, dir: [0, 1, 0], spread: 0.6, speed: [0.3, 1.2], life: [1.0, 1.8], size: [0.7, 1.6], ramp: [[0, '#fff', 0], [0.2, '#fff', 0.5], [1, '#dff', 0]], delay: TC + 0.9, emit: 1.4, drag: 0.5, pos: [1.6, 0.1, 0] }));
     } },
 

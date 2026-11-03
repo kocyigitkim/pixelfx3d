@@ -122,7 +122,7 @@ export default [
       const mat = eggMat(fx, uCrack), prof = eggProfile();
       const cut = 20; const bot = new THREE.Mesh(new THREE.LatheGeometry(prof.slice(0, cut + 1).concat([new THREE.Vector2(0.0005, prof[cut].y)]), 40), mat);
       const top = new THREE.Mesh(new THREE.LatheGeometry([new THREE.Vector2(0.0005, prof[cut].y)].concat(prof.slice(cut)), 40), mat);
-      const inner = new THREE.Mesh(new THREE.SphereGeometry(0.14, 20, 14), new THREE.MeshBasicMaterial({ color: new THREE.Color(2, 1.5, 0.7) })); inner.position.y = 0.3;
+      const inner = new THREE.Mesh(new THREE.SphereGeometry(0.14, 20, 14), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.3, 0.95, 0.42), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false })); inner.position.y = 0.3;
       const grp = new THREE.Group(); const topG = new THREE.Group(); topG.position.y = prof[cut].y; top.position.y = -prof[cut].y; topG.add(top); grp.add(bot, topG, inner);
       const nest = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.05, 8, 24), new THREE.MeshStandardMaterial({ color: '#6b4a2a', roughness: 1 })); nest.rotation.x = Math.PI / 2; nest.position.y = 0.03; nest.scale.set(1.15, 1.15, 1.6); grp.add(nest);
       fx.mesh(grp, (t) => {
@@ -132,17 +132,17 @@ export default [
         const b = clamp((t - 1.85) / 0.9); const e = 1 - Math.pow(1 - b, 2);
         topG.position.set(e * 0.25, prof[cut].y + (e * 0.35 - 3.2 * b * b * 0.35) , e * 0.05); topG.rotation.set(e * 0.4, 0, -e * 1.6); topG.visible = b < 0.95;
         bot.visible = true; bot.scale.setScalar(1);
-        inner.visible = t > 1.75 && t < 2.55; inner.scale.setScalar(0.9 + sm(1.7, 1.85, t) * 0.2 + (t > 1.85 ? 0.3 * Math.exp(-(t - 1.85) * 5) : 0)); inner.material.color.setScalar(1).multiplyScalar(0).add(new THREE.Color(2.2, 1.7, 0.8).multiplyScalar(t > 2.3 ? Math.max(0, 1 - (t - 2.3) / 0.7) : 1));
+        inner.visible = t > 1.75 && t < 2.55; inner.scale.setScalar(0.9 + sm(1.7, 1.85, t) * 0.2 + (t > 1.85 ? 0.3 * Math.exp(-(t - 1.85) * 5) : 0)); inner.material.color.setScalar(1).multiplyScalar(0).add(new THREE.Color(1.3, 0.95, 0.42).multiplyScalar(t > 2.3 ? Math.max(0, 1 - (t - 2.3) / 0.7) : 1));
       }, { dur: 99 });
       fx.light({ color: '#ffd890', intensity: 6, pos: [0, 0.3, 0.1], range: 4, env: (t) => sm(1.0, 1.8, t) * 0.8, t0: 0, dur: 1.9 });
       fx.light({ color: '#ffe6a8', intensity: 30, pos: [0, 0.45, 0.2], range: 8, t0: 1.85, dur: 1.25, fade: [0.03, 0.9] });
-      fx.flash(1.85, 0.25, '#fff2c0', 0.3); fx.shake(1.85, 0.4, 0.03);
-      fx.beam({ pos: [0, 0.3, 0], height: 1.6, r: [0.08, 0.22], intensity: 0.5, t0: 1.85, dur: 1.0, fade: [0.03, 0.8], ramp: [[0, '#fff6d0'], [0.6, '#ffd070'], [1, '#c06000']], noise: 0.4 });
+      fx.flash(1.85, 0.25, '#fff2c0', 0.15); fx.shake(1.85, 0.4, 0.03);
+      fx.beam({ pos: [0, 0.3, 0], height: 1.6, r: [0.08, 0.22], intensity: 0.3, t0: 1.85, dur: 1.0, fade: [0.03, 0.8], ramp: [[0, '#fff6d0'], [0.6, '#ffd070'], [1, '#c06000']], noise: 0.4 });
       fx.ring({ t0: 1.85, dur: 0.7, r: [0.1, 1.2], width: [0.15, 0.04], normal: 'up', intensity: 0.8, ramp: [[0, '#fff'], [1, '#fc7']] });
       fx.emitter({ count: 28, kind: 'shard', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.1, pos: [0, 0.32, 0], dir: [0, 1, 0], radial: 1, spread: 1.4, speed: [1.2, 3.2], life: [0.9, 1.6], size: [0.04, 0.03], gravity: [0, -9, 0], bounce: 0.3, rot: 8, ramp: [[0, '#efe3c8'], [1, '#e2d3b0', 1]], delay: 1.85 });
-      fx.emitter({ count: 70, kind: 'soft', shape: 'sphere', radius: 0.12, pos: [0, 0.32, 0], dir: [0, 1, 0], spread: 1.5, speed: [0.5, 2.4], life: [0.7, 1.6], size: [0.03, 0.008], gravity: [0, 0.3, 0], drag: 0.8, ramp: [[0, '#fff'], [0.4, '#ffd070'], [1, '#c60', 0]], intensity: 3, delay: 1.85, turb: [0.3, 1] });
+      fx.emitter({ count: 70, kind: 'soft', shape: 'sphere', radius: 0.12, pos: [0, 0.32, 0], dir: [0, 1, 0], spread: 1.5, speed: [0.5, 2.4], life: [0.7, 1.6], size: [0.03, 0.008], gravity: [0, 0.3, 0], drag: 0.8, ramp: [[0, '#fff'], [0.4, '#ffd070'], [1, '#c60', 0]], intensity: 1.8, delay: 1.85, turb: [0.3, 1] });
       fx.emitter({ count: 24, kind: 'smoke', blend: 'normal', lit: 1, shape: 'disc', radius: 0.2, pos: [0, 0.2, 0], dir: [0, 1, 0], radial: 0.8, spread: 1.2, speed: [0.3, 1], life: [0.8, 1.5], size: [0.3, 0.7], ramp: [[0, '#fff2d0', 0.5], [1, '#a89868', 0]], delay: 1.85, order: -1, drag: 1.5 });
-      fx.emitter({ count: 14, kind: 'glint', shape: 'sphere', radius: 0.25, pos: [0, 0.3, 0], size: [0.18, 0.04], life: [0.3, 0.6], ramp: [[0, '#fff'], [1, '#fd8', 0]], intensity: 3, delay: 1.9, emit: 0.8, speed: [0, 0.2] });
+      fx.emitter({ count: 14, kind: 'glint', shape: 'sphere', radius: 0.25, pos: [0, 0.3, 0], size: [0.18, 0.04], life: [0.3, 0.6], ramp: [[0, '#fff'], [1, '#fd8', 0]], intensity: 2, delay: 1.9, emit: 0.8, speed: [0, 0.2] });
     } },
 
   /* ------------------------------------------------------------------ poof */
@@ -236,18 +236,18 @@ export default [
         const u = sm(1.2, 3.4, t); br.position.y = -2.7 + u * 2.7; br.visible = t > 1.1; br.rotation.y = 0.2; const s = 1 + (u >= 1 ? 0 : 0); br.scale.setScalar(s);
         br.rotation.x = 0.1 * Math.sin(u * 9) * (1 - u); br.position.x = 0.02 * Math.sin(t * 40) * (1 - u);
       }, { dur: 99 });
-      fx.decal({ kind: 'rune', r: [2.0, 2.0], glyphs: 18, poly: 6, spin: 0.35, reveal: 1.0, ramp: [[0, '#701010'], [0.5, '#e03010'], [1, '#ffb060']], intensity: 1.8, t0: 0, dur: 4.6, fade: [0.1, 1.0] });
+      fx.decal({ kind: 'rune', r: [2.0, 2.0], glyphs: 18, poly: 6, spin: 0.35, reveal: 1.0, ramp: [[0, '#701010'], [0.5, '#e03010'], [1, '#ffb060']], intensity: 1.1, t0: 0, dur: 4.6, fade: [0.1, 1.0] });
       fx.decal({ kind: 'cracks', r: [2.6, 2.8], cells: 4, heat: [1, 0.2], reveal: 0.6, t0: 1.1, dur: 3.5, fade: [0.1, 1.5], ramp: [[0, '#300'], [0.5, '#f40'], [1, '#fc8']] });
       fx.decal({ kind: 'scorch', r: [1.8, 2.0], t0: 1.1, dur: 3.5, fade: [0.5, 1.5] });
-      fx.flash(1.15, 0.25, '#ff7a30', 0.25); fx.shake(1.15, 2.2, 0.05);
+      fx.flash(1.15, 0.25, '#ff7a30', 0.15); fx.shake(1.15, 2.2, 0.05);
       fx.ring({ t0: 1.15, dur: 0.9, r: [0.3, 5], width: [0.4, 0.08], normal: 'up', intensity: 1.2, ramp: [[0, '#fff'], [0.4, '#fa6'], [1, '#a30']] });
-      fx.beam({ pos: [0, 0, 0], height: 5, r: [0.7, 0.7], intensity: 0.3, t0: 1.1, dur: 2.0, fade: [0.05, 1.2], ramp: [[0, '#ff4a10'], [1, '#ffb060']], noise: 0.7 });
+      fx.beam({ pos: [0, 0, 0], height: 5, r: [0.7, 0.9], intensity: 0.18, t0: 1.1, dur: 2.0, fade: [0.05, 1.2], ramp: [[0, '#ff4a10'], [1, '#ffb060']], noise: 1.2 });
       fx.light({ color: '#ff4a20', intensity: 55, pos: [0.4, 1.0, 0.6], range: 10, flicker: 0.2, env: (t) => sm(0.3, 1.2, t) * (1 - sm(3.6, 4.6, t) * 0.8) });
       fx.light({ color: '#ff9a50', intensity: 45, pos: [0, 0.6, 0.8], range: 9, t0: 1.1, dur: 1.2, fade: [0.02, 0.9] });
-      fx.emitter({ count: 70, kind: 'soft', shape: 'ring', radius: 1.9, radiusIn: 1.2, pos: [0, 0, 0], dir: [0, 1, 0], spread: 0.1, speed: [0.5, 1.8], life: [0.8, 1.6], size: [0.04, 0.01], ramp: [[0, '#ffe0a0'], [0.4, '#ff6020'], [1, '#600', 0]], intensity: 2.2, delay: 0.3, emit: 3, swirl: 1 });
+      fx.emitter({ count: 70, kind: 'soft', shape: 'ring', radius: 1.9, radiusIn: 1.2, pos: [0, 0, 0], dir: [0, 1, 0], spread: 0.1, speed: [0.5, 1.8], life: [0.8, 1.6], size: [0.04, 0.01], ramp: [[0, '#ffe0a0'], [0.4, '#ff6020'], [1, '#600', 0]], intensity: 1.5, delay: 0.3, emit: 3, swirl: 1 });
       fx.emitter({ count: 50, kind: 'rock', blend: 'normal', lit: 1, shape: 'disc', radius: 0.6, pos: [0, 0.1, 0], dir: [0, 1, 0], spread: 0.9, speed: [2, 6], life: [1.0, 1.8], size: [0.12, 0.08], gravity: [0, -9.8, 0], bounce: 0.3, rot: 5, ramp: [[0, '#4a3830'], [1, '#4a3830', 1]], delay: 1.15, emit: 0.6 });
       fx.emitter({ count: 50, kind: 'dust', blend: 'normal', lit: 1, shape: 'disc', radius: 0.9, pos: [0, 0.1, 0], dir: [0, 1, 0], radial: 1, spread: 1.3, speed: [0.6, 2.0], life: [1.5, 2.8], size: [0.5, 1.5], drag: 1.2, ramp: [[0, '#6a5446', 0], [0.2, '#5a4a3e', 0.5], [1, '#2a2420', 0]], delay: 1.15, emit: 1.8, order: -1, gravity: [0, 0.15, 0] });
-      fx.emitter({ count: 60, kind: 'spark', shape: 'disc', radius: 0.5, pos: [0, 0.1, 0], dir: [0, 1, 0], spread: 0.8, speed: [2, 6], life: [0.6, 1.4], gravity: [0, -7, 0], size: [0.05, 0.015], stretch: 1.2, ramp: [[0, '#fff0b0'], [0.4, '#ff7a20'], [1, '#400', 0]], intensity: 3.5, delay: 1.2, emit: 1, bounce: 0.35 });
+      fx.emitter({ count: 60, kind: 'spark', shape: 'disc', radius: 0.5, pos: [0, 0.1, 0], dir: [0, 1, 0], spread: 0.8, speed: [2, 6], life: [0.6, 1.4], gravity: [0, -7, 0], size: [0.05, 0.015], stretch: 1.2, ramp: [[0, '#fff0b0'], [0.4, '#ff7a20'], [1, '#400', 0]], intensity: 2.5, delay: 1.2, emit: 1, bounce: 0.35 });
     } },
 ];
 

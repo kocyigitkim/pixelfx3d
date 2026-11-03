@@ -4,7 +4,7 @@ const stack = (fx) => { // crossed logs
   for (let i = 0; i < 5; i++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.075, 0.95, 10), m); const a = (i / 5) * Math.PI * 2; l.position.set(Math.cos(a) * 0.18, 0.1, Math.sin(a) * 0.18); l.rotation.set(Math.PI / 2 - 0.35, 0, -a + Math.PI / 2); l.rotation.order = 'YXZ'; l.rotation.y = a; l.rotation.x = 1.2; g.add(l); }
   return g;
 };
-const FIRE = [[0, '#fff2c0', 1], [0.25, '#ffb030', 0.9], [0.7, '#e04010', 0.5], [1, '#300', 0]];
+const FIRE = [[0, '#ffe2a0', 1], [0.2, '#ffa030', 0.95], [0.55, '#e0480c', 0.7], [0.85, '#6a1606', 0.3], [1, '#1a0602', 0]];
 const SMOKE = [[0, '#2a2622', 0], [0.15, '#403a34', 0.35], [1, '#15130f', 0]];
 const mat = (c, r = 0.9, m = 0) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m });
 const smoke = (fx, o) => fx.emitter({ kind: 'smoke', blend: 'normal', lit: 1, order: -1, ramp: SMOKE, ...o });
@@ -16,7 +16,8 @@ export default [
       fx.mesh(stack(fx), null, { dur: 99 });
       fx.decal({ kind: 'glow', r: [1.2, 1.2], ramp: [[0, '#000'], [0.35, '#8a1a00'], [1, '#ff8a20']], intensity: 1.2, alpha: 0.8, y: 0.006 });
       fx.light({ color: '#ff8a2a', intensity: 22, pos: [0, 0.8, 0], flicker: 0.35, range: 10 });
-      fx.emitter({ count: 34, kind: 'flame', shape: 'disc', radius: 0.26, dir: [0, 1, 0], spread: 0.1, speed: [0.25, 0.6], life: [0.7, 1.25], size: [0.7, 0.2], aspect: 1.9, ramp: fx.pal(FIRE), intensity: 0.6, turb: [0.2, 1.4], pos: [0, 0.18, 0] });
+      fx.emitter({ count: 34, kind: 'flame', shape: 'disc', radius: 0.26, dir: [0, 1, 0], spread: 0.1, speed: [0.25, 0.6], life: [0.7, 1.25], size: [0.7, 0.2], aspect: 1.9, ramp: fx.pal(FIRE), intensity: 0.5, turb: [0.2, 1.4], pos: [0, 0.18, 0] });
+      fx.emitter({ count: 6, kind: 'soft', shape: 'disc', radius: 0.15, dir: [0, 1, 0], speed: [0, 0.05], life: [1.5, 1.5], size: [0.9, 0.9], ramp: [[0, '#ff7a20', 0], [0.5, '#ff6a10', 0.35], [1, '#ff7a20', 0]], intensity: 0.5, pos: [0, 0.35, 0] });
       fx.emitter({ count: 50, kind: 'spark', shape: 'disc', radius: 0.2, dir: [0, 1, 0], spread: 0.6, speed: [0.8, 2.4], life: [1.2, 2.8], gravity: [0, 0.4, 0], drag: 0.25, size: [0.06, 0.02], stretch: 0.6, ramp: [[0, '#fff6c0'], [0.4, '#ff8a20'], [1, '#400', 0]], intensity: 3, turb: [0.4, 1], pos: [0, 0.3, 0] });
       smoke(fx, { count: 26, shape: 'disc', radius: 0.2, dir: [0, 1, 0], spread: 0.2, speed: [0.5, 0.9], life: [2, 3], size: [0.4, 1.7], turb: [0.3, 0.6], gravity: [0, 0.1, 0], pos: [0, 0.9, 0] });
     } },
@@ -63,25 +64,25 @@ export default [
 
   { id: 'fire/fire-ring', name: 'Fire ring', category: 'fire', loop: false, duration: 3.9, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [4.2, 3.0, 5.2], target: [0, 0.3, 0] } },
     build(fx) {
-      fx.flash(0, 0.2, '#ffb060', 0.35);
-      fx.light({ color: '#ff7a20', intensity: 90, pos: [0, 1.2, 0], range: 16, flicker: 0.3, fade: [0.1, 1.2], dur: 3.5 });
-      fx.ring({ t0: 0, dur: 0.9, r: [0.3, 3.0], width: [0.3, 0.12], normal: 'up', intensity: 1.2, fill: 0.2, ramp: [[0, '#fff0b0'], [0.5, '#ff9a30'], [1, '#a30']] });
+      fx.flash(0, 0.2, '#ffb060', 0.2);
+      fx.light({ color: '#ff7a20', intensity: 60, pos: [0, 1.2, 0], range: 16, flicker: 0.3, fade: [0.1, 1.2], dur: 3.5 });
+      fx.ring({ t0: 0, dur: 0.9, r: [0.3, 3.0], width: [0.3, 0.12], normal: 'up', intensity: 0.9, fill: 0.2, ramp: [[0, '#fff0b0'], [0.5, '#ff9a30'], [1, '#a30']] });
       fx.decal({ kind: 'scorch', t0: 0.3, dur: 3.6, r: [2.9, 2.9], fade: [0.4, 1.5], heat: [1, 0], ramp: [[0, '#300'], [0.5, '#f40'], [1, '#fc8']] });
-      fx.emitter({ count: 120, kind: 'smoke', shape: 'ring', radius: 0.4, radiusIn: 0.2, dir: [0, 0.15, 0], spread: 0.15, radial: 1, speed: [2.2, 3.4], life: [0.7, 1.0], size: [0.6, 0.9], aspect: 1.9, ramp: fx.pal(FIRE), intensity: 0.5, emit: 0.25, drag: 0.4, turb: [0.2, 2] });
-      fx.emitter({ count: 220, kind: 'smoke', shape: 'ring', radius: 3.0, radiusIn: 2.6, dir: [0, 1, 0], spread: 0.12, speed: [0.5, 1.4], life: [0.7, 1.5], size: [0.8, 0.3], aspect: 2.0, ramp: fx.pal(FIRE), intensity: 0.45, delay: 0.85, emit: 2.0, turb: [0.3, 1.5], floorFade: 0.05 });
-      fx.emitter({ count: 120, kind: 'spark', shape: 'ring', radius: 2.9, radiusIn: 2.5, dir: [0, 1, 0], spread: 0.5, speed: [1, 3.5], life: [1, 2.2], gravity: [0, 0.3, 0], drag: 0.3, size: [0.05, 0.02], stretch: 0.6, ramp: [[0, '#fff2b0'], [0.4, '#ff8a20'], [1, '#400', 0]], intensity: 3, delay: 0.9, emit: 2.3 });
+      fx.emitter({ count: 120, kind: 'smoke', shape: 'ring', radius: 0.4, radiusIn: 0.2, dir: [0, 0.15, 0], spread: 0.15, radial: 1, speed: [2.2, 3.4], life: [0.7, 1.0], size: [0.6, 0.9], aspect: 1.9, ramp: fx.pal(FIRE), intensity: 0.35, emit: 0.25, drag: 0.4, turb: [0.2, 2] });
+      fx.emitter({ count: 200, kind: 'flame', shape: 'ring', radius: 3.0, radiusIn: 2.6, dir: [0, 1, 0], spread: 0.12, speed: [0.4, 1.1], life: [0.6, 1.2], size: [0.9, 0.35], aspect: 1.9, ramp: fx.pal(FIRE), intensity: 0.3, delay: 0.85, emit: 2.0, turb: [0.3, 1.5], floorFade: 0.05 });
+      fx.emitter({ count: 120, kind: 'spark', shape: 'ring', radius: 2.9, radiusIn: 2.5, dir: [0, 1, 0], spread: 0.5, speed: [1, 3.5], life: [1, 2.2], gravity: [0, 0.3, 0], drag: 0.3, size: [0.05, 0.02], stretch: 0.6, ramp: [[0, '#fff2b0'], [0.4, '#ff8a20'], [1, '#400', 0]], intensity: 2.2, delay: 0.9, emit: 2.3 });
       smoke(fx, { count: 50, shape: 'ring', radius: 2.9, radiusIn: 2.5, dir: [0, 1, 0], spread: 0.2, speed: [0.5, 1.0], life: [2, 3], size: [0.6, 1.8], delay: 1.0, emit: 2.0, turb: [0.3, 0.6], pos: [0, 0.7, 0] });
     } },
 
   { id: 'fire/fire-tornado', name: 'Fire tornado', category: 'fire', loop: true, duration: 2, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [3.6, 2.2, 4.8], target: [0, 1.5, 0] } },
     build(fx) {
-      fx.light({ color: '#ff7a20', intensity: 90, pos: [0, 1.5, 0.3], range: 14, flicker: 0.3 });
-      fx.decal({ kind: 'glow', r: [2.2, 2.2], ramp: [[0, '#000'], [0.4, '#7a1c00'], [1, '#ff6a10']], intensity: 1.1, alpha: 0.8, y: 0.006 });
-      fx.beam({ pos: [0, 0, 0], height: 3.8, r: [0.3, 1.2], noise: 1.5, speed: 1.5, intensity: 0.22, edge: 1.4, ramp: [[0, '#ffd070'], [0.5, '#ff6a10'], [1, '#400']] });
-      fx.emitter({ count: 180, kind: 'smoke', shape: 'disc', radius: 0.35, dir: [0, 1, 0], spread: 0.08, speed: [1.8, 2.8], life: [1.1, 1.8], size: [0.8, 1.3], aspect: 1.6, ramp: fx.pal(FIRE), intensity: 0.17, swirl: 4.5, radial: 0.55, turb: [0.15, 1.2], floorFade: 0.1 });
-      fx.emitter({ count: 120, kind: 'spark', shape: 'disc', radius: 0.5, dir: [0, 1, 0], spread: 0.3, speed: [1.5, 3.5], life: [1, 1.8], size: [0.05, 0.02], stretch: 0.6, ramp: [[0, '#fff0b0'], [0.4, '#ff8a20'], [1, '#400', 0]], intensity: 3, swirl: 6, radial: 0.8 });
-      fx.emitter({ count: 60, kind: 'flame', shape: 'ring', radius: 1.0, radiusIn: 0.6, dir: [0, 1, 0], spread: 0.1, speed: [0.3, 0.9], life: [0.7, 1.3], size: [0.6, 0.25], aspect: 1.8, ramp: fx.pal(FIRE), intensity: 0.45, swirl: 3 });
-      smoke(fx, { count: 40, shape: 'disc', radius: 0.5, dir: [0, 1, 0], spread: 0.2, speed: [1.8, 2.6], life: [1.4, 1.9], size: [0.9, 2.2], swirl: 3, radial: 0.8, pos: [0, 2.4, 0], ramp: [[0, '#2a2622', 0], [0.4, '#3a342e', 0.3], [1, '#15130f', 0]] });
+      fx.light({ color: '#ff7a20', intensity: 70, pos: [0, 1.5, 0.3], range: 14, flicker: 0.3 });
+      fx.decal({ kind: 'glow', r: [2.0, 2.0], ramp: [[0, '#000'], [0.4, '#6a1800'], [1, '#ff6a10']], intensity: 0.9, alpha: 0.7, y: 0.006 });
+      [[0.15, 0.22], [0.6, 0.32], [1.1, 0.46], [1.6, 0.62], [2.15, 0.82], [2.7, 1.05]].forEach(([y, r], i) => fx.emitter({ count: 50, kind: 'flame', shape: 'ring', radius: r, radiusIn: r * 0.8, pos: [0, y, 0], dir: [0, 1, 0], spread: 0.15, speed: [0.25, 0.6], life: [0.5, 0.9], size: [0.55 - i * 0.03, 0.2], aspect: 1.7, ramp: fx.pal(FIRE), intensity: 0.32 - i * 0.025, swirl: 7 - i * 0.6, turb: [0.12, 1.5] }));
+      fx.emitter({ count: 60, kind: 'flame', shape: 'disc', radius: 0.12, dir: [0, 1, 0], spread: 0.05, speed: [1.6, 2.4], life: [0.6, 1.0], size: [0.5, 0.25], aspect: 2.2, ramp: fx.pal(FIRE), intensity: 0.28, swirl: 8, turb: [0.1, 2] });
+      fx.emitter({ count: 90, kind: 'spark', shape: 'disc', radius: 0.5, dir: [0, 1, 0], spread: 0.3, speed: [1.5, 3.5], life: [1, 1.8], size: [0.05, 0.02], stretch: 0.6, ramp: [[0, '#fff0b0'], [0.4, '#ff8a20'], [1, '#400', 0]], intensity: 2.2, swirl: 6, radial: 0.8 });
+      fx.emitter({ count: 40, kind: 'dust', blend: 'normal', lit: 1, shape: 'ring', radius: 0.9, radiusIn: 0.4, dir: [0, 0.3, 0], spread: 0.5, speed: [0.3, 0.8], life: [1, 1.6], size: [0.3, 0.9], swirl: 4, ramp: [[0, '#4a3c30', 0], [0.3, '#3a3028', 0.35], [1, '#1a1612', 0]], order: -1 });
+      smoke(fx, { count: 40, shape: 'ring', radius: 1.0, radiusIn: 0.6, dir: [0, 1, 0], spread: 0.25, speed: [1.0, 1.8], life: [1.4, 1.9], size: [0.9, 2.2], swirl: 3, pos: [0, 3.0, 0], ramp: [[0, '#2a2622', 0], [0.4, '#3a342e', 0.3], [1, '#15130f', 0]] });
     } },
 
   { id: 'fire/fireball', name: 'Fireball', category: 'fire', loop: true, duration: 1.2, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [-1.2, 1.4, 4.6], target: [-0.4, 1.2, 0], fov: 38 } },
