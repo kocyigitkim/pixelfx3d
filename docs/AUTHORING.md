@@ -71,7 +71,7 @@ Acts run the mannequin from `-windup` s before t=0 (wind-up) to the recovery; hi
 13. Custom additive materials: use `blendSrcAlpha: Zero, blendDstAlpha: One` (Stage patches this in transparent mode).
 14. Loops: callbacks must use `t` (not `tAbs`/`ta`) and periodic frequencies `2π·n/duration`; prims are already loop-safe.
 15. Do not hide things under y=0 by relying on the ground; it is clipped in transparent mode.
-16. Flat ground rings/decals: no `soft`; shock rings: `refract` 0.01–0.02, `dark` 0.25–0.3; `Stage({realism:false})` = old look.
+16. Flat ground rings/decals: no `soft`; shock rings: `refract` 0.01–0.02, `dark` 0.25–0.3.
 
 ## Test loop
 Server is already running on :8123 (`node tools/serve.mjs 8123`; start it if not). Render frames of any effect(s):

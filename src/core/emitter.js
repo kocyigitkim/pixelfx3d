@@ -1,7 +1,8 @@
 // Analytic GPU particle emitter. Every particle is a pure function of (time, seed): deterministic,
 // loop-safe, no CPU simulation. Billboards with procedural fragment "kinds" (smoke, flame, spark...).
 import * as THREE from 'three';
-import { NOISE, DEPTH, SU } from './glsl.js';
+import { NOISE, DEPTH, SU, SIXWAY } from './glsl.js';
+import { getTex } from './textures.js';
 
 export const KINDS = { soft: 0, spark: 1, smoke: 2, flame: 3, ring: 4, shard: 5, flake: 6, drop: 7, glint: 8, petal: 9, bubble: 10, rock: 11, streak: 12, dust: 13 };
 const SHAPES = { point: 0, sphere: 1, disc: 2, ring: 3, box: 4, line: 5 };
@@ -27,12 +28,12 @@ export function makeRamp(stops, n = 128) {
 const VERT = /* glsl */ `
 ${NOISE}
 attribute vec4 aRnd; attribute vec4 aRnd2;
-uniform float uTime, uDelay, uSpan, uPeriod, uSpread, uDrag, uRadial, uBounce, uFloorFade, uLit, uInt, uStretch, uRot, uSwirl, uSizePow, uSizeVar, uLightRange, uFlipY, uAspect, uReal;
+uniform float uTime, uDelay, uSpan, uPeriod, uSpread, uDrag, uRadial, uBounce, uFloorFade, uLit, uInt, uStretch, uRot, uSwirl, uSizePow, uSizeVar, uLightRange, uFlipY, uAspect, uGroundY;
 uniform vec2 uLife, uSpeed, uSize, uTurb;
 uniform vec3 uDir, uGravity, uShapeSize, uAmbient, uLightPos, uLightCol, uWind;
 uniform int uShape, uKind;
-uniform sampler2D uRamp;
-varying vec2 vUv; varying float vU; varying vec4 vRnd; varying vec4 vCol; varying float vSp; varying float vL; varying vec3 vLd, vLc, vUp;
+uniform sampler2D uRamp; uniform vec3 uSunDir;
+varying vec2 vUv; varying float vU; varying vec4 vRnd; varying vec4 vCol; varying float vSp; varying float vL; varying float vEm; varying vec3 vLd, vLc, vUp, vSd;
 
 vec3 shapePos(vec4 r, vec4 r2){
   if(uShape==1){ float th=r.x*6.2831853, z=r.y*2.-1.; float s=sqrt(1.-z*z); vec3 d=vec3(s*cos(th),z,s*sin(th)); return d*mix(uShapeSize.y,uShapeSize.x,pow(max(r2.x,0.),.3333)); }
@@ -64,10 +65,10 @@ void main(){
   if(k>1e-3){ float e=(1.-exp(-k*t))/k; disp=v*e; gd=uGravity*(t-e)/k; } else { disp=v*t; gd=.5*uGravity*t*t; }
   vec3 pos=p0+disp+gd+uWind*t*t*.5;
   if(uBounce>=0. && uGravity.y<0.){
-    float a=.5*uGravity.y, b=v.y, c=p0.y; float D=b*b-4.*a*c;
+    float a=.5*uGravity.y, b=v.y, c=p0.y-uGroundY; float D=b*b-4.*a*c;
     if(D>0.){ float th=(-b-sqrt(D))/(2.*a);
       if(t>th){ float t2=t-th; float vy2=-(v.y+uGravity.y*th)*uBounce; float y=vy2*t2+.5*uGravity.y*t2*t2;
-        float tr=-2.*vy2/uGravity.y; if(y<0.||t2>tr) y=0.; pos.y=y;
+        float tr=-2.*vy2/uGravity.y; if(y<0.||t2>tr) y=0.; pos.y=uGroundY+y;
         pos.xz=p0.xz+v.xz*th+v.xz*.5*(1.-exp(-3.*t2))/3.; } }
   }
   if(uTurb.x>0.){ vec3 q=vec3(aRnd.xy*7.,t*uTurb.y)+pos*.35; pos+=(vec3(vnoise(q),vnoise(q+17.1),vnoise(q+31.7))-.5)*2.*uTurb.x*(.3+u); }
@@ -77,7 +78,7 @@ void main(){
   vec2 q=position.xy;
   vec3 vel=v*exp(-k*t)+uGravity*t;
   float sp=length(vel); vSp=sp;
-  mat2 R=mat2(1.); vLd=vec3(0.,0.,1.); vLc=vec3(0.); vUp=vec3(0.,1.,0.);
+  mat2 R=mat2(1.); vLd=vec3(0.,0.,1.); vLc=vec3(0.); vUp=vec3(0.,1.,0.); vSd=vec3(0.,0.,1.);
   if(uStretch>0.){
     vec2 vv=(modelViewMatrix*vec4(vel,0.)).xy; float l=length(vv);
     vec2 d=l>1e-4?vv/l:vec2(0.,1.);
@@ -91,14 +92,14 @@ void main(){
   }
   gl_Position=projectionMatrix*mv;
   vUv=position.xy+.5; vU=u; vRnd=aRnd2;
-  vec4 col=texture2D(uRamp,vec2(u,.5)); col.rgb*=uInt;
+  vec4 col=texture2D(uRamp,vec2(u,.5)); vEm=dot(col.rgb,vec3(.2126,.7152,.0722)); col.rgb*=uInt;
   vec3 wp=(modelMatrix*vec4(pos,1.)).xyz;
-  vec3 dl=uLightPos-wp; float att=1./(1.+dot(dl,dl)/(uLightRange*uLightRange));
-  if(uReal>.5){ float d2=dot(dl,dl), Rw=uLightRange*2.857; float x=d2/max(Rw*Rw,1e-4); float wn=clamp(1.-x*x,0.,1.); att=2.*wn*wn/(d2+1.); } // windowed inverse-square (UE/Frostbite); x2 = same as old at 1 m; Rw = light range
+  vec3 dl=uLightPos-wp; float d2=dot(dl,dl), Rw=uLightRange*2.857; float x=d2/max(Rw*Rw,1e-4); float wn=clamp(1.-x*x,0.,1.); float att=2.*wn*wn/(d2+1.); // windowed inverse-square (UE/Frostbite); x2 = same as old at 1 m; Rw = light range
   vL=att;
-  if(uReal>.5&&uLit>0.){ mat2 Rt=transpose(R); vec3 lv=(viewMatrix*vec4(dl,0.)).xyz; lv/=max(length(lv),1e-4); vLd=vec3(Rt*lv.xy,lv.z); vec3 uw=(viewMatrix*vec4(0.,1.,0.,0.)).xyz; vUp=vec3(Rt*uw.xy,uw.z); vLc=uLightCol*att; }
-  else { vec3 L=uAmbient+uLightCol*att; col.rgb*=mix(vec3(1.),L,uLit); }
-  if(uFloorFade>0.) col.a*=smoothstep(0.,uFloorFade,wp.y+s*.15);
+  if(uLit>0.){ mat2 Rt=transpose(R); vec3 lv=(viewMatrix*vec4(dl,0.)).xyz; lv/=max(length(lv),1e-4); vLd=vec3(Rt*lv.xy,lv.z); vec3 uw=(viewMatrix*vec4(0.,1.,0.,0.)).xyz; vUp=vec3(Rt*uw.xy,uw.z); vLc=uLightCol*att; }
+  if(uFloorFade>0.) col.a*=smoothstep(0.,uFloorFade,(wp.y-uGroundY)+s*.15);
+  { mat2 Rt=transpose(R); vec3 sv=(viewMatrix*vec4(uSunDir,0.)).xyz; sv/=max(length(sv),1e-4); vSd=vec3(Rt*sv.xy,sv.z); vec3 uw=(viewMatrix*vec4(0.,1.,0.,0.)).xyz; vUp=vec3(Rt*uw.xy,uw.z); }
+  if(vRnd.w>.5){ vSd.x=-vSd.x; vLd.x=-vLd.x; vUp.x=-vUp.x; } // mirrored sprite (uv.x flipped in frag)
   vCol=col;
 }`;
 
@@ -106,10 +107,25 @@ const FRAG = /* glsl */ `
 ${NOISE}
 uniform int uKind; uniform float uTime, uNoise, uLit, uSoft; uniform vec3 uAmbient;
 ${DEPTH}
-varying vec2 vUv; varying float vU; varying vec4 vRnd; varying vec4 vCol; varying float vSp; varying float vL; varying vec3 vLd, vLc, vUp;
+${SIXWAY}
+uniform float uTexOn, uFramePow, uTexLoop, uTile, uEmis, uEmax, uInt; uniform sampler2D uTexA, uTexB; uniform vec3 uSunCol, uSky, uGnd;
+varying vec2 vUv; varying float vU; varying vec4 vRnd; varying vec4 vCol; varying float vSp; varying float vL; varying float vEm; varying vec3 vLd, vLc, vUp, vSd;
+// FIRE stops (fx/fire.js, linear). t: 1 = white-hot, 0 = soot.
+vec3 fireRamp(float t){ float u=1.-clamp(t,0.,1.);
+  return u<.15?mix(vec3(1.,.8963,.7157),vec3(1.,.5395,.1946),u/.15):u<.35?mix(vec3(1.,.5395,.1946),vec3(1.,.3231,.0319),(u-.15)/.2):u<.6?mix(vec3(1.,.3231,.0319),vec3(.7605,.0802,.0048),(u-.35)/.25):u<.85?mix(vec3(.7605,.0802,.0048),vec3(.1022,.0103,.0024),(u-.6)/.25):mix(vec3(.1022,.0103,.0024),vec3(.007,.0018,.0012),(u-.85)/.15); }
 void main(){
   if(vU>1.5) discard;
-  vec2 p=vUv*2.-1.; float d=length(p); float a=0.; vec3 col=vCol.rgb; float seed=vRnd.x*17.+vRnd.z*5.;
+  vec2 p=vUv*2.-1.; float d=length(p); float a=0.; vec3 emis=vec3(0.); vec3 col=vCol.rgb; float seed=vRnd.x*17.+vRnd.z*5.;
+  if(uTexOn>.5){ // baked flipbook: 8x8 sheet, F frames, blend between frames; lit by sun/sky/point via 6-way
+    float F=64.; float x=pow(clamp(vU,0.,1.),uFramePow)*(F-1.); if(uTexLoop>.5) x=mod(x+vRnd.y*F,F);
+    float f0=floor(x), f1=min(f0+1.,F-1.), k=fract(x);
+    vec2 uv=clamp(vUv,.5/uTile,1.-.5/uTile); if(vRnd.w>.5) uv.x=1.-uv.x;
+    vec2 t0=(vec2(mod(f0,8.),7.-floor(f0/8.))+uv)/8., t1=(vec2(mod(f1,8.),7.-floor(f1/8.))+uv)/8.;
+    vec4 A=mix(texture2D(uTexA,t0),texture2D(uTexA,t1),k), B=mix(texture2D(uTexB,t0),texture2D(uTexB,t1),k);
+    vec3 L=uSunCol*W6(vSd,A.rgb,B.rgb)+vLc*W6(vLd,A.rgb,B.rgb)+uSky*W6(vUp,A.rgb,B.rgb)+uGnd*W6(-vUp,A.rgb,B.rgb);
+    col=vCol.rgb*L; a=A.a;
+    if(uEmis>.5){ float e=B.a*uEmax; emis=fireRamp(clamp(e*vEm,0.,1.))*uInt*e; } // softF and vCol.a applied in the shared tail
+  } else {
   if(uKind==0){ a=exp(-d*d*3.2)*(1.-smoothstep(.85,1.,d)); }
   else if(uKind==1){ float ux=vUv.y*2.-1.; a=exp(-p.x*p.x*22.)*smoothstep(1.,.55,abs(ux))*mix(.25,1.,vUv.y); col*=mix(.6,1.6,vUv.y); }
   else if(uKind==12){ a=exp(-p.x*p.x*60.)*(1.-smoothstep(0.,1.,vUv.y))*smoothstep(0.,.1,vUv.y); }
@@ -125,8 +141,8 @@ void main(){
     m*=smoothstep(.3,.75,n2+m*.5);                                                  // noise erosion: no straight edges
     float core=pow(m,2.2)*(1.-y*.8); float fl=.85+.3*sin(vU*31.+seed*7.);
     vec3 deep=col*col/max(max(col.r,max(col.g,col.b)),1e-3);
-    a=m*(.4+.4*n); col=mix(deep*.55,col*1.3,clamp(core*1.6+n*.25,0.,1.))*fl;
-    if(uReal>.5){ float hot=clamp(pow(max(core,0.),.7)*1.6+n*.25,0.,1.); col=mix(deep*.45,vCol.rgb*1.6,hot)*fl; col=mix(col,vec3(.08,.05,.04),smoothstep(.6,1.,y)*.6*(1.-hot)); } // HDR core, cooler sooty tips
+    a=m*(.4+.4*n);
+    float hot=clamp(pow(max(core,0.),.7)*1.6+n*.25,0.,1.); col=mix(deep*.45,vCol.rgb*1.6,hot)*fl; col=mix(col,vec3(.08,.05,.04),smoothstep(.6,1.,y)*.6*(1.-hot)); // HDR core, cooler sooty tips
   }
   else if(uKind==4){ float rr=abs(d-.78); a=exp(-rr*rr*160.)*(.6+.5*vnoise(vec3(atan(p.y,p.x)*3.,seed,uTime*2.))); }
   else if(uKind==5){ // faceted shard
@@ -138,10 +154,10 @@ void main(){
   else if(uKind==10){ float rr=abs(d-.82); a=exp(-rr*rr*90.)*.9+smoothstep(.85,.3,d)*.12; a+=exp(-sq(length(p-vec2(-.35,.4))*5.))*.9; col*=1.; }
   else if(uKind==11){ float n=vnoise(vec3(p*2.2,seed)); a=step(d+(n-.5)*.7,.78); vec3 nr=normalize(vec3(p*.8,.7)); float lam=clamp(dot(nr,normalize(vec3(.4,.8,.5))),0.,1.); col*=.35+.9*lam; col*=.6+.7*vnoise(vec3(p*7.,seed)); }
   else if(uKind==13){ float n=fbm(vec3(vUv*4.+seed,vU)); a=smoothstep(1.,.3,d)*smoothstep(.2,.7,n+.25)*.8; }
-  if(uReal>.5&&uLit>0.){ vec3 N=normalize(vec3(p,sqrt(max(0.,1.-dot(p,p)))+.2)); float wr=max(0.,dot(N,vLd)*.5+.5); float bk=sq(max(0.,-vLd.z))*(1.-N.z)*.6;
-    col=pow(max(col,vec3(0.)),vec3(.7)); vec3 L=min(uAmbient*3.5,vec3(.6))*mix(.7,1.3,dot(N,vUp)*.5+.5)+vLc*(wr+bk); col*=mix(vec3(1.),min(L,vec3(2.5)),uLit); } // soot ramps are authored for a 0.1 ambient: lift darks, brighter sky ambient // sphere-normal sprite: wrap diffuse + back-light rim + hemi ambient
-  a*=vCol.a*softF(uSoft); if(a<.003) discard;
-  gl_FragColor=vec4(col*a,a);
+  if(uLit>0.){ vec3 N=normalize(vec3(p,sqrt(max(0.,1.-dot(p,p)))+.2)); float wr=max(0.,dot(N,vLd)*.5+.5); float bk=sq(max(0.,-vLd.z))*(1.-N.z)*.6;
+    col=pow(max(col,vec3(0.)),vec3(.7)); vec3 L=min(uAmbient*3.5,vec3(.6))*mix(.7,1.3,dot(N,vUp)*.5+.5)+vLc*(wr+bk); col*=mix(vec3(1.),min(L,vec3(2.5)),uLit); } } // soot ramps are authored for a 0.1 ambient: lift darks, brighter sky ambient // sphere-normal sprite: wrap diffuse + back-light rim + hemi ambient
+  float fa=vCol.a*softF(uSoft); a*=fa; emis*=fa; if(a<.003&&dot(emis,emis)<1e-6) discard;
+  gl_FragColor=vec4(col*a+emis,a); // premultiplied; emis only on emissive textures
 }`;
 
 const SOFT = [0.35, 0.05, 0.6, 0.15, 0.35, 0.05, 0.1, 0.1, 0.05, 0.1, 0.2, 0.05, 0.05, 0.6]; // depth-fade metres by KINDS index
@@ -163,12 +179,20 @@ export class Emitter {
     for (let i = 0; i < n; i++) { for (let j = 0; j < 4; j++) { r1[i * 4 + j] = rng(); r2[i * 4 + j] = rng(); } r1[i * 4 + 3] = (i + rng() * 0.999) / n; }
     g.setAttribute('aRnd', new THREE.InstancedBufferAttribute(r1, 4)); g.setAttribute('aRnd2', new THREE.InstancedBufferAttribute(r2, 4));
     g.instanceCount = n;
-    const size = Array.isArray(p.size) ? p.size : [p.size, p.size];
     const ss = p.shapeSize || [p.radius || 0, p.radiusIn || 0, 0];
     const kind = typeof p.kind === 'number' ? p.kind : KINDS[p.kind];
+    const kindName = typeof p.kind === 'number' ? Object.keys(KINDS).find(k => KINDS[k] === p.kind) : p.kind;
+    const add = p.blend === 'add';
     const period = p.loop === false ? 0 : (p.loop === true || (p.loop == null && fx.loop)) ? (p.period || fx.duration) : 0;
     const lu = fx.lu;
+    const AUTO = (kind, additive) => kind === 'smoke' ? (additive ? 'explosion-fireball' : 'smoke-puff') : kind === 'dust' ? 'dust-ring' : kind === 'flame' ? 'fire-column' : null;
+    const texName = p.tex === undefined ? AUTO(kindName, add) : p.tex;
+    this.tex = typeof texName === 'string' ? getTex(texName) : null;
+    const size = (Array.isArray(p.size) ? p.size : [p.size, p.size]).map(v => kindName === 'smoke' && this.tex ? v * 1.15 : v); // baked puff fills ~85% of its tile
+    const texLoop = p.texLoop ?? kindName === 'flame';
+    const tx = this.tex || { a: SU.tNoise.value, b: SU.tNoise.value, framePow: 1, tile: 1, emissive: false, emax: 1 }; // placeholders keep the shader identical when no texture
     this.u = {
+      uTexOn: { value: 0 }, uTexA: { value: tx.a }, uTexB: { value: tx.b }, uFramePow: { value: tx.framePow }, uTexLoop: { value: texLoop ? 1 : 0 }, uTile: { value: tx.tile }, uEmis: { value: tx.emissive ? 1 : 0 }, uEmax: { value: tx.emax },
       uTime: { value: 0 }, uDelay: { value: p.delay }, uSpan: { value: period ? (p.emit > 0.01 ? p.emit : period) : p.emit }, uPeriod: { value: period },
       uLife: { value: new THREE.Vector2(...(Array.isArray(p.life) ? p.life : [p.life, p.life])) },
       uSpeed: { value: new THREE.Vector2(...(Array.isArray(p.speed) ? p.speed : [p.speed, p.speed])) },
@@ -177,19 +201,19 @@ export class Emitter {
       uShape: { value: SHAPES[p.shape] }, uShapeSize: { value: new THREE.Vector3(...ss) }, uKind: { value: kind }, uNoise: { value: 1 },
       uTurb: { value: new THREE.Vector2(...p.turb) }, uSwirl: { value: p.swirl }, uSize: { value: new THREE.Vector2(...size) },
       uSizePow: { value: p.sizePow }, uSizeVar: { value: p.sizeVar }, uStretch: { value: p.stretch }, uRot: { value: p.rot },
-      uInt: { value: p.intensity }, uLit: { value: p.lit }, uFloorFade: { value: p.floorFade }, uFlipY: { value: 0 }, uAspect: { value: p.aspect ?? 1 },
+      uInt: { value: p.intensity }, uLit: { value: p.lit }, uFloorFade: { value: p.floorFade }, uFlipY: { value: 0 }, uGroundY: { value: 0 }, uAspect: { value: p.aspect ?? 1 },
       uRamp: { value: makeRamp(p.ramp) },
       uAmbient: lu.uAmbient, uLightPos: lu.uLightPos, uLightCol: lu.uLightCol, uLightRange: lu.uLightRange, uSoft: { value: p.soft ?? SOFT[kind] ?? 0.35 }, ...SU,
     };
-    const add = p.blend === 'add';
+    const pm = !add || !!(this.tex && this.tex.emissive); // premultiplied: normal blend, or emissive fire (additive + alpha)
     const mat = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: this.u, transparent: true, depthWrite: false, blending: THREE.CustomBlending,
-      blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: add ? THREE.ZeroFactor : THREE.OneFactor, blendDstAlpha: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor });
+      blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: pm ? THREE.OneMinusSrcAlphaFactor : THREE.OneFactor, blendSrcAlpha: pm ? THREE.OneFactor : THREE.ZeroFactor, blendDstAlpha: pm ? THREE.OneMinusSrcAlphaFactor : THREE.OneFactor });
     this.mesh = new THREE.Mesh(g, mat); this.mesh.frustumCulled = false; this.mesh.renderOrder = (add ? 20 : 10) + p.order;
     if (p.pos) this.mesh.position.set(...p.pos);
     if (p.rot3) this.mesh.rotation.set(...p.rot3);
     fx.add(this.mesh);
     this.on = p.t0 != null || p.t1 != null; this.t0 = p.t0 ?? -1e9; this.t1 = p.t1 ?? 1e9;
   }
-  update(tAbs, t) { this.u.uTime.value = tAbs; if (this.on) this.mesh.visible = t >= this.t0 && t <= this.t1; if (this.p.follow) this.p.follow(this.mesh, tAbs, t); }
+  update(tAbs, t) { this.u.uTime.value = tAbs; this.u.uGroundY.value = this.fx.groundY ?? 0; if (this.tex) { this.u.uTexOn.value = this.tex.ready ? 1 : 0; this.u.uTexA.value = this.tex.a; this.u.uTexB.value = this.tex.b; }if (this.on) this.mesh.visible = t >= this.t0 && t <= this.t1; if (this.p.follow) this.p.follow(this.mesh, tAbs, t); }
   dispose() { this.mesh.geometry.dispose(); this.mesh.material.dispose(); this.u.uRamp.value.dispose(); }
 }

@@ -4,10 +4,11 @@ import * as THREE from 'three';
 import { NOISE, DEPTH, SU } from './glsl.js';
 import { makeRamp } from './emitter.js';
 import { win, clamp, lerp, easeOut } from './rng.js';
+import { DecalGeometry } from 'three/addons/geometries/DecalGeometry.js';
 
 const V3 = (a, d = [0, 0, 0]) => new THREE.Vector3(...(a || d));
 const A = (x) => (Array.isArray(x) ? x : [x, x]);
-const bl = (add) => ({ transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: add ? THREE.ZeroFactor : THREE.OneFactor, blendDstAlpha: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor });
+export const bl = (add) => ({ transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: add ? THREE.ZeroFactor : THREE.OneFactor, blendDstAlpha: add ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor });
 // loop-safe time noise: uPeriod>0 crossfades two copies one period apart so frame(t) == frame(t+uPeriod). Needs uTime declared before.
 const PER = /* glsl */ `uniform float uPeriod;
 float fbmT(vec3 p, vec3 v){ if(uPeriod<=0.) return fbm(p+v*uTime); float m=mod(uTime,uPeriod); return mix(fbm(p+v*m),fbm(p+v*(m-uPeriod)),m/uPeriod); }
@@ -17,7 +18,7 @@ const per = (fx) => ({ uPeriod: { value: fx.loop ? fx.duration : 0 } });
 const lightU = (fx) => ({ uLightPos: fx.lu.uLightPos, uLightCol: fx.lu.uLightCol });
 const DEFR = [[0, '#fff', 1], [1, '#fff', 1]];
 
-class Prim {
+export class Prim {
   constructor(fx, p) { this.fx = fx; this.p = p; this.t0 = p.t0 ?? 0; this.dur = p.dur ?? fx.duration; const f = p.fade || [0, 0]; this.fi = f[0]; this.fo = f[1]; this.seed = fx.rng() * 100; }
   w(t) { return win(t, this.t0, this.dur, this.fi, this.fo); }
   prog(t) { return clamp((t - this.t0) / Math.max(1e-6, this.dur)); }
@@ -77,9 +78,9 @@ export class Orb extends Prim {
 }
 
 /* ------------------------------------------------------------------ RING (shockwave) */
-const RING_N = /* glsl */ `float ringN(float r, float ang){ float tn=(uReal>.5&&uPr>=0.)?uSeed*.1+(1.-exp(-3.*uPr))*3.:uTime*1.5; return vnoise(vec3(cos(ang)*2.+uSeed,sin(ang)*2.,r*3.+tn)); }`; // realism: pan fast->slow, loop-safe
+const RING_N = /* glsl */ `float ringN(float r, float ang){ float tn=(uPr>=0.)?uSeed*.1+(1.-exp(-3.*uPr))*3.:uTime*1.5; return vnoise(vec3(cos(ang)*2.+uSeed,sin(ang)*2.,r*3.+tn)); }`; // pan fast->slow, loop-safe
 const RING_F = `${NOISE}
-uniform float uR, uW, uInt, uFill, uTime, uSeed, uBreak, uA, uPr, uSoft; uniform sampler2D uRamp; varying vec2 vUv;
+uniform float uR, uW, uInt, uFill, uTime, uSeed, uBreak, uA, uPr, uSoft; uniform sampler2D uRamp, tNoise; varying vec2 vUv;
 ${DEPTH}
 ${RING_N}
 void main(){ vec2 p=vUv*2.-1.; float r=length(p); float ang=atan(p.y,p.x);
@@ -87,20 +88,20 @@ void main(){ vec2 p=vUv*2.-1.; float r=length(p); float ang=atan(p.y,p.x);
   float a=exp(-d*d*2.)*(1.-smoothstep(.88,1.,r)); float inner=uFill*smoothstep(rr,rr-uW*6.,r)*smoothstep(0.,rr*.7,r)*(.35+.65*n)*step(r,rr+.001);
   float tt=clamp(abs(d)*.55+(1.-a)*.25,0.,1.); vec3 c=texture2D(uRamp,vec2(tt,.5)).rgb;
   float s=(a+inner)*uA;
-  if(uReal>.5){ float e=max(uPr,0.)*.6; s*=smoothstep(e,e+.25,fbm3(vec3(cos(ang)*3.+uSeed,sin(ang)*3.,r*5.))+.1)*softF(uSoft); } // erosion grows over life
+  float e=max(uPr,0.)*.6; s*=smoothstep(e,e+.25,texture2D(tNoise, vec2(ang/6.283*3., r*1.5)+uSeed*.13).r+.1)*softF(uSoft); // erosion grows over life
   gl_FragColor=vec4(c*uInt*s,s); }`;
 const PLANE_V = `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
 const RDIST_F = `${NOISE}
-uniform float uR, uW, uTime, uSeed, uBreak, uA, uPr, uRefract, uReal; varying vec2 vUv;
+uniform float uR, uW, uTime, uSeed, uBreak, uA, uPr, uRefract; varying vec2 vUv;
 ${RING_N}
 void main(){ vec2 p=vUv*2.-1.; float r=length(p); float ang=atan(p.y,p.x); float rr=uR+(ringN(r,ang)-.5)*uBreak*uW*2.; float d=(r-rr)/max(uW*1.6,1e-4);
   vec2 g=vec2(dFdx(r),dFdy(r)); float l=length(g); vec2 dir=l>1e-7?g/l:vec2(0.);
   float m=-d*exp(-d*d*2.)*1.65*(1.-smoothstep(.88,1.,r))*uA*(1.-.5*max(uPr,0.)); gl_FragColor=vec4(dir*m*uRefract,0.,0.); }`;
 const RDARK_F = `${NOISE}
-uniform float uR, uW, uTime, uSeed, uBreak, uA, uPr, uDark, uReal; varying vec2 vUv;
+uniform float uR, uW, uTime, uSeed, uBreak, uA, uPr, uDark; varying vec2 vUv;
 ${RING_N}
 void main(){ vec2 p=vUv*2.-1.; float r=length(p); float ang=atan(p.y,p.x); float rr=uR+(ringN(r,ang)-.5)*uBreak*uW*2.; float d=(r-rr-uW*1.8)/max(uW*1.4,1e-4);
-  float a=exp(-d*d*2.)*(1.-smoothstep(.88,1.,r))*uDark*uA*uReal; if(a<.003) discard; gl_FragColor=vec4(vec3(.015)*a,a); }`;
+  float a=exp(-d*d*2.)*(1.-smoothstep(.88,1.,r))*uDark*uA; if(a<.003) discard; gl_FragColor=vec4(vec3(.015)*a,a); }`;
 export class Ring extends Prim {
   constructor(fx, p) {
     super(fx, p); this.R1 = A(p.r)[1]; this.size = this.R1 * 1.15; const nrm = p.normal || 'up';
@@ -122,7 +123,7 @@ export class Ring extends Prim {
 
 /* ------------------------------------------------------------------ SHELL (dome / shield / bubble) */
 const SHELL_F = `${NOISE}
-uniform float uTime, uInt, uPow, uCells, uA, uImpT, uHemi, uNoise, uSoft; uniform vec3 uImpDir; uniform sampler2D uRamp; varying vec3 vN, vWP, vP;
+uniform float uTime, uInt, uPow, uCells, uA, uImpT, uHemi, uNoise, uSoft, uErode; uniform sampler2D tNoise; uniform vec3 uImpDir; uniform sampler2D uRamp; varying vec3 vN, vWP, vP;
 ${PER}
 ${DEPTH}
 void main(){ if(uHemi>.5 && vP.y<-.02) discard;
@@ -131,20 +132,20 @@ void main(){ if(uHemi>.5 && vP.y<-.02) discard;
   float n=fbmT(vP*3.,vec3(0.,.4,0.))*uNoise;
   float imp=0.; if(uImpT>=0.){ float ang=acos(clamp(dot(normalize(vP),uImpDir),-1.,1.)); float x=ang-uImpT*2.2; imp=exp(-x*x*40.)*exp(-uImpT*2.2)*1.6+exp(-ang*ang*30.)*exp(-uImpT*8.)*2.; }
   float s=clamp(f*.9+edge*(.35+f)+n*.25+imp*(.6+edge*2.),0.,2.); vec3 c=texture2D(uRamp,vec2(clamp(s*.5,0.,1.),.5)).rgb;
-  float a=(f*.8+edge*.5+n*.1+imp*.6)*uA; gl_FragColor=vec4(c*uInt*a,a)*softF(uSoft); }`;
+  float a=(f*.8+edge*.5+n*.1+imp*.6)*uA; float en=texture2D(tNoise,normalize(vN).xy*.5+.5).r; a*=mix(1.,smoothstep(uErode*.8,uErode*.8+.25,en),step(.001,uErode)); gl_FragColor=vec4(c*uInt*a,a)*softF(uSoft); }`;
 const SHELL_DIST_F = `uniform float uA, uPow, uRefract, uHemi; varying vec3 vN, vWP, vP;
 void main(){ if(uHemi>.5&&vP.y<-.02) discard; vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP); float f=pow(max(1.-abs(dot(N,V)),0.),max(uPow*.6,.1));
   vec3 nv=(viewMatrix*vec4(N,0.)).xyz; float l=length(nv.xy); vec2 d=l>1e-4?nv.xy/l:vec2(0.); gl_FragColor=vec4(-d*f*uRefract*uA,0.,0.); }`;
 export class Shell extends Prim {
   constructor(fx, p) {
-    super(fx, p); this.u = { ...per(fx), uTime: { value: 0 }, uInt: { value: p.intensity ?? 1.5 }, uPow: { value: p.power ?? 2.5 }, uCells: { value: p.cells ?? 0 }, uA: { value: 1 }, uImpT: { value: -1 }, uHemi: { value: p.hemi ? 1 : 0 }, uNoise: { value: p.noise ?? 0.5 }, uSoft: { value: p.soft ?? 0.3 }, uRefract: { value: p.refract ?? 0 }, ...SU,
+    super(fx, p); this.u = { ...per(fx), uTime: { value: 0 }, uInt: { value: p.intensity ?? 1.5 }, uPow: { value: p.power ?? 2.5 }, uCells: { value: p.cells ?? 0 }, uA: { value: 1 }, uImpT: { value: -1 }, uHemi: { value: p.hemi ? 1 : 0 }, uNoise: { value: p.noise ?? 0.5 }, uSoft: { value: p.soft ?? 0.3 }, uRefract: { value: p.refract ?? 0 }, uErode: { value: p.erode ?? 0 }, ...SU,
       uImpDir: { value: new THREE.Vector3(1, 0.3, 0).normalize() }, uRamp: { value: makeRamp(p.ramp || [[0, '#012'], [.4, '#4af'], [1, '#fff']]) } };
     const v = `varying vec3 vN, vWP, vP; void main(){ vP=position; vec4 wp=modelMatrix*vec4(position,1.); vWP=wp.xyz; vN=normalize(mat3(modelMatrix)*normal); gl_Position=projectionMatrix*viewMatrix*wp; }`;
     const o = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), new THREE.ShaderMaterial({ vertexShader: v, fragmentShader: SHELL_F, uniforms: this.u, ...bl(true), side: THREE.DoubleSide })); o.renderOrder = 24; if (p.refract) { const m = new THREE.Mesh(o.geometry, new THREE.ShaderMaterial({ vertexShader: v, fragmentShader: SHELL_DIST_F, uniforms: this.u, ...bl(true) })); m.layers.set(2); m.frustumCulled = false; o.add(m); } this.place(o);
   }
   update(tAbs, t) {
     const w = this.w(t); this.obj.visible = w > 0.001; if (!this.obj.visible) return; const p = this.p; const [r0, r1] = A(p.r ?? 1); this.obj.scale.setScalar(lerp(r0, r1, p.ease === 'out' ? easeOut(this.prog(t)) : this.prog(t)) * (1 + (p.pulse ? p.pulse[0] * Math.sin(tAbs * p.pulse[1]) : 0)));
-    this.u.uTime.value = tAbs; this.u.uA.value = w * (p.alpha ?? 1); let it = -1;
+    this.u.uTime.value = tAbs; this.u.uA.value = w * (p.alpha ?? 1); this.u.uErode.value = (p.erode ?? 0) * this.prog(t); let it = -1;
     if (p.impacts) for (const im of p.impacts) if (t >= im.t && t - im.t < 1.2) { it = t - im.t; this.u.uImpDir.value.set(...im.dir).normalize(); }
     this.u.uImpT.value = it;
   }
@@ -153,17 +154,17 @@ export class Shell extends Prim {
 /* ------------------------------------------------------------------ BEAM (cylinder shafts: lasers, pillars, cones) */
 const BEAM_V = `varying vec3 vN, vWP; varying vec2 vUv; void main(){ vUv=uv; vec4 wp=modelMatrix*vec4(position,1.); vWP=wp.xyz; vN=normalize(mat3(modelMatrix)*normal); gl_Position=projectionMatrix*viewMatrix*wp; }`;
 const BEAM_F = `${NOISE}
-uniform float uTime, uInt, uA, uFreq, uSpeed, uPulse, uEdge, uNoiseA, uEndFade, uSoft; uniform sampler2D uRamp; varying vec3 vN, vWP; varying vec2 vUv;
+uniform float uTime, uInt, uA, uFreq, uSpeed, uPulse, uEdge, uNoiseA, uEndFade, uSoft, uErode; uniform sampler2D uRamp, tNoise; varying vec3 vN, vWP; varying vec2 vUv;
 ${PER}
 ${DEPTH}
 void main(){ vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP); float c=pow(abs(dot(N,V)),uEdge);
   float y=vUv.y; float an=vUv.x*6.2831853; float n=fbmT(vec3(cos(an)*1.5,sin(an)*1.5,y*uFreq),vec3(.3,0.,-uSpeed)); float bands=mix(1.,.45+1.1*n,uNoiseA);
   float pulse=1.+uPulse*sin(y*uFreq*2.-ph(uSpeed*3.)); float ends=smoothstep(0.,uEndFade,y)*smoothstep(1.,1.-uEndFade,y);
-  float a=c*bands*pulse*ends*uA; vec3 col=texture2D(uRamp,vec2(clamp(1.-c*bands,0.,1.),.5)).rgb; gl_FragColor=vec4(col*uInt*a,a)*softF(uSoft); }`;
+  float a=c*bands*pulse*ends*uA; float en=texture2D(tNoise,vec2(vUv.x*2.-uTime*.5,vUv.y)).r; a*=mix(1.,smoothstep(uErode*.8,uErode*.8+.25,en),step(.001,uErode)); vec3 col=texture2D(uRamp,vec2(clamp(1.-c*bands,0.,1.),.5)).rgb; gl_FragColor=vec4(col*uInt*a,a)*softF(uSoft); }`;
 export class Beam extends Prim {
   constructor(fx, p) {
     super(fx, p); const [rb, rt] = A(p.r ?? 0.1);
-    this.u = { ...per(fx), uTime: { value: 0 }, uInt: { value: p.intensity ?? 2 }, uA: { value: 1 }, uFreq: { value: p.freq ?? 3 }, uSpeed: { value: p.speed ?? 2 }, uPulse: { value: p.pulse ?? 0.2 }, uEdge: { value: p.edge ?? 1.6 }, uNoiseA: { value: p.noise ?? 0.6 }, uEndFade: { value: p.endFade ?? 0.12 }, uSoft: { value: p.soft ?? 0.3 }, ...SU,
+    this.u = { ...per(fx), uTime: { value: 0 }, uInt: { value: p.intensity ?? 2 }, uA: { value: 1 }, uFreq: { value: p.freq ?? 3 }, uSpeed: { value: p.speed ?? 2 }, uPulse: { value: p.pulse ?? 0.2 }, uEdge: { value: p.edge ?? 1.6 }, uNoiseA: { value: p.noise ?? 0.6 }, uEndFade: { value: p.endFade ?? 0.12 }, uSoft: { value: p.soft ?? 0.3 }, uErode: { value: p.erode ?? 0 }, ...SU,
       uRamp: { value: makeRamp(p.ramp || [[0, '#fff'], [.5, '#8cf'], [1, '#13a']]) } };
     const g = new THREE.CylinderGeometry(rt, rb, 1, 32, 1, true); g.translate(0, 0.5, 0);
     const o = new THREE.Mesh(g, new THREE.ShaderMaterial({ vertexShader: BEAM_V, fragmentShader: BEAM_F, uniforms: this.u, ...bl(true), side: THREE.DoubleSide })); o.renderOrder = 23; this.fromTo = p.from && p.to; this.place(o);
@@ -174,7 +175,7 @@ export class Beam extends Prim {
     let from = p.from, to = p.to; if (p.path) [from, to] = p.path(t, pr); if (!from) { from = p.pos || [0, 0, 0]; to = [from[0], from[1] + (p.height ?? 4), from[2]]; }
     this._a.set(...from); this._b.set(...to); const len = this._a.distanceTo(this._b); const dir = this._b.clone().sub(this._a).normalize();
     this.obj.position.copy(this._a); this.obj.quaternion.setFromUnitVectors(this._y, dir); const sw = p.grow ? lerp(p.grow[0], p.grow[1], easeOut(pr)) : 1;
-    this.obj.scale.set(sw, len * (p.extend ? easeOut(clamp(pr * p.extend)) : 1), sw); this.u.uTime.value = tAbs; this.u.uA.value = w * (p.alpha ?? 1);
+    this.obj.scale.set(sw, len * (p.extend ? easeOut(clamp(pr * p.extend)) : 1), sw); this.u.uTime.value = tAbs; this.u.uA.value = w * (p.alpha ?? 1); this.u.uErode.value = (p.erode ?? 0) * pr;
   }
 }
 
@@ -255,7 +256,7 @@ const p_flick = (p, slot) => { const f = p.flicker ?? 0.35; return 1 - f * (((Ma
 /* ------------------------------------------------------------------ DECAL (ground patterns) */
 const DECAL_KINDS = { scorch: 0, cracks: 1, glow: 2, rune: 3, frost: 4, rings: 5 };
 const DEC_F = `${NOISE}
-uniform int uKind; uniform float uTime, uInt, uA, uProg, uHeat, uCell, uSeed, uSpin, uGlyphs, uPoly; uniform sampler2D uRamp; varying vec2 vUv;
+uniform int uKind; uniform float uTime, uInt, uA, uProg, uHeat, uCell, uSeed, uSpin, uGlyphs, uPoly, uRk; uniform sampler2D uRamp; varying vec2 vUv;
 ${PER}
 float rune(vec2 p){ float r=length(p); float ang=atan(p.y,p.x)+uSpin; float seg=fract(ang/6.2831853+.5); float rv=smoothstep(uProg*1.02,uProg*.98,seg+.0)*1.;
   float ring1=exp(-sq((r-.96)*70.)); float ring2=exp(-sq((r-.88)*110.)); float ring3=exp(-sq((r-.5)*80.))*.8; float ring4=exp(-sq((r-.58)*160.))*.5;
@@ -266,7 +267,7 @@ float rune(vec2 p){ float r=length(p); float ang=atan(p.y,p.x)+uSpin; float seg=
   float a2=mod(atan(p.y,p.x)+uSpin*-1.5,6.2831853/uPoly)-3.14159265/uPoly; float poly=exp(-sq((r*cos(a2)-.5)*110.))*step(r,.62)*.9;
   float tick=step(.5,fract(ang*36./6.2831853))*exp(-sq((r-.92)*45.))*.4;
   return (ring1+ring2*.7+ring3+ring4+g*1.3+poly+tick)*rv*step(r,1.02); }
-void main(){ vec2 p=vUv*2.-1.; float r=length(p); vec3 col=vec3(0.); float a=0.; bool add=true;
+void main(){ vec2 p=(vUv*2.-1.)/max(uRk,1e-3); if(length(p)>1.02) discard; float r=length(p); vec3 col=vec3(0.); float a=0.; bool add=true;
   if(uKind==0){ float n=fbm(vec3(p*3.+uSeed,0.)); float m=smoothstep(1.,.25,r+(n-.5)*.7); float em=smoothstep(.5,.75,fbmT(vec3(p*8.+uSeed,0.),vec3(0.,0.,.3)))*uHeat*smoothstep(.9,.15,r);
     vec3 c=texture2D(uRamp,vec2(em,.5)).rgb*uInt; gl_FragColor=vec4((vec3(.012)*m+c*em)*uA,m*.92*uA); return; }
   if(uKind==1){ vec2 vo=voronoi(vec3(p*uCell+uSeed,0.)); float line=smoothstep(.08,.0,vo.y)*smoothstep(1.,.25,r)*(.55+.45*vnoise(vec3(p*6.,uTime*.7)))*smoothstep(uProg+.03,uProg-.03,r);
@@ -280,14 +281,61 @@ void main(){ vec2 p=vUv*2.-1.; float r=length(p); vec3 col=vec3(0.); float a=0.;
 export class Decal extends Prim {
   constructor(fx, p) {
     super(fx, p); this.u = { ...per(fx), uKind: { value: DECAL_KINDS[p.kind || 'glow'] }, uTime: { value: 0 }, uInt: { value: p.intensity ?? 2 }, uA: { value: 1 }, uProg: { value: 1 }, uHeat: { value: 1 }, uCell: { value: p.cells ?? 5 }, uSeed: { value: this.seed },
-      uSpin: { value: 0 }, uGlyphs: { value: p.glyphs ?? 16 }, uPoly: { value: p.poly ?? 5 }, uRamp: { value: makeRamp(p.ramp || [[0, '#200'], [.4, '#f50'], [1, '#ffd']]) } };
+      uSpin: { value: 0 }, uRk: { value: 1 }, uGlyphs: { value: p.glyphs ?? 16 }, uPoly: { value: p.poly ?? 5 }, uRamp: { value: makeRamp(p.ramp || [[0, '#200'], [.4, '#f50'], [1, '#ffd']]) } };
     const add = p.kind !== 'scorch' && p.kind !== 'frost';
     const o = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ vertexShader: PLANE_V, fragmentShader: DEC_F, uniforms: this.u, ...bl(add), side: THREE.DoubleSide }));
     o.rotation.x = -Math.PI / 2; o.position.y = p.y ?? 0.004; o.renderOrder = add ? 8 : 6; this.place(o); if (p.rotate) o.rotation.set(...p.rotate); if (!p.rotate) o.rotation.x = -Math.PI / 2; if (!p.pos) o.position.y = p.y ?? 0.004;
   }
+  /** one-time: swap the quad for a DecalGeometry projected onto fx.ground (max 2 per fx). Radius growth then lives in uRk. */
+  project(r1) {
+    const fx = this.fx, o = this.obj; if (!fx.ground || this.p.project === false || (fx._decalProj || 0) >= 2) return false; fx._decalProj = (fx._decalProj || 0) + 1;
+    o.scale.setScalar(1); o.updateWorldMatrix(true, false); fx.ground.updateWorldMatrix(true, false);
+    const c = o.getWorldPosition(new THREE.Vector3()), R = r1 * new THREE.Vector3().setFromMatrixColumn(o.matrixWorld, 0).length();
+    const g = new DecalGeometry(fx.ground, c, new THREE.Euler(-Math.PI / 2, 0, 0), new THREE.Vector3(2 * R, 2 * R, 2 * R));
+    g.applyMatrix4(new THREE.Matrix4().copy(o.matrixWorld).invert()); o.geometry.dispose(); o.geometry = g;
+    Object.assign(o.material, { polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, depthTest: true }); return true;
+  }
   update(tAbs, t) {
-    const w = this.w(t); this.obj.visible = w > 0.001; if (!this.obj.visible) return; const p = this.p, pr = this.prog(t); const [r0, r1] = A(p.r ?? 2); this.obj.scale.setScalar(lerp(r0, r1, p.grow === false ? 1 : easeOut(Math.min(1, pr * (p.growSpeed ?? 4)))));
+    const w = this.w(t); this.obj.visible = w > 0.001; if (!this.obj.visible) return; const p = this.p, pr = this.prog(t); const [r0, r1] = A(p.r ?? 2);
+    if (this.proj === undefined) this.proj = this.project(r1);
+    const rc = lerp(r0, r1, p.grow === false ? 1 : easeOut(Math.min(1, pr * (p.growSpeed ?? 4))));
+    if (this.proj) this.u.uRk.value = rc / Math.max(r1, 1e-3); else this.obj.scale.setScalar(rc);
     this.u.uTime.value = tAbs; this.u.uA.value = w * (p.alpha ?? 1); this.u.uProg.value = p.reveal ? clamp((t - this.t0) / p.reveal) : 1; this.u.uHeat.value = p.heat ? lerp(p.heat[0], p.heat[1], pr) : 1; this.u.uSpin.value = (p.spin ?? 0) * tAbs;
+  }
+}
+
+/* ------------------------------------------------------------------ DEBRIS (instanced chunks, closed-form bounces) */
+const GRAV = 9.8, _dm = new THREE.Matrix4(), _dp = new THREE.Vector3(), _dq = new THREE.Quaternion(), _da = new THREE.Vector3(), _ds = new THREE.Vector3();
+export class Debris extends Prim {
+  constructor(fx, p) {
+    super(fx, p); const R = fx.rng, n = Math.min(p.count ?? 20, 40), sp = A(p.speed ?? [3, 6]), sz = A(p.size ?? [0.05, 0.12]), e = p.bounce ?? 0.35;
+    this.n = n; this.life = p.life ?? this.dur; this.ax = new Float32Array(n * 3); this.sz = new Float32Array(n); this.seg = new Float32Array(n * 5 * 9); // 4 flights + rest, 9 floats each: T X Y Z VX VY VZ R A
+    const g = new THREE.IcosahedronGeometry(1, 0), pa = g.attributes.position, jit = new Map(); // jitter per unique vertex so flat faces still meet
+    for (let i = 0; i < pa.count; i++) { const k = pa.getX(i).toFixed(4) + pa.getY(i).toFixed(4) + pa.getZ(i).toFixed(4); if (!jit.has(k)) jit.set(k, [0, 1, 2].map(() => 1 + (R() * 2 - 1) * 0.25)); const j = jit.get(k); pa.setXYZ(i, pa.getX(i) * j[0], pa.getY(i) * j[1], pa.getZ(i) * j[2]); }
+    const mat = new THREE.MeshStandardMaterial({ color: p.color ?? '#4a4038', roughness: 0.9, flatShading: true }); const o = new THREE.InstancedMesh(g, mat, n); o.castShadow = true; this.place(o);
+    const floor = (fx.groundY ?? 0) - o.position.y, S = this.seg; // spawn at the obj origin; floor is obj-local
+    const put = (b, k, s) => S.set([s.T, s.X, s.Y, s.Z, s.VX, s.VY, s.VZ, s.R, s.A], b + k * 9);
+    for (let i = 0; i < n; i++) {
+      const th = R() * (p.spread ?? 0.6), ph = R() * 6.2831853, v = lerp(sp[0], sp[1], R()), z = R() * 2 - 1, az = R() * 6.2831853, q = Math.sqrt(1 - z * z);
+      this.ax.set([q * Math.cos(az), z, q * Math.sin(az)], i * 3); this.sz[i] = lerp(sz[0], sz[1], R());
+      let s = { T: 0, X: 0, Y: 0, Z: 0, VX: Math.sin(th) * Math.cos(ph) * v, VY: Math.cos(th) * v, VZ: Math.sin(th) * Math.sin(ph) * v, R: lerp(4, 12, R()), A: 0 };
+      for (let k = 0; k < 4; k++) { // flight k ends on the floor; the rebound starts the next flight
+        const td = (s.VY + Math.sqrt(s.VY * s.VY + 2 * GRAV * Math.max(0, s.Y - floor))) / GRAV; put(i * 45, k, s);
+        s = { T: s.T + td, X: s.X + s.VX * td, Y: floor, Z: s.Z + s.VZ * td, VX: s.VX * 0.6, VY: -e * (s.VY - GRAV * td), VZ: s.VZ * 0.6, R: s.R * 0.5, A: s.A + s.R * td };
+      }
+      put(i * 45, 4, { ...s, VX: 0, VY: 0, VZ: 0, R: 0 }); // rest on the floor
+    }
+    this.obj = o; this.mat = mat; this.floor = floor;
+  }
+  update(tAbs, t) {
+    const w = this.w(t); this.obj.visible = w > 0.001; if (!this.obj.visible) return; const tt = t - this.t0, S = this.seg, M = this.obj;
+    for (let i = 0; i < this.n; i++) {
+      const b = i * 45; let j = 4; while (j > 0 && S[b + j * 9] > tt) j--; const o = b + j * 9, dt = tt - S[o], s = this.sz[i];
+      let y = S[o + 2] + S[o + 5] * dt - 0.5 * GRAV * dt * dt; const k = clamp((tt - (this.life - 0.5)) / 0.5); y -= 0.3 * s * k; // sink in the last 0.5 s
+      _dp.set(S[o + 1] + S[o + 4] * dt, y, S[o + 3] + S[o + 6] * dt); _da.set(this.ax[i * 3], this.ax[i * 3 + 1], this.ax[i * 3 + 2]);
+      _dq.setFromAxisAngle(_da, S[o + 8] + S[o + 7] * dt); _ds.setScalar(tt < 0 || tt >= this.life ? 0 : s); M.setMatrixAt(i, _dm.compose(_dp, _dq, _ds));
+    }
+    M.instanceMatrix.needsUpdate = true;
   }
 }
 
@@ -323,19 +371,23 @@ export class Water extends Prim {
 /* ------------------------------------------------------------------ LIGHT (physical point light + feeds smoke/ground lighting) */
 const GLOW_F = `uniform vec3 uCol; uniform float uSoft; varying vec2 vUv;
 ${DEPTH}
-void main(){ vec2 p=vUv*2.-1.; float d2=dot(p,p); float a=max(0.,1./(1.+d2*24.)-.04)*smoothstep(1.,.6,sqrt(d2))*uReal*softF(uSoft); if(a<.002) discard; gl_FragColor=vec4(uCol*a,a); }`;
+void main(){ vec2 p=vUv*2.-1.; float d2=dot(p,p); float a=max(0.,1./(1.+d2*24.)-.04)*smoothstep(1.,.6,sqrt(d2))*softF(uSoft); if(a<.002) discard; gl_FragColor=vec4(uCol*a,a); }`;
 export class Light extends Prim {
+  dispose() { if (!this.pooled) return super.dispose(); const l = this.l; l.intensity = 0; l.userData.busy = false; if (this.glow) { l.remove(this.glow); this.glow.geometry.dispose(); this.glow.material.dispose(); } super.dispose(); }
   constructor(fx, p) {
-    super(fx, p); this.color = new THREE.Color(p.color || '#ff9a3c'); this.l = new THREE.PointLight(this.color, 0, p.range ?? 12, 2); this.l.position.set(...(p.pos || [0, 1, 0])); fx.add(this.l); this.obj = this.l; this.i0 = (p.intensity ?? 30) * 0.09;
+    super(fx, p); this.color = new THREE.Color(p.color || '#ff9a3c'); this.pooled = fx.lightPool?.find((l) => !l.userData.busy) || null;
+    if (this.pooled) { this.l = this.pooled; this.l.userData.busy = true; this.l.decay = 2; this.l.distance = p.range ?? 12; this.lp = new THREE.Vector3(...(p.pos || [0, 1, 0])); this.place(new THREE.Object3D()); } // pooled light lives in the host scene; obj is a fx-local placeholder
+    else { this.l = new THREE.PointLight(this.color, 0, p.range ?? 12, 2); this.l.position.set(...(p.pos || [0, 1, 0])); fx.add(this.l); this.obj = this.l; } this.i0 = (p.intensity ?? 30) * 0.09;
     this.rate = p.rate ?? 9; this.seed2 = this.seed;
     if (p.glow) { const s = p.glowSize ?? 0.12 * (p.range ?? 12); this.gu = { uCol: { value: new THREE.Color() }, uSoft: { value: 0.5 }, ...SU };
       const m = new THREE.Mesh(new THREE.PlaneGeometry(s, s), new THREE.ShaderMaterial({ vertexShader: PLANE_V, fragmentShader: GLOW_F, uniforms: this.gu, ...bl(true) })); m.renderOrder = 27; m.frustumCulled = false; this.l.add(m); this.glow = m; } // inverse-square halo, alpha ~ live intensity
   }
   update(tAbs, t) {
+    if (this.pooled) this.obj.getWorldPosition(this.l.position); // pooled light sits in scene root: copy world pos
     const w = this.w(t); const p = this.p; const P = this.fx.loop ? this.fx.duration : 0, r = P ? (2 * Math.PI / P) * Math.max(1, Math.round(this.rate * P / (2 * Math.PI))) : this.rate, k2 = P ? 2 : 2.3, k5 = P ? 5 : 5.1; // loops: integer harmonics of the period
     const fl = p.flicker ? 1 + p.flicker * (Math.sin(tAbs * r + this.seed2) * 0.5 + Math.sin(tAbs * r * k2 + this.seed2 * 2) * 0.35 + Math.sin(tAbs * r * k5) * 0.15) : 1;
     const env = p.env ? p.env(t, this.prog(t)) : 1; const I = this.i0 * w * fl * env; this.l.intensity = I; this.l.color.copy(this.color); if (p.colorFn) p.colorFn(this.l.color, t); if (this.glow) { this.glow.visible = w > 0.001; this.glow.quaternion.copy(this.fx.camQuat); this.gu.uCol.value.copy(this.l.color).multiplyScalar(p.glow * 0.35 * Math.min(1.5, w * fl * env)); }
-    if (p.main !== false && w > 0.001) { const lu = this.fx.lu; lu.uLightPos.value.copy(this.l.position).applyMatrix4(this.fx.matrixWorld); lu.uLightCol.value.copy(this.l.color).multiplyScalar(Math.min(2.5, I / ((p.norm ?? 18) * 0.09))); lu.uLightRange.value = (p.range ?? 12) * 0.35; }
+    if (p.main !== false && w > 0.001) { const lu = this.fx.lu; lu.uLightPos.value.copy(this.pooled ? this.lp : this.l.position).applyMatrix4(this.fx.matrixWorld); lu.uLightCol.value.copy(this.l.color).multiplyScalar(Math.min(2.5, I / ((p.norm ?? 18) * 0.09))); lu.uLightRange.value = (p.range ?? 12) * 0.35; }
   }
 }
 

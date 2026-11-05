@@ -68,7 +68,7 @@
   document.head.appendChild(Object.assign(document.createElement('script'), { type: 'importmap', textContent: JSON.stringify({ imports: { three: base + 'build/three.module.js', 'three/addons/': base + 'examples/jsm/' } }) }));
 </script>
 <script type="module">
-import { Stage, registerAll, registry, CATEGORIES } from '../src/index.js';
+import { Stage, registerAll, registry, CATEGORIES, loadTextures } from '../src/index.js';
 registerAll();
 const $ = (s) => document.querySelector(s);
 const PALETTES = { default: null, 'blue flame': ['#001133', '#0a3fd0', '#38a8ff', '#bfe8ff', '#ffffff'], 'toxic green': ['#031a05', '#0c6b18', '#43d63a', '#c8ff8a', '#ffffff'], 'violet': ['#12002a', '#4b0fa8', '#a24cff', '#e2b8ff', '#ffffff'], 'pink': ['#200018', '#a0156b', '#ff4fa8', '#ffc0e0', '#ffffff'], 'gold': ['#2a1600', '#a86a00', '#ffc533', '#fff0a8', '#ffffff'], 'ice': ['#041526', '#1a5f9e', '#58b8ff', '#c8f0ff', '#ffffff'] };
@@ -108,6 +108,7 @@ addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT') { if (e.k
 // tour + progress bar
 setInterval(() => { const fx = stage.fx; if (!fx) return; $('#prog i').style.width = (fx.loop ? (fx.t / fx.duration) : Math.min(1, Math.max(0, fx.time / fx.duration))) * 100 + '%';
   if (tour) { const seen = fx.loop ? fx.time : fx.time; const lim = fx.loop ? fx.duration * 1.5 + 1 : fx.duration + 1.2; if (seen > lim) { const i = tourList.indexOf(cur); select(tourList[(i + 1) % tourList.length]); } } }, 100);
+await loadTextures();
 drawCats(); drawList(); const first = location.hash.slice(1); select(registry.has(first) ? first : (registry.has('fire/campfire') ? 'fire/campfire' : [...registry.keys()][0]), !!first);
 addEventListener('hashchange', () => { const id = location.hash.slice(1); if (registry.has(id)) select(id, true); });
 </script>

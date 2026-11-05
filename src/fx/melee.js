@@ -1,6 +1,7 @@
 // Melee: blade-following swept-surface trails (sampled from the mannequin's own pose keys), sparks, dust, hit-stop.
 import * as THREE from 'three';
 import { evalKeys } from '../core/dummy.js';
+import { SU } from '../core/glsl.js';
 
 const _v = new THREE.Vector3();
 /** sample a point on the held weapon (len m from the hand, along the blade) over [t0,t1] -> fn(t) -> [x,y,z] (fx-local). rotY(t) optional body spin. */
@@ -11,15 +12,15 @@ export function bladeTable(fx, t0, t1, len, rotY, step = 1 / 90) {
   return (t) => { const f = Math.min(n, Math.max(0, (t - t0) / step)), i = Math.min(n - 1, Math.floor(f)), k = f - i, a = arr[i], c = arr[i + 1]; return [a[0] + (c[0] - a[0]) * k, a[1] + (c[1] - a[1]) * k, a[2] + (c[2] - a[2]) * k]; };
 }
 const SW_V = `attribute float aAge, aV; varying float vAge, vV; void main(){ vAge=aAge; vV=aV; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
-const SW_F = `float sq(float x){return x*x;} float cube(float x){return x*x*x;} uniform vec3 uC0, uC1, uC2; uniform float uInt, uA, uEdge, uNorm; varying float vAge, vV;
-void main(){ float a=clamp(vAge,0.,1.); float fall=pow(max(1.-a,0.),1.7); float e=pow(max(vV,0.),uEdge)*.9+.12*vV; float fin=smoothstep(0.,.05,a)*.6+.4; float b=fall*e*uA*uInt;
-  vec3 c=a<.35?mix(uC0,uC1,a/.35):mix(uC1,uC2,(a-.35)/.65); c=mix(c,uC0,cube(sq(max(vV,0.)))*.6); if(uNorm>.5){ float na=clamp(fall*smoothstep(0.,.35,vV)*uA*uInt,0.,1.); gl_FragColor=vec4(c*na,na); } else gl_FragColor=vec4(c*b,1.); }`;
+const SW_F = `float sq(float x){return x*x;} float cube(float x){return x*x*x;} uniform vec3 uC0, uC1, uC2; uniform float uInt, uA, uEdge, uNorm; varying float vAge, vV; uniform sampler2D tNoise;
+void main(){ float a=clamp(vAge,0.,1.); float fall=pow(max(1.-a,0.),1.7); float e=pow(max(vV,0.),uEdge)*.9+.12*vV; float fin=smoothstep(0.,.05,a)*.6+.4; float b=fall*e*uA*uInt; float en=texture2D(tNoise, vec2(vAge*2., vV)).a; float ea=vAge*.9; float ero=smoothstep(ea,ea+.2,en)*(1.+2.*exp(-vAge*12.)); b*=ero;
+  vec3 c=a<.35?mix(uC0,uC1,a/.35):mix(uC1,uC2,(a-.35)/.65); c=mix(c,uC0,cube(sq(max(vV,0.)))*.6); if(uNorm>.5){ float na=clamp(fall*smoothstep(0.,.35,vV)*uA*uInt*ero,0.,1.); gl_FragColor=vec4(c*na,na); } else gl_FragColor=vec4(c*b,1.); }`;
 /** swept blade surface between two points on the weapon (inner/outer len). Fades by itself after t1. */
 export function sweepSurface(fx, A, B, o) {
   const N = o.n ?? 30, len = o.len ?? 0.14, t0 = o.t0, t1 = o.t1, pos = new Float32Array((N + 1) * 2 * 3), age = new Float32Array((N + 1) * 2), vv = new Float32Array((N + 1) * 2), idx = [];
   for (let i = 0; i <= N; i++) { vv[i * 2] = 0; vv[i * 2 + 1] = 1; if (i < N) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } }
   const g = new THREE.BufferGeometry(); g.setIndex(idx); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aAge', new THREE.BufferAttribute(age, 1)); g.setAttribute('aV', new THREE.BufferAttribute(vv, 1));
-  const u = { uC0: { value: new THREE.Color(o.c0 || '#ffffff') }, uC1: { value: new THREE.Color(o.c1 || '#9cf') }, uC2: { value: new THREE.Color(o.c2 || '#126') }, uInt: { value: o.intensity ?? 2.2 }, uA: { value: 1 }, uEdge: { value: o.edge ?? 2.2 }, uNorm: { value: o.normal ? 1 : 0 } };
+  const u = { uC0: { value: new THREE.Color(o.c0 || '#ffffff') }, uC1: { value: new THREE.Color(o.c1 || '#9cf') }, uC2: { value: new THREE.Color(o.c2 || '#126') }, uInt: { value: o.intensity ?? 2.2 }, uA: { value: 1 }, uEdge: { value: o.edge ?? 2.2 }, uNorm: { value: o.normal ? 1 : 0 }, tNoise: SU.tNoise };
   const m = new THREE.ShaderMaterial({ vertexShader: SW_V, fragmentShader: SW_F, uniforms: u, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: o.normal ? THREE.OneMinusSrcAlphaFactor : THREE.OneFactor, blendSrcAlpha: o.normal ? THREE.OneFactor : THREE.ZeroFactor, blendDstAlpha: o.normal ? THREE.OneMinusSrcAlphaFactor : THREE.OneFactor });
   const mesh = new THREE.Mesh(g, m); mesh.frustumCulled = false; mesh.renderOrder = 26;
   fx.mesh(mesh, (t, pr, f, w) => {

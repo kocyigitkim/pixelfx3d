@@ -58,12 +58,12 @@ Writes transparent PNG frames, a sprite sheet and a JSON per effect. JSON fields
 `quality: 'low' | 'medium' | 'high'` on `Stage`. Without `Stage`, use `createFx(id, { countScale })` to scale particle counts. Lower counts are dimmer by design (additive overlap).
 
 ## look options
-Stage options: `bloomScale` (default 0.8), `flashMax` (default 0.6), `toneMapping` (`aces | agx | neutral | none`), `threshold`, `radius`, `bloom`, `exposure`.
+Stage options: `bloomScale` (default 0.55), `flashMax` (default 0.6), `toneMapping` (`aces | agx | neutral | none`), `threshold`, `radius`, `bloom`, `exposure`.
 
 ## tests
 ```
 node tools/determinism-test.mjs all      # same seed = same pixels; loops: frame 0 ~= frame duration
-node tools/alpha-test.mjs                # needs the baseline worktree on port 8124 (BASE_PORT)
+node tools/alpha-test.mjs
 node tools/shots.mjs /tmp/w/shots/me all 0.5
 node tools/gpu-scan.mjs all 0.1,0.5,-0.9   # real-GPU blank-frame / console-error scan (headed Chromium)
 ```

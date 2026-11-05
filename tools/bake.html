@@ -1,0 +1,75 @@
+<!doctype html><meta charset="utf-8"><link rel="icon" href="data:,"><body style="margin:0;background:#000">
+<script type="importmap">{"imports":{"three":"../node_modules/three/build/three.module.js","three/addons/":"../node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+// Offline baker page: window.__bake(name) renders on the real GPU and returns raw RGBA8 (bottom-up) as base64.
+import * as THREE from 'three';
+import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
+import { PRESETS } from './bake/presets.js';
+import { bakeNoise } from './bake/noise.js';
+import { bakePreset } from './bake/march.js';
+import { Sim } from './bake/sim.js';
+
+window.__presets = Object.keys(PRESETS);
+
+// Debug: run the sim for `steps` substeps; sums are read at 1/8 stride (x64 estimate), NaN/Inf counted on every texel.
+window.__simDebug = async (name, steps) => {
+  const sim = new Sim(renderer, PRESETS[name], 1337);
+  for (let i = 0; i < steps; i++) sim.step();
+  const grab = (rt) => { const buf = new Uint16Array(rt.width * rt.height * 4); renderer.readRenderTargetPixels(rt, 0, 0, rt.width, rt.height, buf); return buf; };
+  const S = grab(sim.S.read), V = grab(sim.V.read), w = sim.S.read.width, h = sim.S.read.height;
+  const divBuf = grab(sim.D); // D after the last step = divergence before projection
+  const f = (x) => THREE.DataUtils.fromHalfFloat(x);
+  const maxD = (buf) => { let m = 0; for (let y = 0; y < h; y += 8) for (let x = 0; x < w; x += 8) m = Math.max(m, Math.abs(f(buf[(y * w + x) * 4]))); return m; };
+  const out = { sumRho: 0, sumV: 0, nan: 0, divBefore: maxD(divBuf) };
+  for (let i = 0; i < S.length; i++) if (!Number.isFinite(f(S[i])) || !Number.isFinite(f(V[i]))) out.nan++;
+  for (let y = 0; y < h; y += 8) for (let x = 0; x < w; x += 8) {
+    const i = (y * w + x) * 4;
+    out.sumRho += f(S[i]);
+    out.sumV += Math.abs(f(V[i])) + Math.abs(f(V[i + 1])) + Math.abs(f(V[i + 2]));
+  }
+  out.sumRho *= 64; out.sumV *= 64;
+  sim.divergence(); // divergence of the projected velocity
+  out.divAfter = maxD(grab(sim.D));
+  sim.dispose();
+  return out;
+};
+const renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(64, 64, false);
+
+const toB64 = (u8) => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+
+const testMat = new THREE.ShaderMaterial({
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+  fragmentShader: `varying vec2 vUv;
+    void main(){
+      vec2 g = vUv * 8.0; vec2 t = floor(g); vec2 f = fract(g);
+      float idx = t.x + t.y * 8.0;
+      vec3 c = 0.5 + 0.5 * cos(6.2831 * (idx / 64.0 + vec3(0.0, 0.33, 0.67)));
+      gl_FragColor = vec4(c * (0.4 + 0.6 * vec3(f, 0.5)), 1.0);
+    }`,
+});
+const quad = new FullScreenQuad(testMat);
+
+function renderTest() {
+  const W = 1024, H = 1024;
+  const rt = new THREE.WebGLRenderTarget(W, H, { format: THREE.RGBAFormat, type: THREE.UnsignedByteType, depthBuffer: false });
+  renderer.setRenderTarget(rt);
+  quad.render(renderer);
+  renderer.setRenderTarget(null);
+  const px = new Uint8Array(W * H * 4);
+  renderer.readRenderTargetPixels(rt, 0, 0, W, H, px);
+  rt.dispose();
+  return { files: [{ name: 'test_a', w: W, h: H, b64: toB64(px) }], meta: {} };
+}
+
+// Returns null for names that have no bake yet (driver skips them).
+window.__bake = async (name) => {
+  if (name === 'test') return renderTest();
+  if (name === 'noise') return bakeNoise(renderer, 1337);
+  if (PRESETS[name]) return bakePreset(renderer, name, PRESETS[name], 1337);
+  return null;
+};
+
+window.__ready = true;
+</script>

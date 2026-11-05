@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { makeRng, clamp, lerp, easeOut } from './rng.js';
 import { Emitter } from './emitter.js';
 import * as P from './prims.js';
+import { Erode } from './meshes.js';
 import { Dummy, Target, actKeys, evalKeys } from './dummy.js';
 
 export const registry = new Map();
@@ -13,10 +14,11 @@ const _c = new THREE.Color(), _c2 = new THREE.Color();
 export class Fx extends THREE.Group {
   /** def: effect definition {id, loop, duration, build(fx,o), act?, body?}; o: {seed, position, scale, flip, angle, palette, speed, ...} */
   constructor(def, o = {}) {
-    super(); this.def = def; this.fxId = def.id; this.o = o; this.loop = !!def.loop; this.duration = def.duration ?? 2; this.rng = makeRng(o.seed ?? 1337);
+    super(); this.def = def; this.fxId = def.id; this.o = o; this.lightPool = o.lightPool || null; this.loop = !!def.loop; this.duration = def.duration ?? 2; this.rng = makeRng(o.seed ?? 1337);
     this.time = 0; this.parts = []; this.events = []; this.hold = 0; this.speed = o.speed ?? 1; this.camQuat = new THREE.Quaternion(); this.shakeV = new THREE.Vector3(); this.flashAmt = 0; this.flashColor = new THREE.Color(1, 1, 1);
     this.lu = { uAmbient: { value: new THREE.Color(0.1, 0.12, 0.18) }, uLightPos: { value: new THREE.Vector3(0, 3, 0) }, uLightCol: { value: new THREE.Color(0, 0, 0) }, uLightRange: { value: 4 } };
     this.onFrame = []; this.postState = null; this.timeScale = 1; this.lead = 0;
+    this._ls = {}; this._impacts = []; this._lastT = undefined; this.feelHold = false; this.tier = o.tier ?? def.tier ?? (o.grade ? Math.round(o.grade) : undefined); // tier: feel.js TIER key
     if (o.position) this.position.set(...o.position); if (o.scale) this.scale.setScalar(o.scale); if (o.flip) this.scale.x *= -1; if (o.angle) this.rotation.y = o.angle;
     if (def.act || def.body) this.setupActor();
     def.build(this, o); this.reset();
@@ -41,14 +43,17 @@ export class Fx extends THREE.Group {
   ribbon(p) { return this._add(new P.Ribbon(this, p)); }
   bolt(p) { return this._add(new P.Bolt(this, p)); }
   decal(p) { return this._add(new P.Decal(this, p)); }
+  debris(p) { return this._add(new P.Debris(this, p)); }
   water(p) { return this._add(new P.Water(this, p)); }
   light(p) { return this._add(new P.Light(this, p)); }
   heat(p) { return this._add(new P.Heat(this, p)); }
+  erode(p) { return this._add(new Erode(this, p)); }
   text(p) { return this._add(new P.Text(this, p)); }
   /** custom three object. fn(t, pr, fx, w, obj, tAbs) runs every frame while in [t0, t0+dur]. */
   mesh(obj, fn, p = {}) { return this._add(new P.MeshPrim(this, obj, fn, p)); }
-  /** per-frame callback (t = looped fx time, tAbs = absolute) */
-  on(fn) { this.onFrame.push(fn); return this; }
+  /** per-frame callback (t = looped fx time, tAbs = absolute); on('name', fn) subscribes to a named event (e.g. 'impact') */
+  on(a, b) { if (typeof a === 'string') (this._ls[a] ||= []).push(b); else this.onFrame.push(a); return this; }
+  _emit(name, e) { for (const f of this._ls[name] || []) f(e, this); }
   /** crescent slash: p {center, radius, a0, a1, tilt, depth, width, t0, dur, ramp, ...ribbon opts} */
   slash(p) {
     const c = p.center || [0, 1.1, 0], R = p.radius ?? 1.3, a0 = p.a0 ?? 2.0, a1 = p.a1 ?? -0.5, tilt = p.tilt ?? 0, depth = p.depth ?? 0.15, n = p.n ?? 40, cy = Math.cos(tilt), sy = Math.sin(tilt), pts = [];
@@ -65,8 +70,10 @@ export class Fx extends THREE.Group {
   flash(t0, dur, color = '#fff', amt = 1) { this.events.push({ type: 'flash', t0, dur, color: new THREE.Color(color), amt }); return this; }
   /** hit at time t: {stop (s of hit-stop), shake, amp, push (target kick), flash} */
   hit(t, o = {}) { this.events.push({ type: 'hit', t0: t, ...o }); if (o.shake) this.shake(t, o.shake, o.amp ?? 0.05); return this; }
+  /** impact event at fx-local time t (default: now); emits 'impact' once per period. strength 0..1, dir, pos */
+  impact({ t = this.t ?? 0, strength = 1, dir = [0, -1, 0], pos = null } = {}) { this._impacts.push({ t, strength, dir, pos, fired: false }); return this; }
   /* ---------------------------------------------------------- run */
-  reset() { this.time = -(this.lead || 0); this.hold = 0; this.events.forEach((e) => (e.done = false)); this.target?.reset(); this.body?.reset(); this.update(0); }
+  reset() { this.time = -(this.lead || 0); this.hold = 0; this._impacts.forEach((e) => (e.fired = false)); this.events.forEach((e) => (e.done = false)); this.target?.reset(); this.body?.reset(); this.update(0); }
   get t() { return this.loop ? ((this.time % this.duration) + this.duration) % this.duration : clamp(this.time, -1e3, this.duration); }
   get done() { return !this.loop && this.time > this.duration; }
   update(dt) {
@@ -75,12 +82,14 @@ export class Fx extends THREE.Group {
     const prev = this.time; this.time += dt * this.speed * this.timeScale; const tAbs = this.time, t = this.t;
     this.shakeV.set(0, 0, 0); this.flashAmt = 0;
     for (const e of this.events) {
-      if (e.type === 'hit' && !e.done && prev < e.t0 && tAbs >= e.t0) { e.done = true; if (e.stop) this.hold = e.stop; if (e.push) this.target?.kick(e.push); if (e.flash) this.flash(tAbs, 0.12, '#fff', e.flash); }
+      if (e.type === 'hit' && !e.done && prev < e.t0 && tAbs >= e.t0) { e.done = true; if (e.stop && !this.feelHold) this.hold = e.stop; if (e.push) this.target?.kick(e.push); if (e.flash) this.flash(tAbs, 0.12, '#fff', e.flash); this._emit('impact', { t: tAbs, strength: Math.min(1, (e.amp ?? 0.05) / 0.05), dir: [1, 0, 0], pos: null, fromAct: true }); }
       if (e.type === 'shake') { const u = (t - e.t0) / e.dur; if (u >= 0 && u <= 1) { const k = e.amp * (1 - u) * (1 - u); const s = Math.floor(t * 60); this.shakeV.add(_v(Math.sin(s * 12.9898) * k, Math.sin(s * 78.233) * k, 0)); } }
       if (e.type === 'flash') { const u = (t - e.t0) / e.dur; if (u >= 0 && u <= 1) { this.flashAmt = Math.max(this.flashAmt, e.amt * (1 - u) * (1 - u)); this.flashColor.copy(e.color); } }
     }
     const tp = this.loop ? t : tAbs; // loops: parts see wrapped time, so frame(t) == frame(t + duration); identical inside the first period
     for (const p of this.parts) p.update(tp, t); for (const f of this.onFrame) f(t, tAbs, this);
+    const pt = this._lastT ?? (this.loop ? t : -Infinity), wrapped = t < pt; this._lastT = t; if (wrapped) this._impacts.forEach((e) => (e.fired = false)); // loop wrap re-arms impacts
+    for (const e of this._impacts) if (!e.fired && t >= e.t && (wrapped || pt < e.t)) { e.fired = true; this._emit('impact', e); }
     if (this.body) { this.body.u.uTime.value = tp; if (this.keys) this.body.setPose(evalKeys(this.keys, tAbs)); }
   }
   dispose() { this.parts.forEach((p) => p.dispose?.()); this.removeFromParent(); }

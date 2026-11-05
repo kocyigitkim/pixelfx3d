@@ -169,7 +169,6 @@ export class Fx extends THREE.Group {
 
 /* ---------- Stage: renderer, camera, playback ---------- */
 export interface StageOptions {
-  realism?: boolean;
   transparent?: boolean; quality?: 'low' | 'medium' | 'high'; preserve?: boolean; maxPixelRatio?: number;
   bloom?: number; bloomScale?: number; threshold?: number; radius?: number; exposure?: number;
   flashMax?: number; toneMapping?: 'aces' | 'agx' | 'neutral' | 'none'; sky?: StageDef['sky'];

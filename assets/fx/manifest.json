@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "seed": 1337,
+  "presets": {},
+  "noise": {
+    "file": "noise.png",
+    "size": 512,
+    "channels": "fbm,worleyF1,worleyEdge,streak",
+    "sha256": "b3e844a261a580b0c34287919ed90a79d091d07bfddac8d21eb7b384255e5219"
+  },
+  "files": {
+    "test_a.png": {
+      "w": 1024,
+      "h": 1024,
+      "sha256": "cda2fe465ac8a91fbecff93fdaa7a3996a486d760cdf7e662b2515f8175bf99d"
+    },
+    "noise.png": {
+      "w": 512,
+      "h": 512,
+      "sha256": "b3e844a261a580b0c34287919ed90a79d091d07bfddac8d21eb7b384255e5219"
+    }
+  }
+}
