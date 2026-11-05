@@ -1,5 +1,7 @@
 // Impacts: jagged billboard starbursts, camera-plane burst lines, dust rings, cracks, energy domes. Characters take hits via the mannequin.
 import * as THREE from 'three';
+import { ringSheet } from '../core/meshes.js';
+import { ENV } from '../core/feel.js';
 
 const _r = new THREE.Vector3(), _u = new THREE.Vector3();
 const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
@@ -124,21 +126,30 @@ export default [
       fx.light({ color: '#ffc070', intensity: 40, pos: [I[0] + 0.3, I[1] + 0.2, 0.9], range: 6, t0: 0, dur: 0.3, fade: [0.01, 0.2], norm: 40 });
     } },
 
-  { id: 'impacts/ground-slam', name: 'Ground slam', category: 'impacts', loop: false, duration: 3.2, stage: { sky: 'dusk', bloom: 0.45, view: { pos: [2.2, 2.2, 8.5], target: [0.6, 0.8, 0] } },
-    act: { kind: 'stomp', target: false, windup: 0.7, hits: [{ t: 0, stop: 0.14, shake: 0.9, amp: 0.14 }] },
+  { id: 'impacts/ground-slam', name: 'Ground slam', category: 'impacts', loop: false, duration: 3.2, tier: 3, stage: { sky: 'dusk', bloom: 0.45, view: { pos: [2.2, 2.2, 8.5], target: [0.6, 0.8, 0] } },
+    act: { kind: 'stomp', target: false, windup: 0.7, hits: [{ t: 0, stop: 0.14, shake: 0.9, amp: 0.14, dir: [0, -1, 0] }] },
     build(fx) {
-      const P = [0.25, 0, 0];
-      fx.flash(0, 0.18, '#ffd8a0', 0.3);
-      fx.light({ color: '#ff9a50', intensity: 110, pos: [0.4, 1.4, 1.2], range: 12, t0: -0.02, dur: 1.6, fade: [0.01, 1.2], norm: 80, flicker: 0.1 });
-      fx.ring({ refract: 0.02, dark: 0.3, t0: 0, dur: 0.9, r: [0.3, 7], width: [0.5, 0.1], normal: 'up', pos: P, intensity: 1.1, fill: 0.08, ramp: [[0, '#fff'], [0.4, '#fdb'], [1, '#a64']] });
+      // act hit at T0 (amp .14 -> fx 'impact' strength 1) already emits the impact event, so no fx.impact here
+      const P = [0.25, 0, 0], T0 = 0, SL = [P[0], 0.1, 0], DUST = [[0, '#6a6055', 0], [0.12, '#5a5148', 0.6], [1, '#2a2622', 0]];
+      fx.flash(0, 0.18, '#ffd8a0', 0.15);
+      // anticipation: dust pulled inward, ground glow grows over the windup
+      fx.emitter({ count: 30, kind: 'dust', blend: 'normal', shape: 'ring', radius: 2, radiusIn: 1.8, pos: SL, dir: [0, 0.3, 0], spread: 0.3, radial: -1, speed: [2, 3], life: [0.7, 0.7], size: [0.6, 1.2], ramp: DUST, lit: 1, drag: 1.6, turb: [0.3, 0.9], t0: 0, delay: 0, emit: 0.7, order: -1 });
+      fx.decal({ kind: 'glow', t0: 0, dur: 2.5, reveal: 0.7, r: [1.5, 2.8], pos: P, fade: [0.03, 2.0], intensity: 1.0 });
+      // impact at T0: shock, rings, cracks, scorch, dust crown, debris, warm light, core sprite
+      fx.ring({ refract: 0.02, dark: 0.3, t0: T0, dur: 0.9, r: [0.3, 7], width: [0.5, 0.1], normal: 'up', pos: P, intensity: 1.1, fill: 0.08, ramp: [[0, '#fff'], [0.4, '#fdb'], [1, '#a64']] });
       fx.ring({ refract: 0.02, dark: 0.3, t0: 0.12, dur: 1.0, r: [0.3, 5], width: [0.35, 0.08], normal: 'up', pos: P, intensity: 0.9, ramp: [[0, '#ffe'], [0.4, '#fc9'], [1, '#864']] });
+      const sh = fx.erode({ geo: ringSheet({ r0: 0.5, r1: 1 }), erode: [0, 1], scroll: [1, 0], blend: 'add', intensity: 1, ramp: [[0, '#fff'], [0.4, '#fc9'], [1, '#a50']], pos: P, t0: T0, dur: 0.5 });
+      fx.on((t) => { const s = 0.3 + 4.7 * Math.min(1, Math.max(0, t / 0.5)); sh.obj.scale.set(s, 1, s); }); // shock expands .3 -> 5 over .5 s
       fx.shell({ t0: 0, dur: 0.4, r: [0.3, 2.2], hemi: true, power: 2, noise: 1, intensity: 0.9, pos: P, ramp: [[0, '#fff'], [0.5, '#fc9'], [1, '#a50']], fade: [0, 0.3] });
-      fx.decal({ kind: 'cracks', t0: 0, dur: 3.1, r: [4.2, 4.8], pos: P, fade: [0.05, 2.0], heat: [1, 0.05], reveal: 0.5, cells: 5, ramp: [[0, '#300'], [0.4, '#f40'], [1, '#fc6']] });
-      fx.decal({ kind: 'glow', t0: 0, dur: 2.5, r: [1.5, 2.8], pos: P, fade: [0.03, 2.0], intensity: 1.0 });
+      fx.decal({ kind: 'cracks', t0: 0, dur: 3.1, r: [4.2, 4.8], pos: P, fade: [0.05, 2.0], heat: [1, 0.2], reveal: 0.4, cells: 5, ramp: [[0, '#300'], [0.4, '#f40'], [1, '#fc6']] });
       fx.decal({ kind: 'scorch', t0: 0, dur: 3.1, r: [1.0, 1.8], pos: P, fade: [0.05, 2.0], heat: [1, 0], ramp: [[0, '#210'], [0.5, '#f60'], [1, '#fc8']] });
+      fx.emitter({ count: 48, kind: 'dust', blend: 'normal', shape: 'ring', radius: 1.2, radiusIn: 0.8, pos: SL, dir: [0, 0.3, 0], spread: 0.3, radial: 1, speed: [2, 4], life: [1.2, 2], size: [0.8, 1.4], ramp: DUST, lit: 1, drag: 1.6, gravity: [0, -0.3, 0], turb: [0.3, 0.9], delay: T0, t0: T0 - 0.02, emit: 0.1, order: -1 }); // gravity < 0: dust settles, clear by 2.2 s
+      fx.debris({ count: 36, t0: T0, pos: SL, color: '#4a4038', speed: [3, 7], spread: 0.9, size: [0.05, 0.14], life: 2.2 });
+      fx.light({ color: '#ffb070', intensity: 400, pos: [0.4, 1.2, 1.0], range: 8, t0: T0 - 0.02, dur: 1.2, env: (t) => ENV.impact(t - T0, 6) });
+      fx.emitter({ count: 1, kind: 'soft', blend: 'add', shape: 'point', pos: SL, speed: 0, life: [0.05, 0.05], size: [0.7, 0.7], ramp: [[0, '#fff6e0', 1], [1, '#ffd0a0', 0.6]], intensity: 8, delay: T0, emit: 0.001 });
+      // dissipation: smoke column (unchanged)
       smoke(fx, [P[0], 0.1, 0], { n: 80, radius: 0.5, speed: [1.8, 6], size: [1, 2.6], t: 0, emit: 0.3, life: [1.5, 2.6], drag: 1.4, ramp: [[0, '#8a7a68', 0], [0.12, '#7a6c5c', 0.5], [1, '#4a4238', 0]] });
       smoke(fx, [P[0], 0.2, 0], { n: 40, shape: 'sphere', radius: 0.4, dir: [0, 1, 0], spread: 0.8, radial: 0.2, speed: [1, 3], size: [1, 2.2], t: 0.05, rise: 0.8, life: [1.8, 2.6], ramp: [[0, '#8a7a68', 0], [0.12, '#7a6c5c', 0.45], [1, '#4a4238', 0]] });
-      rocks(fx, [P[0], 0.1, 0], { n: 40, speed: [3, 9.5], size: [0.2, 0.1] });
       sparks(fx, [P[0], 0.1, 0], { n: 90, spread: 1.4, s0: 3, s1: 11, life: [0.4, 1.2] });
     } },
 

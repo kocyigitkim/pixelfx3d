@@ -82,7 +82,7 @@ export class Fx extends THREE.Group {
     const prev = this.time; this.time += dt * this.speed * this.timeScale; const tAbs = this.time, t = this.t;
     this.shakeV.set(0, 0, 0); this.flashAmt = 0;
     for (const e of this.events) {
-      if (e.type === 'hit' && !e.done && prev < e.t0 && tAbs >= e.t0) { e.done = true; if (e.stop && !this.feelHold) this.hold = e.stop; if (e.push) this.target?.kick(e.push); if (e.flash) this.flash(tAbs, 0.12, '#fff', e.flash); this._emit('impact', { t: tAbs, strength: Math.min(1, (e.amp ?? 0.05) / 0.05), dir: [1, 0, 0], pos: null, fromAct: true }); }
+      if (e.type === 'hit' && !e.done && prev < e.t0 && tAbs >= e.t0) { e.done = true; if (e.stop && !this.feelHold) this.hold = e.stop; if (e.push) this.target?.kick(e.push); if (e.flash) this.flash(tAbs, 0.12, '#fff', e.flash); this._emit('impact', { t: tAbs, strength: Math.min(1, (e.amp ?? 0.05) / 0.05), dir: e.dir || [1, 0, 0], pos: null, fromAct: true }); }
       if (e.type === 'shake') { const u = (t - e.t0) / e.dur; if (u >= 0 && u <= 1) { const k = e.amp * (1 - u) * (1 - u); const s = Math.floor(t * 60); this.shakeV.add(_v(Math.sin(s * 12.9898) * k, Math.sin(s * 78.233) * k, 0)); } }
       if (e.type === 'flash') { const u = (t - e.t0) / e.dur; if (u >= 0 && u <= 1) { this.flashAmt = Math.max(this.flashAmt, e.amt * (1 - u) * (1 - u)); this.flashColor.copy(e.color); } }
     }

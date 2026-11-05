@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { cone, ringSheet } from '../core/meshes.js';
+import { ENV } from '../core/feel.js';
 
 /* ---------- shared helpers ---------- */
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -76,21 +78,22 @@ export default [
   /* ------------------------------------------------ frost nova */
   { id: 'ice/frost-nova', name: 'Frost nova', category: 'ice', loop: false, duration: 3.4, body: true, stage: { sky: 'night', bloom: 0.45, view: { pos: [4.2, 3.0, 5.2], target: [0, 0.7, 0], fov: 44 } },
     build(fx) {
-      const mat = iceMat(); const g = new THREE.Group(); const N = 14, st = [];
-      for (let i = 0; i < N; i++) { const a = (i / N) * TAU + fx.rng() * 0.15, r = 2.2 + fx.rng() * 0.25, h = 0.7 + fx.rng() * 0.8; const c = new THREE.Mesh(crystalGeo(0.09 + fx.rng() * 0.05, h), mat); c.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); c.rotation.set(Math.sin(a) * 0.3, 0, -Math.cos(a) * 0.3); g.add(c); st.push(0.4 + fx.rng() * 0.25); }
-      fx.mesh(g, (t, pr, f, w, obj) => obj.children.forEach((c, i) => c.scale.setScalar(Math.max(1e-3, back((t - st[i]) / 0.3) * (1 - sm(2.3 + (i % 5) * 0.1, 3.1, t))))));
-      fx.flash(0.32, 0.4, '#d8eeff', 0.7); fx.shake(0.32, 0.5, 0.06);
-      fx.light({ color: '#8fd0ff', intensity: 220, pos: [0, 1.0, 0], range: 18, env: (t) => (t < 0.3 ? 0.1 + 0.6 * t / 0.3 : 0.25 + 0.75 * Math.exp(-(t - 0.3) * 2.2)), norm: 80 });
-      fx.ring({ t0: 0.3, dur: 1.1, r: [0.3, 4.6], width: [0.5, 0.12], normal: 'up', intensity: 1.6, fill: 0.25, ramp: [[0, '#ffffff'], [0.4, '#a8dcff'], [1, '#2a68c0']] });
-      fx.ring({ t0: 0.34, dur: 0.8, r: [0.3, 3.0], width: [0.3, 0.06], normal: 'cam', pos: [0, 0.9, 0], intensity: 1.2, ramp: [[0, '#fff'], [1, '#9ad0ff']] });
-      fx.ring({ t0: 0.5, dur: 1.3, r: [0.2, 3.6], width: [0.25, 0.06], normal: 'up', y: 0.03, intensity: 1.0, ramp: [[0, '#dff2ff'], [1, '#4c8ee0']] });
-      fx.decal({ kind: 'frost', t0: 0.32, dur: 3.08, r: [4.2, 4.2], cells: 7, reveal: 0.7, fade: [0.15, 1.1], intensity: 1.15, alpha: 0.95 });
-      fx.decal({ kind: 'rune', t0: 0.0, dur: 1.4, r: [1.6, 1.6], fade: [0.15, 0.5], glyphs: 14, spin: 0.7, reveal: 0.4, intensity: 1.5, ramp: [[0, '#0a2a60'], [0.5, '#6fc0ff'], [1, '#ffffff']] });
-      fx.emitter({ count: 26, kind: 'glint', shape: 'sphere', radius: 0.35, dir: [0, 1, 0], spread: 1, radial: 1, speed: [-1.4, -2.2], life: [0.35, 0.5], size: [0.2, 0.06], ramp: glintRamp, intensity: 3, delay: 0.0, emit: 0.3, pos: [0, 1.0, 0] });
-      fx.emitter({ count: 90, kind: 'flake', shape: 'ring', radius: 0.5, radiusIn: 0.2, dir: [0, 0.6, 0], spread: 0.6, radial: 0.9, speed: [1.5, 4.2], life: [1.4, 2.6], size: [0.1, 0.07], swirl: 2.2, drag: 0.8, gravity: [0, -0.25, 0], ramp: flakeRamp, intensity: 1.5, rot: 3, delay: 0.3, emit: 0.5, pos: [0, 0.25, 0], turb: [0.3, 0.8] });
-      fx.emitter({ count: 56, kind: 'shard', shape: 'ring', radius: 0.4, dir: [0, 1, 0], spread: 1.1, radial: 0.8, speed: [2, 5.5], life: [0.7, 1.4], size: [0.08, 0.03], gravity: [0, -7, 0], ramp: iceBurstRamp, intensity: 1.3, delay: 0.32, rot: 5, pos: [0, 0.3, 0] });
-      fx.emitter({ count: 40, kind: 'smoke', blend: 'normal', shape: 'ring', radius: 0.6, radiusIn: 0.2, dir: [0, 0.3, 0], spread: 0.5, radial: 1, speed: [1.4, 3.2], drag: 0.9, life: [1.4, 2.4], size: [0.8, 2.4], ramp: mistRamp, lit: 1, delay: 0.3, emit: 0.4, pos: [0, 0.15, 0], order: -1, turb: [0.3, 0.7] });
-      fx.on((t) => { const k = Math.exp(-Math.max(0, t - 0.3) * 1.6) * sm(0.0, 0.3, t); fx.body.set({ rim: '#9fdcff', rimAmt: k * 1.6, tint: '#8fd0ff', tintAmt: k * 0.3 }); });
+      const IMP = 0.35, SPK = 8, spikeMat = () => new THREE.MeshStandardMaterial({ color: '#cfe6ff', roughness: 0.15, metalness: 0, emissive: '#3a6a9a', emissiveIntensity: 0.4 });
+      // anticipation: cold mist gathers, frost decal starts
+      fx.emitter({ count: 30, kind: 'smoke', blend: 'normal', lit: 1, shape: 'ring', radius: 1.4, radiusIn: 0.4, pos: [0, 0.15, 0], dir: [0, 0.3, 0], spread: 0.4, radial: -0.5, speed: [0.8, 2], life: [1.6, 2.2], size: [0.6, 1.4], drag: 0.9, ramp: [[0, '#b8d0e0', 0], [0.2, '#b8d0e0', 0.34], [1, '#4a6a8c', 0]], emit: 0.3, order: -1, turb: [0.3, 0.7] });
+      fx.decal({ kind: 'frost', t0: 0, dur: 3.0, r: [3.2, 3.2], cells: 7, reveal: 0.3, fade: [0.15, 1.1], intensity: 1.0, ramp: [[0, '#0a1a2a'], [0.5, '#8fcfff'], [1, '#eaf6ff']] });
+      // impact at IMP: directional push, shock ring, spikes, cold flash
+      fx.impact({ t: IMP, strength: 0.7, dir: [0, -1, 0], pos: [0, 0, 0] });
+      const sh = fx.erode({ geo: ringSheet({ r0: 0.6, r1: 1 }), erode: [0, 1], scroll: [1, 0], blend: 'add', intensity: 1, ramp: [[0, '#cfe6ff'], [1, '#ffffff']], t0: IMP, dur: 0.6 });
+      fx.on((t) => { const k = Math.max(0, (t - IMP) / 0.6), s = 0.3 + 4 * (1 - Math.exp(-k * 6)); sh.obj.scale.set(s, 1, s); }); // fast -> slow expansion
+      for (let i = 0; i < SPK; i++) {
+        const a = (i / SPK) * Math.PI * 2, th = 0.35, sp = new THREE.Mesh(cone({ r0: 0.18, r1: 0, h: 0.9 }), spikeMat());
+        sp.position.set(Math.cos(a) * 1.1, 0, Math.sin(a) * 1.1); sp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(Math.cos(a) * Math.sin(th), Math.cos(th), Math.sin(a) * Math.sin(th)));
+        fx.mesh(sp, (t, pr, f, w, obj) => { obj.scale.set(1, Math.max(1e-3, sm(IMP, IMP + 0.2, t)), 1); }, { t0: IMP, dur: 1.4 }); // erupt 0.2 s; hidden at 1.75 (shatter)
+      }
+      fx.light({ color: '#cfe6ff', intensity: 30, pos: [0, 0.6, 0], range: 6, t0: IMP, dur: 0.4, fade: [0, 0.2], env: (t) => 4 * ENV.impact(t - IMP, 6) }); // 2-frame cold flash, peak 120
+      fx.debris({ count: 24, t0: 1.75, pos: [0, 0.5, 0], color: '#d8ecff', speed: [2, 4], spread: 1, size: [0.04, 0.09], life: 1.2, bounce: 0.2 }); // spike shards
+      fx.on((t) => fx.body.set({ rim: '#9fdcff', rimAmt: Math.exp(-Math.max(0, t - IMP) * 1.6) * sm(0, 0.3, t) * 0.8 }));
     } },
 
   /* ------------------------------------------------ ice crystal */

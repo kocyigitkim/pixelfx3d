@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Dummy, POSES } from '../core/dummy.js';
 import { NOISE } from '../core/glsl.js';
+import { spiral } from '../core/meshes.js';
 import { clamp, smooth as sm, lerp } from '../core/rng.js';
 
 const TAU = Math.PI * 2;
@@ -87,19 +88,15 @@ export default [
   /* ------------------------------------------------------------------ heal */
   { id: 'holy/heal', name: 'Heal', category: 'holy', loop: false, duration: 1.9, body: true, stage: { ...SKY, view: { pos: [2.4, 1.5, 3.6], target: [0, 1.0, 0], fov: 42 } },
     build(fx) {
-      fx.on((t) => { const k = Math.exp(-Math.pow((t - 0.55) / 0.35, 2)) * sm(0, 0.3, t) + 0.35 * sm(0.2, 0.6, t) * (1 - sm(1.2, 1.8, t)); fx.body.set({ tint: '#7dffa0', tintAmt: k * 0.55, glow: k * 0.9, rim: '#a8ffc0', rimAmt: k * 0.8 }); });
-      fx.beam({ pos: [0, 0, 0], height: 3.2, r: [0.75, 0.55], intensity: 0.45, t0: 0.1, dur: 1.5, fade: [0.2, 0.9], ramp: [[0, '#40d070'], [0.5, '#a0ffc0'], [1, '#fff']], noise: 0.7, speed: 2.5, edge: 2 });
-      fx.ring({ t0: 0.05, dur: 0.8, r: [0.3, 1.6], width: [0.2, 0.04], normal: 'up', intensity: 1.1, ramp: [[0, '#fff'], [1, '#40e070']] });
-      fx.ring({ t0: 0.3, dur: 0.7, r: [0.3, 1.2], width: [0.15, 0.03], normal: 'up', y: 0.3, intensity: 0.9, ramp: [[0, '#fff'], [1, '#60f090']] });
-      fx.decal({ kind: 'glow', r: [1.2, 1.2], t0: 0, dur: 1.9, fade: [0.15, 1.0], ramp: [[0, '#000'], [0.5, '#106030'], [1, '#80ffa8']], intensity: 0.9, alpha: 0.7, y: 0.005 });
-      fx.light({ color: '#70ff98', intensity: 70, pos: [0.4, 1.2, 0.6], range: 7, t0: 0, dur: 1.9, fade: [0.1, 1.0], flicker: 0.05 });
-      fx.emitter({ count: 26, kind: 'petal', shape: 'ring', radius: 0.75, radiusIn: 0.35, pos: [0, 0, 0], dir: [0, 1, 0], spread: 0.25, speed: [0.9, 1.9], life: [1.0, 1.5], size: [0.13, 0.08], aspect: 1.8, rot: 3, turb: [0.4, 1.4], swirl: 2.5, ramp: [[0, '#ffffff', 0.9], [0.5, '#a0ffc0', 0.9], [1, '#40d070', 0]], intensity: 1.8, delay: 0.1, emit: 0.6, drag: 0.4 });
-      fx.emitter({ count: 70, kind: 'soft', shape: 'cylinder' in {} ? 'disc' : 'disc', radius: 0.6, pos: [0, 0.05, 0], dir: [0, 1, 0], spread: 0.1, speed: [0.8, 2], life: [0.8, 1.4], size: [0.04, 0.01], ramp: [[0, '#fff'], [0.4, '#90ffb0'], [1, '#20c050', 0]], intensity: 2.4, delay: 0.1, emit: 0.8, swirl: 2 });
-      fx.emitter({ count: 12, kind: 'glint', shape: 'box', shapeSize: [0.3, 0.8, 0.2], pos: [0, 1, 0], size: [0.2, 0.04], life: [0.3, 0.7], ramp: [[0, '#fff'], [1, '#8fa', 0]], intensity: 3, delay: 0.3, emit: 0.9, speed: [0, 0.2] });
-      for (let i = 0; i < 3; i++) {
-        const h = heartMesh(), x0 = fx.rng.range(-0.25, 0.25), z0 = fx.rng.range(-0.15, 0.3), tS = 0.55 + i * 0.22;
-        fx.mesh(h, (t) => { const u = clamp((t - tS) / 1.1); h.visible = t > tS && u < 1; h.position.set(x0 + 0.08 * Math.sin(u * 6 + i), 1.5 + u * 0.85, z0); h.rotation.y = Math.sin(u * 4 + i) * 0.5; const s = sm(0, 0.2, u) * (0.9 + 0.1 * Math.sin(u * 20)); h.scale.setScalar(s); h.material.opacity = 1 - sm(0.6, 1, u); }, { dur: 99 });
+      const GOLD_R = [[0, '#fff6e0'], [0.5, '#e8c890'], [1, '#8a6a30']];
+      fx.on((t) => { const k = sm(0.6, 1.0, t) * (1 - sm(1.2, 1.9, t)); fx.body.set({ tint: '#ffd890', tintAmt: k * 0.2, glow: k * 0.35 }); }); // subtle gold body glow
+      fx.decal({ kind: 'rune', r: [1.2, 1.2], glyphs: 12, poly: 6, spin: 0.4, reveal: 0.4, t0: 0, dur: 1.9, fade: [0.3, 0.8], ramp: [[0, '#8a5000'], [0.5, '#ffc040'], [1, '#fff4c8']], intensity: 1.2 });
+      fx.emitter({ count: 30, kind: 'glint', shape: 'sphere', radius: 1.2, pos: [0, 1.0, 0], radial: -1, speed: [1, 2], life: [0.4, 0.6], size: [0.08, 0.03], ramp: [[0, '#fff', 0], [0.3, '#fff6e0', 1], [1, '#e8c890', 0]], intensity: 2, emit: 0.4 }); // motes gather to the body
+      for (const s of [1, -1]) { // two counter-rotating spirals: scroll flips direction
+        fx.erode({ geo: spiral({ turns: 1.5, r0: 0.55, r1: 0.45, h: 1.9, w: 0.12 }), blend: 'add', ramp: GOLD_R, intensity: 1.2, scroll: [s, 0], tile: [3, 1], erode: [0.15, 0.9], head: [0, 1], soft: 0.25, rot3: [0, s < 0 ? Math.PI : 0, 0], t0: 0.2, dur: 1.6 });
       }
+      fx.light({ color: '#ffd890', intensity: 40, pos: [0.4, 1.2, 0.6], range: 5, t0: 0, dur: 1.9, fade: [0.05, 0.6], env: (t) => sm(0, 0.6, t) * (1 - sm(0.6, 1.6, t)) });
+      fx.emitter({ count: 40, kind: 'soft', tex: 'ember-burst', shape: 'disc', radius: 0.5, pos: [0, 0.1, 0], dir: [0, 1, 0], spread: 0.2, speed: [0.4, 1.2], life: [1.2, 1.8], size: [0.2, 0.1], ramp: [[0, '#fff6e0', 0], [0.2, '#ffd890', 1], [1, '#8a6a30', 0]], intensity: 2, delay: 0.6, emit: 0.8 }); // gold motes drift up
     } },
 
   /* ------------------------------------------------------------------ heal aoe */

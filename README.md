@@ -2,7 +2,7 @@
 
 Realistic **3D, shader-driven** re-imagining of [patch-gg/pixelfx](https://github.com/patch-gg/pixelfx) — the same effects (fire, explosions, water, ice, lightning, sci-fi, melee, impacts, projectiles, spawn/death, arcane, holy, shadow, status, nature, weather, UI, pickups, transitions, critters, moves), rebuilt for **three.js / WebGL2**.
 
-No images, no sprite sheets: particles, flames, smoke, water, shields, lightning and decals are GLSL; every random number is seeded, so frame N is always identical.
+Smoke, fire and explosion flipbooks are baked once into `assets/fx` (see Textures below); particles, water, shields, lightning and decals are GLSL. Every random number is seeded, so frame N is always identical.
 
 **406 effects in 43 categories**: 244 classic effects plus 162 MMORPG skills in 22 skill categories (warrior, rogue, archer, mage, priest, shaman, dark, pyro, hydro, geo, aero, steam, lava, storm, frost, swamp, dune, plasma, cryo, nano, ion, quantum). Each skill has 3 grades: `stage.play(id, { grade: 1 | 2 | 3 })`, and a `meta` block (class, elements, tier, archetype, castTime, cooldown, range, shape). The gallery filters by tier/element and has a grade selector.
 
@@ -60,11 +60,20 @@ Writes transparent PNG frames, a sprite sheet and a JSON per effect. JSON fields
 ## look options
 Stage options: `bloomScale` (default 0.55), `flashMax` (default 0.6), `toneMapping` (`aces | agx | neutral | none`), `threshold`, `radius`, `bloom`, `exposure`.
 
+## Textures (bake)
+Flipbook presets (`tex:` on emitters) are baked offline and committed under `assets/fx/` (`*.png` + `manifest.json`). Runtime only reads them.
+```
+node tools/bake.mjs all            # bake every preset (headed Chromium on the real GPU, ~3 min on an M1)
+node tools/bake.mjs all --check    # compare hashes with manifest.json; exit 1 on mismatch
+```
+The driver prints the total size and fails above the 20 MB budget (`du -ch assets/fx/*.png | tail -1` to check by hand).
+
 ## tests
 ```
 node tools/determinism-test.mjs all      # same seed = same pixels; loops: frame 0 ~= frame duration
-node tools/alpha-test.mjs
+node tools/alpha-test.mjs                # no baseline worktree needed; corner alpha 0, valid premultiplied, no dark halo
 node tools/shots.mjs /tmp/w/shots/me all 0.5
+node tools/shots.mjs /tmp/w/shots/me fire/campfire 0.5 host=1   # host scene (stage.attach)
 node tools/gpu-scan.mjs all 0.1,0.5,-0.9   # real-GPU blank-frame / console-error scan (headed Chromium)
 ```
 

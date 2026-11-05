@@ -24,7 +24,34 @@ export interface EmitterParams extends Timed {
   gravity?: Vec3; wind?: number; drag?: number; turb?: [number, number]; swirl?: number;
   bounce?: number; stretch?: number; rot?: number; floorFade?: number; lit?: number;
   pos?: Vec3; rot3?: Vec3; emit?: number; delay?: number; t0?: number; t1?: number; order?: number;
+  /** baked flipbook preset (assets/fx); false = procedural sprite; undefined = auto-map by kind/blend */
+  tex?: string | false; texLoop?: boolean;
   follow?: (obj: THREE.Object3D, tAbs: number, t: number) => void;
+}
+
+export interface ErodeParams extends Timed {
+  geo: THREE.BufferGeometry; ramp?: Ramp; tile?: [number, number]; scroll?: [number, number];
+  erode?: [number, number]; head?: [number, number]; channel?: 'r' | 'a'; blend?: 'add' | 'normal';
+  intensity?: number; soft?: number; pos?: Vec3; rot3?: Vec3; scale?: number; alpha?: number;
+}
+
+export interface DebrisParams extends Timed {
+  count?: number; pos?: Vec3; speed?: Range; spread?: number; size?: Range; life?: number; bounce?: number; color?: string;
+}
+
+export interface ImpactParams { t?: number; strength?: number; dir?: Vec3; pos?: Vec3 | null; }
+export interface ImpactEvent { t: number; strength: number; dir: Vec3 | number[]; pos: Vec3 | null; fromAct?: boolean; }
+
+/** stage.attach() input: a host three.js scene rendered through the stage's bloom + final passes */
+export interface HostParams {
+  scene: THREE.Scene; camera: THREE.Camera; ground?: THREE.Object3D | null;
+  lights?: { sun?: THREE.DirectionalLight; hemi?: THREE.HemisphereLight };
+  depthTexture?: THREE.Texture | null;
+}
+
+/** baked texture entry from getTex(name) */
+export interface TexEntry {
+  a: THREE.Texture; b: THREE.Texture; frames: number; framePow: number; emissive: boolean; emax: number; size: number; tile: number; ready: boolean;
 }
 
 export interface OrbParams extends Timed {
@@ -151,9 +178,14 @@ export class Fx extends THREE.Group {
   water(p: WaterParams): Part;
   light(p: LightParams): Part & { l: THREE.PointLight };
   heat(p: HeatParams): Part;
+  erode(p: ErodeParams): Part;
+  debris(p: DebrisParams): Part;
+  /** impact event at fx-local time t (default now): fires 'impact' listeners once per period */
+  impact(p?: ImpactParams): Fx;
   text(p: TextParams): Part;
   mesh(obj: THREE.Object3D, fn: ((t: number, pr: number, fx: Fx, w: number, obj: THREE.Object3D, tAbs: number) => void) | null, opts?: Timed): Part;
   on(fn: (t: number, tAbs: number, fx: Fx) => void): void;
+  on(event: 'impact', fn: (e: ImpactEvent, fx: Fx) => void): void;
   shake(t0: number, dur: number, amp: number): void;
   flash(t0: number, dur: number, color: string, amt: number): void;
   hit(t: number, opts: { stop?: number; shake?: number; amp?: number; push?: number }): void;
@@ -172,11 +204,18 @@ export interface StageOptions {
   transparent?: boolean; quality?: 'low' | 'medium' | 'high'; preserve?: boolean; maxPixelRatio?: number;
   bloom?: number; bloomScale?: number; threshold?: number; radius?: number; exposure?: number;
   flashMax?: number; toneMapping?: 'aces' | 'agx' | 'neutral' | 'none'; sky?: StageDef['sky'];
+  /** game-feel layer: false = all off; per-part flags default to true */
+  feel?: false | { hitStop?: boolean; push?: boolean; blur?: boolean; aberration?: boolean; desat?: boolean };
+  /** host-owned renderer: the stage does not create, size or append a canvas */
+  renderer?: THREE.WebGLRenderer;
 }
 
 export class Stage {
   constructor(el: HTMLElement, opts?: StageOptions);
   play(id: string | EffectDef, opts?: FxOptions): void;
+  /** host mode: render a host scene/camera through this stage's bloom + final passes */
+  attach(h: HostParams): void;
+  detach(): void;
   frame(t: number): void;
   seek(t: number): void;
   start(): void;
@@ -219,3 +258,23 @@ export const prims: Record<string, (...args: unknown[]) => unknown>;
 export const Dummy: unknown;
 export const Target: unknown;
 export const POSES: Record<string, unknown>;
+
+/* ---------- textures (assets/fx, see docs/AUTHORING.md) ---------- */
+export function loadTextures(base?: string | URL): Promise<void>;
+export function getTex(name: string): TexEntry;
+export const TEX: Record<string, TexEntry>;
+
+/* ---------- parametric mesh builders (src/core/meshes.js) ---------- */
+export function surface(nu: number, nv: number, f: (u: number, v: number) => Vec3): THREE.BufferGeometry;
+export interface SpiralParams { turns?: number; r0?: number; r1?: number; h?: number; w?: number; }
+export function spiral(p?: SpiralParams): THREE.BufferGeometry;
+export interface ConeParams { r0?: number; r1?: number; h?: number; }
+export function cone(p?: ConeParams): THREE.BufferGeometry;
+export interface ArcParams { R?: number; a0?: number; a1?: number; w?: number; tilt?: number; thick?: number; }
+export function arc(p?: ArcParams): THREE.BufferGeometry;
+export interface SlashMeshParams { R?: number; a0?: number; a1?: number; w?: number; curl?: number; }
+export function slash(p?: SlashMeshParams): THREE.BufferGeometry;
+export interface RingSheetParams { r0?: number; r1?: number; }
+export function ringSheet(p?: RingSheetParams): THREE.BufferGeometry;
+export interface BandParams { r?: number; h?: number; }
+export function band(p?: BandParams): THREE.BufferGeometry;

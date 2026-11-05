@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ENV } from '../core/feel.js';
 
 const TAU = Math.PI * 2;
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -100,26 +101,23 @@ export default [
     } },
 
   /* ------------------------------------------------ lightning strike */
-  { id: 'lightning/lightning-strike', name: 'Lightning strike', category: 'lightning', loop: false, duration: 3, stage: { sky: 'storm', bloom: 0.4, view: { pos: [3.4, 2.4, 6.4], target: [0, 2.3, 0], fov: 50 } },
+  { id: 'lightning/lightning-strike', name: 'Lightning strike', category: 'lightning', loop: false, duration: 3, tier: 3, stage: { sky: 'storm', bloom: 0.4, view: { pos: [3.4, 2.4, 6.4], target: [0, 2.3, 0], fov: 50 } },
     build(fx) {
-      const TS = 1.0;
-      fx.decal({ kind: 'rune', t0: 0, dur: 3, fade: [0.4, 1.0], r: [1.7, 1.7], glyphs: 14, spin: 0.5, poly: 6, reveal: 0.9, intensity: 1.4, ramp: [[0, '#0a1450'], [0.5, '#6a86ff'], [1, '#ffffff']] });
+      const TS = 1.0, G = [0, 0.02, 0]; // strike time and strike point
       fx.light({ color: '#8aa0ff', intensity: 40, pos: [0, 0.8, 0], range: 9, env: (t) => (t < TS ? 0.1 + 0.5 * sm(0, TS, t) : 0.1), flicker: 0.2, norm: 70 });
-      fx.light({ color: '#cfd8ff', intensity: 260, pos: [0, 2.2, 0.8], range: 26, env: (t) => (t >= TS ? Math.exp(-(t - TS) * 3.5) * (0.75 + 0.25 * hs(Math.floor(t * 40))) : 0), norm: 200 });
-      fx.flash(TS, 0.35, '#e6ecff', 0.45); fx.flash(TS + 0.28, 0.2, '#e6ecff', 0.25); fx.shake(TS, 0.6, 0.09);
-      fx.beam({ t0: TS, dur: 0.35, fade: [0.01, 0.25], pos: [0, 0, 0], height: 7.5, r: [0.22, 0.16], noise: 0.8, speed: 8, intensity: 0.6, ramp: [[0, '#ffffff'], [0.4, '#c0ccff'], [1, '#4a3ce0']] });
-      fx.bolt({ t0: TS, dur: 0.38, fade: [0.0, 0.2], from: [0.3, 7.5, -0.3], to: [0, 0.02, 0], jag: 0.16, branches: 6, branchLen: 0.22, width: 0.06, rate: 40, flicker: 0.3, ramp: BOLT, intensity: 2.6 });
-      fx.bolt({ t0: TS + 0.26, dur: 0.22, fade: [0.0, 0.15], from: [-0.2, 7.5, 0.2], to: [0.05, 0.02, 0], jag: 0.18, branches: 4, width: 0.05, rate: 35, flicker: 0.4, ramp: BOLT, intensity: 2.4 });
-      fx.bolt({ t0: TS, dur: 0.5, fade: [0.0, 0.4], from: [0.3, 7.5, -0.3], to: [0, 0.02, 0], jag: 0.2, branches: 0, width: 0.03, rate: 18, flicker: 0.5, ramp: BOLT, intensity: 2 });
+      [TS - 0.2, TS - 0.1].forEach((t0, i) => fx.bolt({ t0, dur: 0.08, fade: [0, 0.02], from: [0.4 - 0.5 * i, 7.5, -0.2], to: G, jag: 0.2, branches: 2, branchLen: 0.2, width: 0.02, rate: 30, flicker: 0.4, ramp: BOLT, intensity: 0.6 })); // pre-leaders
+      fx.bolt({ t0: TS, dur: 0.035, fade: [0, 0], from: [0.3, 7.5, -0.3], to: G, jag: 0.16, branches: 6, branchLen: 0.22, width: 0.06, rate: 40, flicker: 0.3, ramp: BOLT, intensity: 8 });
+      [[0.06, 4], [0.12, 3], [0.18, 2]].forEach(([dt, I], i) => fx.bolt({ t0: TS + dt, dur: 0.03, fade: [0, 0], from: [-0.2 + 0.1 * i, 7.5, 0.2], to: G, jag: 0.18, branches: 4, branchLen: 0.22, width: 0.05, rate: 35, flicker: 0.4, ramp: BOLT, intensity: I })); // restrikes
+      fx.light({ color: '#dfe8ff', intensity: 400, pos: [0, 2.2, 0.8], range: 12, t0: TS - 0.02, dur: 1.2, env: (t) => ENV.impact(t - TS, 10) });
+      fx.flash(TS, 0.2, '#e6ecff', 0.15); fx.shake(TS, 0.6, 0.09);
+      fx.impact({ t: TS, strength: 1, dir: [0, -1, 0], pos: G });
       fx.ring({ t0: TS, dur: 0.9, r: [0.2, 5.5], width: [0.5, 0.12], normal: 'up', intensity: 1.5, fill: 0.2, ramp: [[0, '#fff'], [0.4, '#aab8ff'], [1, '#3a2cc0']] });
-      fx.ring({ t0: TS, dur: 0.5, r: [0.2, 2.6], width: [0.3, 0.06], normal: 'cam', pos: [0, 0.5, 0], intensity: 1.2, ramp: [[0, '#fff'], [1, '#8a9cff']] });
-      fx.decal({ kind: 'scorch', t0: TS, dur: 2.0, r: [1.8, 2.2], fade: [0.05, 1.0], heat: [1, 0], ramp: [[0, '#001'], [0.5, '#46f'], [1, '#bdf']] });
-      fx.decal({ kind: 'cracks', t0: TS, dur: 1.8, r: [2.6, 3.0], fade: [0.05, 1.0], heat: [1, 0.1], reveal: 0.3, cells: 4, ramp: [[0, '#001'], [0.5, '#46f'], [1, '#cdf']] });
-      fx.emitter({ count: 130, kind: 'spark', shape: 'sphere', radius: 0.15, pos: [0, 0.2, 0], dir: [0, 1, 0], spread: 1.5, speed: [4, 11], life: [0.4, 1.2], gravity: [0, -9, 0], size: [0.09, 0.03], stretch: 1.4, ramp: sparkRamp, intensity: 3, delay: TS, bounce: 0.35 });
+      fx.decal({ kind: 'scorch', t0: TS, dur: 2.0, r: [1.8, 2.2], fade: [0.05, 1.0], heat: [0, 0], alpha: 0.9, ramp: [[0, '#000'], [1, '#000']] });
+      fx.decal({ kind: 'cracks', t0: TS, dur: 2.0, r: [2.6, 3.0], fade: [0.05, 1.0], heat: [1, 0], reveal: 0.3, cells: 4, ramp: [[0, '#001'], [0.5, '#8ab4ff'], [1, '#f0f6ff']] });
+      fx.emitter({ count: 40, kind: 'spark', shape: 'sphere', radius: 0.15, pos: [0, 0.2, 0], dir: [0, 1, 0], spread: 1.5, speed: [4, 11], life: [0.4, 1.2], gravity: [0, -9, 0], size: [0.09, 0.03], stretch: 1.4, ramp: sparkRamp, intensity: 3, delay: TS, bounce: 0.35 });
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: [0, 0.3, 0], size: [1.4, 0.4], life: [0.35, 0.35], ramp: glintRamp, intensity: 2, delay: TS });
-      fx.emitter({ count: 36, kind: 'dust', blend: 'normal', shape: 'disc', radius: 0.4, pos: [0, 0.1, 0], dir: [0, 0.3, 0], spread: 0.6, radial: 1, speed: [1.5, 4], drag: 1.2, life: [1.2, 2.2], size: [0.7, 2.2], ramp: [[0, '#6a6f7a', 0], [0.15, '#555b66', 0.55], [1, '#2a2d34', 0]], lit: 1, delay: TS, emit: 0.1, order: -1 });
-      fx.emitter({ count: 22, kind: 'rock', blend: 'normal', shape: 'disc', radius: 0.5, pos: [0, 0.1, 0], dir: [0, 1, 0], spread: 0.9, speed: [2, 6], life: [0.8, 1.6], gravity: [0, -9.8, 0], size: [0.1, 0.08], ramp: [[0, '#6c665e'], [1, '#6c665e', 1]], lit: 1, bounce: 0.3, rot: 6, delay: TS });
-      fx.emitter({ count: 20, kind: 'smoke', blend: 'normal', shape: 'disc', radius: 0.3, pos: [0, 0.3, 0], dir: [0, 1, 0], spread: 0.3, speed: [0.4, 1.0], life: [1.5, 2.4], size: [0.3, 1.1], ramp: [[0, '#333', 0], [0.2, '#3a3d44', 0.35], [1, '#1a1b1f', 0]], lit: 1, delay: TS + 0.2, emit: 0.8, order: -1 });
+      fx.emitter({ count: 30, kind: 'dust', blend: 'normal', shape: 'ring', radius: 1.2, radiusIn: 0.8, pos: [0, 0.1, 0], dir: [0, 0.3, 0], spread: 0.3, radial: 1, speed: [2, 4], drag: 1.2, life: [1.2, 2.2], size: [0.7, 2.2], ramp: [[0, '#6a6f7a', 0], [0.15, '#555b66', 0.55], [1, '#2a2d34', 0]], lit: 1, delay: TS, emit: 0.1, order: -1 });
+      fx.emitter({ count: 16, kind: 'smoke', blend: 'normal', shape: 'disc', radius: 0.3, pos: [0, 0.3, 0], dir: [0, 1, 0], spread: 0.3, speed: [0.4, 1.0], life: [0.8, 1.4], size: [0.3, 1.1], ramp: [[0, '#333', 0], [0.2, '#3a3d44', 0.35], [1, '#1a1b1f', 0]], lit: 1, delay: TS, emit: 0.2, order: -1 });
     } },
 
   /* ------------------------------------------------ plasma ball */

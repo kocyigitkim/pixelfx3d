@@ -6,7 +6,7 @@
   "main": "src/index.js",
   "types": "./index.d.ts",
   "exports": { ".": { "types": "./index.d.ts", "default": "./src/index.js" }, "./fx/*": { "types": "./fx.d.ts", "default": "./src/fx/*.js" } },
-  "files": ["src", "index.d.ts", "fx.d.ts", "NOTICE.md"],
+  "files": ["src", "assets", "index.d.ts", "fx.d.ts", "NOTICE.md"],
   "peerDependencies": { "three": ">=0.160.0" },
   "devDependencies": { "three": "0.170.0", "playwright": "*" },
   "license": "MIT"

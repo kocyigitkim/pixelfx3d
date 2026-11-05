@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { ENV } from '../core/feel.js';
+import { spiral, band } from '../core/meshes.js';
 const stack = (fx) => { // crossed logs
   const g = new THREE.Group(), m = new THREE.MeshStandardMaterial({ color: '#3a281b', roughness: 0.95 });
   for (let i = 0; i < 5; i++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.075, 0.95, 10), m); const a = (i / 5) * Math.PI * 2; l.position.set(Math.cos(a) * 0.18, 0.1, Math.sin(a) * 0.18); l.rotation.set(Math.PI / 2 - 0.35, 0, -a + Math.PI / 2); l.rotation.order = 'YXZ'; l.rotation.y = a; l.rotation.x = 1.2; g.add(l); }
@@ -14,12 +16,14 @@ export default [
   { id: 'fire/campfire', name: 'Campfire', category: 'fire', loop: true, duration: 3, stage: { sky: 'night', view: { pos: [2.6, 1.5, 3.2], target: [0, 0.55, 0] } },
     build(fx) {
       fx.mesh(stack(fx), null, { dur: 99 });
-      fx.decal({ kind: 'glow', r: [1.2, 1.2], ramp: [[0, '#000'], [0.35, '#8a1a00'], [1, '#ff8a20']], intensity: 1.2, alpha: 0.8, y: 0.006 });
-      fx.light({ glow: 0.4, color: '#ff8a2a', intensity: 22, pos: [0, 0.8, 0], flicker: 0.35, range: 10 });
+      fx.decal({ kind: 'glow', r: [1.2, 1.2], ramp: [[0, '#000'], [0.35, '#8a1a00'], [1, '#ff8a20']], intensity: 0.5, alpha: 0.6, y: 0.006 });
+      fx.decal({ kind: 'scorch', r: [1.1, 1.1], ramp: [[0, '#0a0604'], [1, '#050302']], intensity: 1, alpha: 0.8, y: 0.005 });
+      fx.light({ glow: 0.4, color: '#ff8a2a', intensity: 22, pos: [0, 0.8, 0], flicker: 0.15, rate: 10, range: 6 });
       fx.heat({ pos: [0, 0.35, 0], size: [0.9, 1.8] });
-      fx.emitter({ count: 34, kind: 'flame', shape: 'disc', radius: 0.26, dir: [0, 1, 0], spread: 0.1, speed: [0.25, 0.6], life: [0.7, 1.25], size: [0.7, 0.2], aspect: 1.9, ramp: fx.pal(FIRE), intensity: 0.5, turb: [0.2, 1.4], pos: [0, 0.18, 0] });
+      fx.orb({ r: [0.12, 0.12], kind: 'fire', intensity: 2, pos: [0, 0.14, 0], ramp: [[0, '#200'], [0.3, '#c21'], [0.6, '#f70'], [0.85, '#fc4'], [1, '#fff']], noise: 1.8, scroll: 1, disp: 0.55 }); // only HDR peak: flame base
+      fx.emitter({ count: 24, kind: 'flame', shape: 'disc', radius: 0.26, dir: [0, 1, 0], spread: 0.1, speed: [0.25, 0.6], life: [1, 1], size: [0.7, 0.2], sizeVar: 0.4, aspect: 1.9, ramp: fx.pal(FIRE), intensity: 0.5, turb: [0.2, 1.4], pos: [0, 0.12, 0] }); // life 1 s = 3 cycles per loop
       fx.emitter({ count: 6, kind: 'soft', shape: 'disc', radius: 0.15, dir: [0, 1, 0], speed: [0, 0.05], life: [1.5, 1.5], size: [0.9, 0.9], ramp: [[0, '#ff7a20', 0], [0.5, '#ff6a10', 0.35], [1, '#ff7a20', 0]], intensity: 0.5, pos: [0, 0.35, 0] });
-      fx.emitter({ count: 50, kind: 'spark', shape: 'disc', radius: 0.2, dir: [0, 1, 0], spread: 0.6, speed: [0.8, 2.4], life: [1.2, 2.8], gravity: [0, 0.4, 0], drag: 0.25, size: [0.06, 0.02], stretch: 0.6, ramp: [[0, '#fff6c0'], [0.4, '#ff8a20'], [1, '#400', 0]], intensity: 3, turb: [0.4, 1], pos: [0, 0.3, 0] });
+      fx.emitter({ count: 30, kind: 'spark', shape: 'disc', radius: 0.2, dir: [0, 1, 0], spread: 0.6, speed: [0.8, 2.4], life: [1.2, 2.8], gravity: [0, 0.4, 0], drag: 0.25, size: [0.06, 0.02], stretch: 0.6, ramp: [[0, '#fff6c0'], [0.4, '#ff8a20'], [1, '#400', 0]], intensity: 1.5, turb: [0.4, 1], pos: [0, 0.3, 0] });
       smoke(fx, { count: 26, shape: 'disc', radius: 0.2, dir: [0, 1, 0], spread: 0.2, speed: [0.5, 0.9], life: [2, 3], size: [0.4, 1.7], turb: [0.3, 0.6], gravity: [0, 0.1, 0], pos: [0, 0.9, 0] });
     } },
 
@@ -92,12 +96,14 @@ export default [
 
   { id: 'fire/fireball', name: 'Fireball', category: 'fire', loop: true, duration: 1.2, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [-1.2, 1.4, 4.6], target: [-0.4, 1.2, 0], fov: 38 } },
     build(fx) {
-      const c = [0.6, 1.25, 0];
-      fx.light({ glow: 0.4, color: '#ff8030', intensity: 70, pos: [0.4, 1.3, 0.4], range: 12, flicker: 0.25 });
-      fx.orb({ kind: 'fire', r: [0.34, 0.34], intensity: 0.55, ramp: [[0, '#300'], [0.3, '#d02a08'], [0.6, '#ff8a20'], [0.85, '#ffd060'], [1, '#fff4c0']], pos: c, noise: 2.2, scroll: 3.5, disp: 0.5, power: 2 });
-      fx.emitter({ count: 70, kind: 'smoke', shape: 'sphere', radius: 0.25, dir: [-1, 0.1, 0], spread: 0.4, speed: [2.5, 5.5], life: [0.4, 0.75], size: [0.7, 0.2], aspect: 1.7, ramp: fx.pal(FIRE), intensity: 0.55, turb: [0.35, 2], pos: c });
-      fx.emitter({ count: 60, kind: 'spark', shape: 'sphere', radius: 0.25, dir: [-1, 0.1, 0], spread: 0.5, speed: [3, 7], life: [0.4, 1.0], gravity: [0, -1.5, 0], size: [0.06, 0.02], stretch: 1.0, ramp: [[0, '#fff'], [0.4, '#ffa030'], [1, '#600', 0]], intensity: 3, turb: [0.4, 2], pos: c });
-      smoke(fx, { count: 40, shape: 'sphere', radius: 0.2, dir: [-1, 0.2, 0], spread: 0.3, speed: [2.5, 4], life: [0.8, 1.15], size: [0.4, 1.2], gravity: [0, 0.8, 0], turb: [0.4, 1], pos: [-0.2, 1.3, 0] });
+      const c = [0.6, 1.25, 0]; // the ball holds its place; trails stream toward -x (flight axis)
+      fx.orb({ kind: 'fire', r: [0.34, 0.34], intensity: 4, ramp: [[0, '#300'], [0.3, '#d02a08'], [0.6, '#ff8a20'], [0.85, '#ffd060'], [1, '#fff4c0']], pos: c, noise: 2.2, scroll: 2.5, disp: 0.5, power: 2 }); // focal: only element above HDR 1; scroll*1.2 s is integer (loop-safe)
+      fx.emitter({ count: 60, tex: 'explosion-fireball', shape: 'sphere', radius: 0.2, dir: [-1, 0.1, 0], spread: 0.35, speed: [2.5, 5], life: [0.3, 0.5], size: [0.6, 0.2], sizePow: 0.5, ramp: fx.pal(FIRE), intensity: 0.8, turb: [0.3, 1.5], pos: c });
+      smoke(fx, { count: 40, shape: 'sphere', radius: 0.2, dir: [-1, 0.2, 0], spread: 0.3, speed: [2.5, 4], life: [0.8, 1.15], size: [0.5, 1.2], gravity: [0, 0.8, 0], turb: [0.4, 1], pos: c });
+      fx.emitter({ count: 30, tex: 'ember-burst', kind: 'spark', blend: 'add', shape: 'sphere', radius: 0.25, dir: [-1, 0.1, 0], spread: 0.5, speed: [2, 5], life: [0.4, 0.9], gravity: [0, -1.5, 0], size: [0.07, 0.03], stretch: 0.6, ramp: [[0, '#fff2b0'], [0.4, '#ff8a20'], [1, '#400', 0]], intensity: 0.8, turb: [0.4, 1.5], pos: c });
+      fx.erode({ geo: spiral({ turns: 1.5, r0: 0.35, r1: 0.15, h: 1.2, w: 0.08 }), ramp: FIRE, scroll: [-2.5, 0], tile: [3, 1], erode: [0.2, 0.6], intensity: 0.6, blend: 'add', pos: c, rot3: [0, 0, Math.PI / 2] }); // helix axis = flight axis; -2.5 * 1.2 s = -3 turns (loop-safe)
+      fx.light({ glow: 0.4, color: '#ff8030', intensity: 120, pos: c, range: 6, flicker: 0.1, rate: 10 }); // Light snaps rate to an integer harmonic of 2π/duration
+      fx.heat({ pos: [c[0] - 0.9, 0.8, 0], size: [1.2, 1.6], strength: 0.006, rise: 2.5 });
     } },
 
   { id: 'fire/flame-pillar', name: 'Flame pillar', category: 'fire', loop: false, duration: 5, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [4.5, 2.4, 6.4], target: [0, 2.0, 0] } },
@@ -129,26 +135,39 @@ export default [
 
   { id: 'fire/meteor', name: 'Meteor', category: 'fire', loop: false, duration: 5, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [5.5, 2.8, 9], target: [0, 2.6, 0], fov: 46 } },
     build(fx) {
-      const TI = 1.3, P0 = [-6, 11, -1], P1 = [0, 0.45, 0];
+      const TI = 1.3, P0 = [-6, 11, -1], P1 = [0, 0.45, 0]; // TI = hit time TH
       const pos = (t) => { const u = Math.min(1, t / TI), e = u * u * 0.6 + u * 0.4; return [P0[0] + (P1[0] - P0[0]) * e, P0[1] + (P1[1] - P0[1]) * e, P0[2] + (P1[2] - P0[2]) * e]; };
+      const dl = [P1[0] - P0[0], P1[1] - P0[1], P1[2] - P0[2]], dn = Math.hypot(...dl), dir = dl.map((v) => v / dn);
+      const head = (m, a, t) => m.position.set(...pos(Math.min(t, TI)));
       const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5, 2), new THREE.MeshStandardMaterial({ color: '#2a1d16', roughness: 0.9, emissive: '#ff4a10', emissiveIntensity: 0.9 }));
       const gp = rock.geometry.attributes.position; for (let i = 0; i < gp.count; i++) { const k = 1 + 0.16 * Math.sin(gp.getX(i) * 7 + gp.getY(i) * 5) * Math.cos(gp.getZ(i) * 6); gp.setXYZ(i, gp.getX(i) * k, gp.getY(i) * k, gp.getZ(i) * k); } rock.geometry.computeVertexNormals();
-      fx.mesh(rock, (t, pr, f, w, o) => { const p = pos(t); o.position.set(...p); o.rotation.set(t * 3, t * 2, 0); }, { t0: 0, dur: TI });
-      fx.light({ glow: 0.4, color: '#ff7a28', intensity: 120, pos: [0, 1, 0], range: 20, env: (t) => t < TI ? 0.12 : t < TI + 0.05 ? 2.2 : Math.max(0.1, 2.2 * Math.exp(-(t - TI) * 0.9)), flicker: 0.25 });
-      fx.on((t, a, f) => { const l = f.parts.find((q) => q.l); if (l && t < TI) l.l.position.set(...pos(t)); else if (l) l.l.position.set(0, 1.2, 0); });
-      fx.trail({ t0: 0, dur: TI, path: pos, len: 0.5, width: 0.5, n: 40, intensity: 1.6, ramp: [[0, '#fff4c0'], [0.3, '#ffa030'], [1, '#701000']] });
-      fx.emitter({ count: 80, kind: 'flame', shape: 'sphere', radius: 0.4, dir: [-0.6, 0.8, 0], spread: 0.5, speed: [1.5, 4], life: [0.25, 0.5], size: [0.9, 0.3], aspect: 1.4, ramp: fx.pal(FIRE), intensity: 0.5, t0: 0, t1: TI, loop: false, emit: TI, follow: (m, a, t) => m.position.set(...pos(Math.min(t, TI))) });
-      smoke(fx, { count: 20, kind: 'smoke', shape: 'sphere', radius: 0.4, dir: [-0.5, 0.5, 0], spread: 0.4, speed: [1, 2], life: [1.2, 2], size: [0.8, 2], t0: 0, t1: TI, loop: false, emit: TI * 0.9, follow: (m, a, t) => m.position.set(...pos(Math.min(t, TI))), ramp: [[0, '#2a2622', 0], [0.2, '#3a322c', 0.4], [1, '#15130f', 0]] });
-      fx.flash(TI, 0.4, '#ffd090', 0.8); fx.shake(TI, 0.9, 0.12);
-      fx.ring({ t0: TI, dur: 0.9, r: [0.3, 7], width: [0.6, 0.15], normal: 'up', intensity: 1.3, fill: 0.15, ramp: [[0, '#fff'], [0.4, '#fc9'], [1, '#a50']] });
-      fx.orb({ t0: TI, dur: 0.9, r: [0.3, 1.8], ease: 'out', kind: 'fire', intensity: 0.9, fade: [0, 0.6], ramp: [[0, '#200'], [0.3, '#c21'], [0.6, '#f70'], [0.85, '#fc4'], [1, '#fff']], pos: [0, 0.9, 0], noise: 1.8, scroll: 2.5, disp: 0.55 });
-      fx.emitter({ count: 90, kind: 'smoke', shape: 'sphere', radius: 0.5, dir: [0, 1, 0], spread: 1.1, speed: [1.5, 5], life: [0.7, 1.6], size: [1.4, 2.8], ramp: fx.pal([[0, '#ffe9b0', 0.9], [0.2, '#ff9a30', 0.85], [0.55, '#c8300a', 0.5], [1, '#200', 0]]), intensity: 0.45, drag: 1.1, gravity: [0, 2.2, 0], delay: TI, pos: [0, 0.6, 0], turb: [0.3, 1.2] });
-      fx.emitter({ count: 140, kind: 'spark', shape: 'sphere', radius: 0.2, dir: [0, 1, 0], spread: 1.4, speed: [4, 13], life: [0.6, 1.8], gravity: [0, -9, 0], size: [0.1, 0.03], stretch: 1.4, ramp: [[0, '#fff'], [0.3, '#ffc050'], [1, '#800', 0]], intensity: 4, bounce: 0.35, delay: TI, pos: [0, 0.3, 0] });
+      fx.mesh(rock, (t, pr, f, w, o) => { o.position.set(...pos(t)); o.rotation.set(t * 3, t * 2, 0); }, { t0: 0, dur: TI });
+      // anticipation: head = fire orb + explosion-fireball trail + smoke-puff trail, lit by its own light
+      fx.orb({ t0: 0, dur: TI, r: [0.3, 0.3], kind: 'fire', intensity: 1, fade: [0, 0.1], follow: head, ramp: [[0, '#200'], [0.3, '#c21'], [0.6, '#f70'], [0.85, '#fc4'], [1, '#fff']], noise: 1.8, scroll: 2.5, disp: 0.55 });
+      fx.trail({ t0: 0, dur: TI, path: pos, len: 0.5, width: 0.5, n: 40, intensity: 1, ramp: [[0, '#fff4c0'], [0.3, '#ffa030'], [1, '#701000']] });
+      fx.emitter({ count: 50, tex: 'explosion-fireball', shape: 'sphere', radius: 0.3, dir: [-0.6, 0.8, 0], spread: 0.4, speed: [1, 2.5], life: [0.25, 0.5], size: [0.8, 0.35], sizePow: 0.5, ramp: fx.pal(FIRE), intensity: 0.8, t0: 0, t1: TI, loop: false, emit: TI, follow: head });
+      smoke(fx, { count: 30, shape: 'sphere', radius: 0.4, dir: [-0.5, 0.5, 0], spread: 0.4, speed: [1, 2], life: [1.2, 2], size: [0.8, 2], t0: 0, t1: TI, loop: false, emit: TI * 0.9, follow: head });
+      const L = fx.light({ glow: 0.4, color: '#ff7a28', intensity: 120, pos: [0, 1, 0], range: 20, flicker: 0.25, env: (t) => (t < TI ? 0.15 + 0.85 * ENV.anticip(t, 0, TI) : 0.5 * Math.exp(-(t - TI) * 1.5)) });
+      fx.on((t) => { const v = t < TI ? pos(t) : [0, 1.2, 0]; L.obj.position.set(...v); L.lp?.set(...v); }); // light rides the head, then sits over the crater
+      // impact at TH: 2-frame flash (4x light, HDR core), explosion cluster, shock, dust crown, debris, decals
+      fx.impact({ t: TI, strength: 1, dir, pos: P1 });
+      fx.light({ color: '#fff0d8', intensity: 120, pos: [0, 0.6, 0], range: 20, main: false, env: (t) => 4 * ENV.impact(t - TI, 25) }); // main:false keeps the host-lighting uniforms owned by L
+      fx.emitter({ count: 1, kind: 'soft', blend: 'add', shape: 'point', pos: P1, speed: 0, life: [0.05, 0.05], size: [0.6, 0.6], ramp: [[0, '#fff6e0', 1], [1, '#ffd0a0', 0.6]], intensity: 8, delay: TI, emit: 0.001 });
+      fx.emitter({ count: 6, tex: 'explosion-fireball', shape: 'sphere', radius: 0.6, dir: [0, 1, 0], spread: 1, speed: [0.3, 1.2], life: [0.5, 0.75], size: [1.8, 1.2], sizePow: 0.5, ramp: fx.pal(FIRE), intensity: 0.8, delay: TI, emit: 0.05, pos: P1 });
+      const sh = fx.erode({ geo: band({ r: 1, h: 0.5 }), erode: [0, 1], scroll: [1, 0], blend: 'add', intensity: 1.2, ramp: FIRE, pos: P1, t0: TI, dur: 0.5 });
+      fx.on((t) => { const s = 0.3 + 4 * Math.min(1, Math.max(0, (t - TI) / 0.5)); sh.obj.scale.set(s, 1, s); }); // shock expands over 0.5 s
+      fx.ring({ t0: TI, dur: 0.9, r: [0.3, 7], width: [0.6, 0.15], normal: 'up', intensity: 1, fill: 0.15, refract: 0.015, dark: 0.25, ramp: [[0, '#fff'], [0.4, '#fc9'], [1, '#a50']] });
+      fx.emitter({ count: 40, kind: 'dust', blend: 'normal', shape: 'ring', radius: 1.2, radiusIn: 0.8, dir: [0, 0.3, 0], spread: 0.3, radial: 1, speed: [1.5, 3], life: [1.2, 1.8], size: [0.8, 1.4], ramp: [[0, '#6b5d4a', 0], [0.3, '#8a7a62', 0.35], [1, '#40382c', 0]], order: -1, delay: TI, emit: 0.1, pos: P1 }); // dust kind + normal blend -> dust-ring
+      fx.debris({ count: 30, pos: P1, speed: [4, 8], spread: 0.7, size: [0.06, 0.14], life: 2.5, color: '#3a2a20', t0: TI });
+      fx.flash(TI, 0.1, '#ffd090', 0.15);
+      fx.orb({ t0: TI, dur: 0.8, r: [0.3, 1.8], ease: 'out', kind: 'fire', intensity: 1, fade: [0, 0.5], ramp: [[0, '#200'], [0.3, '#c21'], [0.6, '#f70'], [0.85, '#fc4'], [1, '#fff']], pos: [0, 0.9, 0], noise: 1.8, scroll: 2.5, disp: 0.55 });
+      fx.emitter({ count: 60, tex: 'ember-burst', kind: 'spark', blend: 'add', shape: 'sphere', radius: 0.5, dir: [0, 1, 0], spread: 1.1, speed: [3, 8], life: [0.8, 1.8], gravity: [0, -9, 0], size: [0.1, 0.04], stretch: 1.4, ramp: [[0, '#fff', 1], [0.3, '#ffc050'], [1, '#800', 0]], intensity: 1, bounce: 0.35, delay: TI, emit: 0.1, pos: P1 });
+      fx.emitter({ count: 60, kind: 'smoke', shape: 'sphere', radius: 0.5, dir: [0, 1, 0], spread: 1.1, speed: [1.5, 5], life: [0.5, 0.8], size: [1.4, 2.8], ramp: fx.pal([[0, '#ffe9b0', 0.9], [0.2, '#ff9a30', 0.85], [0.55, '#c8300a', 0.5], [1, '#200', 0]]), intensity: 0.45, drag: 1.1, gravity: [0, 2.2, 0], delay: TI, pos: [0, 0.6, 0], turb: [0.3, 1.2] }); // fire cloud: gone by TH+0.8
       fx.emitter({ count: 36, kind: 'rock', blend: 'normal', shape: 'sphere', radius: 0.2, dir: [0, 1, 0], spread: 1.1, speed: [3, 10], life: [1.4, 2.8], gravity: [0, -9.8, 0], size: [0.2, 0.15], ramp: [[0, '#5c4c3e'], [1, '#5c4c3e', 1]], lit: 1, bounce: 0.3, rot: 6, delay: TI, pos: [0, 0.2, 0] });
-      smoke(fx, { count: 90, shape: 'sphere', radius: 0.6, dir: [0, 1, 0], spread: 0.8, speed: [0.8, 3], life: [2.4, 3.6], size: [1.4, 4.5], delay: TI + 0.1, emit: 0.6, drag: 0.9, gravity: [0, 0.8, 0], turb: [0.5, 0.5], pos: [0, 0.8, 0], ramp: [[0, '#4a3d30', 0], [0.12, '#2f2822', 0.8], [0.6, '#1c1916', 0.5], [1, '#0e0d0c', 0]] });
-      fx.decal({ kind: 'scorch', t0: TI, dur: 5 - TI, r: [3.2, 3.8], fade: [0.2, 1.4], heat: [1, 0], ramp: [[0, '#300'], [0.5, '#f40'], [1, '#fc8']] });
+      fx.decal({ kind: 'glow', t0: 0, dur: TI + 1.2, reveal: TI, growSpeed: 0.8, fade: [0, 1.2], r: [0.4, 3.0], ramp: [[0, '#000'], [0.4, '#8a1a00'], [1, '#ff8a20']], intensity: 1.2, alpha: 0.8 }); // projected anticipation glow grows toward the hit
+      fx.decal({ kind: 'scorch', t0: TI, dur: 5 - TI, r: [3.2, 3.8], fade: [0.2, 1.4], heat: [1, 0], ramp: [[0, '#300'], [0.5, '#f40'], [1, '#fc8']] }); // heat cools to 0 by the end
       fx.decal({ kind: 'cracks', t0: TI, dur: 3.5, r: [3.6, 4.2], fade: [0.1, 2.4], heat: [1, 0.1], reveal: 0.4, cells: 4 });
-      fx.emitter({ count: 40, kind: 'soft', shape: 'disc', radius: 0.9, dir: [0, 1, 0], spread: 0.3, speed: [0.1, 0.5], life: [0.8, 1.6], size: [0.35, 0.1], ramp: [[0, '#ff9a30', 0.7], [1, '#600', 0]], intensity: 1.5, delay: TI + 0.8, emit: 2.5, pos: [0, 0.1, 0] });
+      smoke(fx, { count: 60, shape: 'sphere', radius: 0.6, dir: [0, 1, 0], spread: 0.8, speed: [0.8, 3], life: [1.2, 1.8], size: [1.4, 4.5], delay: TI + 0.1, emit: 0.6, drag: 0.9, gravity: [0, 0.8, 0], turb: [0.5, 0.5], pos: [0, 0.8, 0], ramp: [[0, '#4a3d30', 0], [0.12, '#2f2822', 0.8], [0.6, '#1c1916', 0.5], [1, '#0e0d0c', 0]] }); // column clears by TH+2.5
     } },
 
   { id: 'fire/spirit-flame', name: 'Spirit flame', category: 'fire', loop: true, duration: 3, stage: { sky: 'dark', bloom: 0.6, view: { pos: [1.8, 1.4, 2.6], target: [0, 1.05, 0], fov: 36 } },

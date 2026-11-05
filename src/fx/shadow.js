@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { NOISE } from '../core/glsl.js';
+import { spiral } from '../core/meshes.js';
 
 /* ---------------------------------------------------------------- helpers (local to this category) */
 const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -298,14 +299,17 @@ export default [
   /* ===================================================================== void orb */
   { id: 'shadow/void-orb', name: 'Void orb', category: 'shadow', loop: true, duration: 3.2, stage: { sky: 'void', bloom: 0.3, view: { pos: [2.6, 1.6, 3.4], target: [0, 1.1, 0], fov: 38 } },
     build(fx) {
-      const C = [0, 1.1, 0];
+      const C = [0, 1.1, 0], VIO = [[0, '#1a0c40'], [0.5, '#6a4ad0'], [1, '#c8b0ff']];
       const occ = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 24), new THREE.MeshBasicMaterial({ color: '#000' })); occ.position.set(...C); fx.mesh(occ, (t, pr, f, w, o, ta) => o.scale.setScalar(1 + 0.04 * Math.sin((t / 3.2) * Math.PI * 4)), { dur: 99 });
-      fx.orb({ kind: 'void', r: 0.55, pos: C, pulse: [0.04, 3.927], noise: 2.4, scroll: 0.8, disp: 0.08, power: 2.6, intensity: 2.4, ramp: [[0, '#000'], [0.35, '#6a58d0'], [0.7, '#c8d8ff'], [1, '#fff']] });
-      fx.ring({ normal: 'cam', pos: C, r: [0.57, 0.57], width: [0.03, 0.03], decay: 0, intensity: 0.9, breakup: 0.25, ramp: [[0, '#fff'], [0.5, '#bcd0ff'], [1, '#6a50d0']] });
-      for (let k = 0; k < 2; k++) fx.ring({ t0: k * 1.6, dur: 1.6, fade: [0.1, 0], r: [0.6, 2.0], width: [0.2, 0.04], decay: 1, normal: 'cam', pos: C, intensity: 0.25, breakup: 0.5, ramp: [[0, '#cfd8ff'], [1, '#403090']] });
+      fx.orb({ kind: 'void', r: 0.55, pos: C, pulse: [0.04, 3.927], noise: 2.4, scroll: 0.625, disp: 0.08, power: 2.6, intensity: 1.2, ramp: [[0, '#000'], [0.35, '#6a58d0'], [0.7, '#c8d8ff'], [1, '#fff']] });
+      fx.erode({ geo: new THREE.SphereGeometry(0.7, 32, 16), pos: C, blend: 'normal', erode: [0.3, 0.3], scroll: [-1.25, 0], tile: [4, 1], soft: 0.3, intensity: 0.8, ramp: [[0, '#000010'], [0.5, '#4a3a8a'], [1, '#000000']] }); // shell: integer scroll per 3.2 s loop
+      for (const ry of [0, Math.PI]) fx.erode({ geo: spiral({ turns: 2, r0: 1.3, r1: 0.6, h: 0.6, w: 0.1 }), pos: [0, C[1] - 0.3, 0], rot3: [0, ry, 0], erode: [0.3, 0.3], scroll: [-1.25, 0], intensity: 0.7, blend: 'add', ramp: VIO });
+      fx.ring({ normal: 'cam', pos: C, r: [0.57, 0.57], width: [0.03, 0.03], decay: 0, intensity: 0.6, breakup: 0.25, ramp: [[0, '#fff'], [0.5, '#bcd0ff'], [1, '#6a50d0']] });
+      for (let k = 0; k < 2; k++) fx.ring({ t0: k * 1.6, dur: 1.6, fade: [0.1, 0], r: [0.6, 2.0], width: [0.2, 0.04], decay: 1, normal: 'cam', pos: C, intensity: 0.15, breakup: 0.5, ramp: [[0, '#cfd8ff'], [1, '#403090']] });
       fx.emitter({ count: 90, kind: 'spark', shape: 'sphere', radius: 2.0, radiusIn: 1.2, radial: 1, speed: [-1.8, -1.0], life: [0.7, 1.1], size: [0.08, 0.01], stretch: 1.3, ramp: [[0, '#8090ff', 0], [0.25, '#c8d0ff', 1], [1, '#fff', 0.2]], intensity: 3, pos: C, swirl: 1.2, drag: -0.0 });
       fx.emitter({ count: 50, kind: 'soft', shape: 'sphere', radius: 1.6, radiusIn: 0.9, radial: 1, speed: [-1.2, -0.7], life: [1.1, 1.6], size: [0.06, 0.01], ramp: [[0, '#a0a8ff', 0], [0.3, '#d8dcff', 1], [1, '#fff', 0]], intensity: 2, pos: C, swirl: 1.5 });
-      fx.emitter({ count: 26, kind: 'smoke', blend: 'normal', shape: 'sphere', radius: 1.2, radiusIn: 0.8, radial: 1, speed: [-0.6, -0.3], life: [1.4, 2.2], size: [0.5, 0.15], ramp: [[0, '#1a1038', 0], [0.3, '#1a1038', 0.4], [1, '#000', 0]], pos: C, swirl: 1.5, order: -1 });
-      fx.light({ color: '#9aa8ff', intensity: 26, pos: [0, 1.4, 0.8], range: 8, flicker: 0.1 });
+      fx.emitter({ count: 24, kind: 'smoke', blend: 'normal', shape: 'sphere', radius: 1.2, radiusIn: 0.8, radial: -0.4, speed: [0.3, 0.6], life: [1.6, 1.6], size: [0.5, 0.15], ramp: [[0, '#1a1030', 0], [0.3, '#1a1030', 0.4], [1, '#0a0616', 0]], lit: 0.5, pos: C, swirl: 1.5, order: -1 });
+      fx.light({ color: '#8a60ff', intensity: 20, pos: C, range: 5, flicker: 0.1, rate: 4 });
+      fx.decal({ kind: 'scorch', r: [1.5, 1.5], alpha: 0.6, heat: [0, 0], ramp: [[0, '#05030c'], [1, '#05030c']] });
     } },
 ];

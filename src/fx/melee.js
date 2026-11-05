@@ -2,6 +2,8 @@
 import * as THREE from 'three';
 import { evalKeys } from '../core/dummy.js';
 import { SU } from '../core/glsl.js';
+import { slash } from '../core/meshes.js';
+import { ENV } from '../core/feel.js';
 
 const _v = new THREE.Vector3();
 /** sample a point on the held weapon (len m from the hand, along the blade) over [t0,t1] -> fn(t) -> [x,y,z] (fx-local). rotY(t) optional body spin. */
@@ -54,11 +56,21 @@ const cams = (fx, t, ramp) => fx.ring({ t0: t, dur: 0.35, r: [0.1, 1.1], width: 
 const dust = (fx, p, t, n = 30, size = [0.4, 1.4], speed = [0.6, 2.6]) => fx.emitter({ count: n, kind: 'smoke', blend: 'normal', shape: 'disc', radius: 0.3, pos: p, dir: [0, 0.4, 0], spread: 1.5, radial: 0.9, speed, life: [0.8, 1.8], size, ramp: [[0, '#6a6055', 0], [0.12, '#5a5148', 0.6], [1, '#2a2622', 0]], lit: 1, drag: 1.6, gravity: [0, 0.35, 0], turb: [0.3, 0.9], delay: t, t0: t - 0.02, emit: 0.15, order: -1 });
 
 export default [
-  { id: 'melee/sword-slash', name: 'Sword slash', category: 'melee', loop: false, duration: 0.75, stage: { sky: 'night', view: VIEW },
+  { id: 'melee/sword-slash', name: 'Sword slash', category: 'melee', loop: false, duration: 0.75, tier: 2, stage: { sky: 'night', view: VIEW },
     act: { kind: 'slash', weapon: 'sword', target: [1.85, 0, 0], windup: 0.45, hits: [{ t: 0.07, stop: 0.09, shake: 0.2, amp: 0.03, push: 1.4 }] },
     build(fx) {
-      swing(fx, { t0: -0.07, t1: 0.2, len: 0.12, inner: 0.65, outer: 1.05, c0: '#ffffff', c1: '#a9d6ff', c2: '#1b3fa8', intensity: 1.5, edge: 3 });
-      contact(fx, [1.62, 1.2, 0.1], 0.07, { light: '#8fc0ff', glintCol: '#9cf' });
+      const T = 0.07, C = [1.62, 1.2, 0.1], H = [0.57, 1.2, 0.1], F = [1.85, 0.05, 0]; // T = hit, C = contact, H = hand pivot (outer blade 1.05 reaches C), F = target feet
+      const { B } = swing(fx, { t0: -0.07, t1: 0.2, len: 0.25, inner: 0.65, outer: 1.05, c0: '#ffffff', c1: '#a9d6ff', c2: '#1b3fa8', intensity: 1.2, edge: 3 }); // len .25: tail erodes to 1 in .25 s
+      // anticipation: faint glint at the blade tip, 0.1 s before the hit
+      fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: B(T - 0.1), size: [0.5, 0.3], life: [0.12, 0.12], ramp: [[0, '#fff'], [1, '#9cf', 0]], intensity: 1.5, delay: T - 0.1, t0: T - 0.12, emit: 0.001 });
+      // secondary volume: crescent in the swing plane (rotated x 90 deg, so arc angle a = -theta), dark steel rim
+      fx.erode({ geo: slash({ R: 1.05, a0: -0.9, a1: 0.2, w: 0.4, curl: 0.3 }), rotate: [Math.PI / 2, 0, 0], pos: H, blend: 'normal', ramp: [[0, '#3a4450', 0.6], [1, '#1a1e24', 0]], intensity: 0.5, erode: [0.1, 1], tile: [2, 1], channel: 'a', soft: 0.3, t0: T, dur: 0.3, fade: [0, 0.1] });
+      // contact: sparks, 2-frame glint, light spike (ENV.impact, peak 4x of 30 = 120 = TIER 2 light)
+      fx.emitter({ count: 30, kind: 'spark', shape: 'point', pos: C, dir: [0.5, 0.35, 0.8], spread: 1.2, speed: [2, 9], life: [0.25, 0.6], gravity: [0, -9, 0], size: [0.07, 0.02], stretch: 1.6, ramp: [[0, '#fff'], [0.4, '#ffd070'], [1, '#a40', 0]], intensity: 4, bounce: C[1] < 0.5 ? 0.3 : -1, delay: T, t0: T - 0.02, emit: 0.001 });
+      fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: C, size: [0.3, 0.3], life: [0.05, 0.05], ramp: [[0, '#fff'], [1, '#9cf', 0]], intensity: 6, delay: T, t0: T - 0.02, emit: 0.001 });
+      fx.light({ color: '#8fc0ff', intensity: 30, pos: C, range: 4, t0: T - 0.02, dur: 0.5, env: (t) => 4 * ENV.impact(t - T, 6) });
+      // dissipation: small dust puffs at the target's feet
+      fx.emitter({ count: 8, kind: 'dust', blend: 'normal', shape: 'disc', radius: 0.3, pos: F, dir: [0, 0.4, 0], spread: 1.5, radial: 0.9, speed: [0.6, 2.6], life: [0.6, 0.9], size: [0.4, 1.0], ramp: [[0, '#6a6055', 0], [0.12, '#5a5148', 0.6], [1, '#2a2622', 0]], lit: 1, drag: 1.6, gravity: [0, 0.35, 0], turb: [0.3, 0.9], delay: T, t0: T - 0.02, emit: 0.1, order: -1 });
     } },
 
   { id: 'melee/claw-swipe', name: 'Claw swipe', category: 'melee', loop: false, duration: 0.9, stage: { sky: 'dusk', view: VIEW },

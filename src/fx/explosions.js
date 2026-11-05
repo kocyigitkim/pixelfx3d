@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { ENV } from '../core/feel.js';
+import { ringSheet } from '../core/meshes.js';
 const mat = (c, r = 0.8, m = 0, e) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m, ...(e ? { emissive: e } : {}) });
 const HOT = [[0, '#ffe9b0', 0.9], [0.2, '#ff9a30', 0.85], [0.55, '#c8300a', 0.5], [1, '#200', 0]];
 const DSMOKE = [[0, '#4a3d30', 0], [0.12, '#2f2822', 0.8], [0.6, '#1c1916', 0.55], [1, '#0e0d0c', 0]];
@@ -122,10 +124,25 @@ export default [
       fx.light({ color: '#ffb050', intensity: 5, pos: [0, 0.3, 0.2], t0: 1.6, dur: TB - 1.6, fade: [0.2, 0.05], flicker: 0.6, norm: 18 });
       fx.emitter({ count: 40, kind: 'spark', shape: 'point', dir: [0, 1, 0], spread: 1.2, speed: [0.5, 2], life: [0.2, 0.5], gravity: [0, -3, 0], size: [0.04, 0.012], stretch: 0.6, ramp: SPK, intensity: 3.5, t0: 0, t1: TB, emit: TB, loop: false, follow: (m, a, t) => { const p = H(Math.min(t, TB)); m.position.set(p[0], p[1] + 0.17, 0); } });
       fx.emitter({ count: 12, kind: 'smoke', blend: 'normal', lit: 1, shape: 'point', dir: [0, 1, 0], spread: 0.6, speed: [0.2, 0.6], life: [0.8, 1.4], size: [0.1, 0.4], ramp: [[0, '#888', 0], [0.2, '#aaa', 0.3], [1, '#555', 0]], t0: 0, t1: TB, emit: TB, loop: false, follow: (m, a, t) => { const p = H(Math.min(t, TB)); m.position.set(p[0], p[1] + 0.17, 0); } });
-      blast(fx, TB, 0.9, [0, 0, 0], { sparks: 90 });
-      fx.emitter({ count: 80, kind: 'streak', shape: 'sphere', radius: 0.1, dir: [0, 0.3, 0], spread: 1.9, speed: [14, 28], life: [0.2, 0.45], size: [0.45, 0.03], stretch: 2, ramp: [[0, '#fff'], [0.4, '#ffd070'], [1, '#a40', 0]], intensity: 3, delay: TB, pos: [0, 0.4, 0] });
       fx.emitter({ count: 12, kind: 'shard', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.1, dir: [0, 1, 0], spread: 1.3, speed: [5, 11], life: [1.0, 1.8], gravity: [0, -9.8, 0], size: [0.07, 0.04], ramp: [[0, '#4a5a3c'], [1, '#4a5a3c', 1]], bounce: 0.4, rot: 12, delay: TB, pos: [0, 0.3, 0] });
-      fx.light({ color: '#ffa040', intensity: 300, pos: [0, 1.2, 0], range: 24, t0: TB, dur: 1.8, env: (t) => Math.exp(-(t - TB) * 2), norm: 100 });
+      // anticipation: pre-glow rises into the hit (ENV.anticip), then the boom
+      const G = [0, 0.1, 0], dir = [1.8, 1.4, 4.4].map((v) => v / Math.hypot(1.8, 1.4, 4.4)); // grenade -> camera side
+      fx.light({ color: '#ffb060', intensity: 40, pos: [0, 0.4, 0], range: 8, t0: TB - 0.1, dur: 0.1, main: false, env: (t) => ENV.anticip(t, TB - 0.1, TB) });
+      // impact at TB: 2-frame flash, shock, cluster, streaks, debris, dust crown, decals, smoke
+      fx.impact({ t: TB, strength: 0.8, dir, pos: G });
+      fx.light({ color: '#fff0d8', intensity: 120, pos: [0, 0.4, 0], range: 16, env: (t) => 4 * ENV.impact(t - TB, 2) });
+      fx.emitter({ count: 1, kind: 'soft', blend: 'add', shape: 'point', pos: G, speed: 0, life: [0.05, 0.05], size: [0.5, 0.5], ramp: [[0, '#fff6e0', 1], [1, '#ffd0a0', 0.6]], intensity: 8, delay: TB, emit: 0.001 });
+      fx.flash(TB, 0.1, '#ffd090', 0.08);
+      fx.emitter({ count: 6, tex: 'explosion-fireball', shape: 'sphere', radius: 0.6, dir: [0, 1, 0], spread: 1, speed: [0.3, 1.2], life: [0.5, 0.55], size: [1.5, 1.0], sizePow: 0.5, ramp: fx.pal(HOT), intensity: 0.8, delay: TB, emit: 0.05, pos: G });
+      const sh = fx.erode({ geo: ringSheet({ r0: 0.6, r1: 1 }), erode: [0, 1], scroll: [1, 0], blend: 'add', intensity: 0.8, ramp: HOT, pos: G, t0: TB, dur: 0.45 });
+      fx.on((t) => { const s = 0.3 + 3.7 * Math.min(1, Math.max(0, (t - TB) / 0.45)); sh.obj.scale.set(s, 1, s); }); // shock 0.3 -> 4 over 0.45 s
+      fx.ring({ refract: 0.02, dark: 0.3, t0: TB, dur: 0.8, r: [0.2, 4.5], width: [0.45, 0.12], normal: 'up', pos: [0, 0.02, 0], intensity: 0.8, fill: 0.15, ramp: [[0, '#fff'], [0.4, '#fc9'], [1, '#a50']] });
+      for (let i = 0; i < 3; i++) fx.emitter({ count: 20, kind: 'spark', shape: 'sphere', radius: 0.1, dir: [0, 0.3, 0], spread: 1.9, speed: [14, 28], life: [0.2, 0.45], size: [0.45, 0.03], stretch: 2, ramp: [[0, '#fff'], [0.4, '#ffd070'], [1, '#a40', 0]], intensity: 0.8, delay: TB, pos: [0, 0.4, 0] });
+      fx.debris({ count: 24, pos: G, speed: [3, 7], spread: 0.8, size: [0.04, 0.1], life: 2.2, color: '#5a4a3a', t0: TB });
+      fx.emitter({ count: 36, kind: 'dust', blend: 'normal', shape: 'ring', radius: 1.0, radiusIn: 0.6, dir: [0, 0.3, 0], spread: 0.3, radial: 1, speed: [1.5, 3], life: [1.2, 1.8], size: [0.8, 1.4], ramp: [[0, '#6b5d4a', 0], [0.3, '#8a7a62', 0.35], [1, '#40382c', 0]], order: -1, delay: TB, emit: 0.1, pos: G });
+      fx.decal({ kind: 'scorch', t0: TB + 0.05, dur: fx.duration - TB - 0.06, r: [2.2, 2.8], fade: [0.15, 1.6], heat: [1, 0], ramp: [[0, '#300'], [0.5, '#f40'], [1, '#fc8']], pos: [0, 0.01, 0] });
+      fx.decal({ kind: 'cracks', t0: TB, dur: 3.5, r: [2.6, 3.2], fade: [0.1, 2.4], heat: [1, 0.1], reveal: 0.4, cells: 4, pos: [0, 0.01, 0] });
+      fx.emitter({ count: 60, kind: 'smoke', blend: 'normal', lit: 1, order: -1, shape: 'sphere', radius: 0.6, dir: [0, 1, 0], spread: 0.8, speed: [0.8, 3], life: [1.5, 2.2], size: [1.4, 4.5], delay: TB + 0.05, emit: 0.6, drag: 0.9, gravity: [0, 0.8, 0], turb: [0.5, 0.5], pos: [0, 0.6, 0], ramp: DSMOKE }); // mushroom, gone by TB+3
     } },
 
   { id: 'explosions/implosion', name: 'Implosion', category: 'explosions', loop: false, duration: 1.65, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [3.8, 2.2, 5.2], target: [0, 1.2, 0] } },
