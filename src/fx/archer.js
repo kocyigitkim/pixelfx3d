@@ -1,11 +1,12 @@
 // Archer class: 6 bow and projectile skills (PLAN2 B5). Built from the T-PRJ, T-GND, T-BUF and T-VOL templates.
 import * as THREE from 'three';
-import { kit, SKILL, meta, sm, clamp, TAU, POSES, metal, DUST, VAPOR, STEEL, AIR, FROST, HOLY, FIRE } from './_skill.js';
+import { kit, SKILL, meta, sm, clamp, TAU, POSES, metal, DUST, STEEL, AIR, FROST, HOLY, FIRE } from './_skill.js';
 
 const m = meta('archer', 'class');
 const O = [0, 0, 0], A = [0.6, 1.38, 0.2]; // default cast point
 const lerp3 = (p, q, u) => [p[0] + (q[0] - p[0]) * u, p[1] + (q[1] - p[1]) * u, p[2] + (q[2] - p[2]) * u];
 const X = new THREE.Vector3(1, 0, 0), D = new THREE.Vector3();
+const VAP = [[0, '#b7bcbf', 0], [0.15, '#b0b6b9', 0.55], [1, '#7a848b', 0]]; // VAPOR darkened to <= #b8c0c8 (V5)
 
 /** bow held in the left hand, follows armL */
 const bowOf = (fx, k) => { const g = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.017, 8, 40, 1.9), new THREE.MeshStandardMaterial({ color: '#6b4426', roughness: 0.6 })); g.rotation.z = -0.95; const h = new THREE.Group(); h.add(g); g.position.x = -0.5; const to = k.at('armL'); fx.mesh(h, () => to(h), { t0: -3, dur: 99 }); return h; };
@@ -21,7 +22,7 @@ export default [
   SKILL('archer/triple-volley', 'Triple volley', m(['steel', 'air'], 'volley', 0.7, 6, 9, 'cone'), 1.5, {
     view: 'long',
     act: ACT_BOW(0.25),
-    // P3=271
+    // P3=272
     build(fx, o) {
       const k = kit(fx, o, STEEL), A1 = [0.75, 1.45, 0], T = 0.25;
       // one arrow aimed at fan angle a, launched at s: trail, then sparks and dust at its end
@@ -36,7 +37,6 @@ export default [
       k.ring({ r: [0.05, 0.5], normal: [1, 0, 0], pos: A1, t0: 0, dur: 0.22 });
       k.light({ pos: [2.5, 1.6, 0.8], t0: 0, dur: 0.8, intensity: 30 });
       shot(-0.12, 0); shot(0, 0.03); shot(0.12, 0.06);
-      fx.flash(T, 0.1, k.col(0), 0.12);
       if (k.g >= 2) k.sparks(A1, 0, 30);
       if (k.g === 3) { shot(-0.24, 0.03); shot(0.24, 0.03); }
       k.extras([4, 1.3, 0], T);
@@ -46,7 +46,7 @@ export default [
   SKILL('archer/needle-rain', 'Needle rain', m(['steel'], 'ground-rain', 0.7, 14, 8, 'circle'), 2.6, {
     view: 'wide',
     act: { ...ACT_BOW(0.85), target: [3.2, 0, 0] },
-    // P3=491
+    // P3=528
     build(fx, o) {
       const k = kit(fx, o, STEEL), G = [3.2, 0, 0], T = 0.85, GS = [G[0], 0.05, 0];
       // T-GND: rune circle, ring closes in, then the strike
@@ -64,10 +64,7 @@ export default [
         a.rotation.set(0, ang, 1.1);
         k.pop(a, T + 0.07 * i, T + 0.07 * i + 0.1, 2.5, 2.6);
       }
-      fx.shake(T, 1.1, 0.015);
-      fx.flash(T, 0.12, k.col(0), 0.15);
-      k.light({ pos: [G[0], 1.2, 0.8], t0: T, dur: 1.1, flicker: 0.2, intensity: 60 });
-      if (k.g >= 2) for (const t of [0.9, 1.2, 1.5]) k.ring({ r: [0.2, 1.8], normal: 'up', pos: G, t0: t, dur: 0.3 });
+      if (k.g >= 2) for (const t of [1.2, 1.5]) k.ring({ r: [0.2, 1.8], normal: 'up', pos: G, t0: t, dur: 0.3 });
       if (k.g === 3) {
         for (let i = 0; i < 6; i++) { const a = arrow(), ang = (i * TAU) / 6; a.position.set(G[0] + 1.2 * Math.cos(ang), 0.15, 1.2 * Math.sin(ang)); a.rotation.set(0, ang, 1.1); k.pop(a, 1.7, 1.8, 2.5, 2.6); }
         k.sparks(G, 1.7, 30);
@@ -79,7 +76,7 @@ export default [
   SKILL('archer/lance-shot', 'Lance shot', m(['air', 'steel'], 'charged-pierce', 1.0, 12, 12, 'line'), 1.8, {
     view: 'long',
     act: ACT_BOW(0.12, 1.0),
-    // P3=191
+    // P3=192
     build(fx, o) {
       const k = kit(fx, o, AIR), E = [6.5, 1.35, 0], HIT = [4.2, 1.3, 0], T = 0.12;
       const path = (t) => lerp3(A, E, clamp((t - T) / 0.2));
@@ -93,7 +90,6 @@ export default [
       k.ring({ r: [0.2, 1.2], normal: [1, 0, 0], pos: HIT, t0: T, dur: 0.3 });
       k.sparks(HIT, T, 50, { dir: [1, 0.2, 0] });
       k.smoke({ count: 30, shape: 'line', shapeSize: [1.8, 0, 0], pos: [2.6, 1.4, 0], ramp: DUST, delay: T, emit: 0.001, t0: T });
-      fx.flash(T, 0.1, k.col(0), 0.15);
       if (k.g >= 2) for (let i = 0; i < 3; i++) {
         const pts = Array.from({ length: 24 }, (_, j) => { const u = j / 23, p = lerp3(A, E, u), a = 3 * TAU * u + (i * TAU) / 3; return [p[0], p[1] + 0.15 * Math.cos(a), p[2] + 0.15 * Math.sin(a)]; });
         k.ribbon({ points: pts, n: 23, width: 0.03, sweep: [0, 1.5], t0: 0.02, dur: 0.3 });
@@ -109,7 +105,7 @@ export default [
   SKILL('archer/frost-trap-arrow', 'Frost trap arrow', m(['frost'], 'trap-zone', 0.6, 15, 8, 'circle'), 2.6, {
     view: 'wide',
     act: ACT_BOW(0.3),
-    // P3=191
+    // P3=228
     build(fx, o) {
       const k = kit(fx, o, FROST), G = [3, 0, 0], T = 0.3;
       const P = (t) => { const u = clamp(t / T); return [A[0] + (G[0] - A[0]) * u, A[1] + (G[1] - A[1]) * u + 0.7 * Math.sin(Math.PI * u), A[2] * (1 - u)]; };
@@ -121,11 +117,8 @@ export default [
         const a = (i * TAU) / 9; c.position.set(G[0] + Math.cos(a), 0.17, Math.sin(a));
         k.pop(c, 0.35 + 0.03 * i, 0.5 + 0.03 * i, 2.2, 2.6);
       }
-      k.smoke({ count: 50, shape: 'disc', radius: 1.2, pos: G, ramp: VAPOR, delay: T, emit: 1.5 });
+      k.smoke({ count: 50, shape: 'disc', radius: 1.2, pos: G, ramp: VAP, delay: T, emit: 1.5 });
       k.em({ count: 60, kind: 'flake', shape: 'disc', radius: 1.5, pos: G, gravity: [0, 0.3, 0], delay: T, emit: 1.5 });
-      k.ring({ r: [0.2, 2], normal: 'up', pos: G, t0: T, dur: 0.6 });
-      k.light({ pos: [G[0], 1.5, 0.8], t0: T, dur: 1.5, intensity: 60 });
-      fx.flash(T, 0.1, k.col(1), 0.15);
       if (k.g >= 2) k.em({ count: 40, kind: 'shard', shape: 'point', pos: G, delay: T, emit: 0.001, t0: T, speed: [2, 6], gravity: [0, -9, 0] });
       if (k.g === 3) {
         // 5 larger spikes at 0.9, plus a ring
@@ -151,7 +144,6 @@ export default [
       const bow = bowOf(fx, k);
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up', intensity: 0.6 });
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: D0, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / D0), intensity: 20 });
-      fx.flash(0.3, 0.1, k.col(0), 0.12);
       k.em({ count: 30, kind: 'glint', shape: 'point', pos: E, size: [0.3, 0.1], life: [0.3, 0.3], delay: 0.3, emit: 2.2 });
       k.ring({ r: [0.275, 0.275], width: [0.03, 0.03], normal: [1, 0, 0], pos: A, t0: 0.3, dur: 2.1, decay: 0, intensity: 0.7 });
       k.ring({ r: [0.275, 0.275], width: [0.03, 0.03], normal: [0, 0, 1], pos: A, t0: 0.3, dur: 2.1, decay: 0, intensity: 0.7 });
@@ -163,14 +155,14 @@ export default [
       }
       if (k.g >= 2) { k.decal({ kind: 'rune', r: [0.4, 0.4], pos: [4, 0, 0], t0: 0.3 }); k.ring({ r: [0.2, 0.8], normal: 'cam', pos: [4, 1.2, 0], t0: 0.3, dur: 0.6 }); }
       if (k.g === 3) k.em({ count: 30, kind: 'petal', shape: 'ring', radius: 0.6, pos: E, swirl: 3, blend: 'normal', lit: 1, delay: 0.3, emit: 2.2 });
-      k.extras([0, 1.1, 0], 0.3);
+      k.extras([0, 1.1, 0], 0.3, 'E');
     } }),
 
   // 6. flaming arrow that explodes on impact
   SKILL('archer/blast-bolt', 'Blast bolt', m(['fire', 'steel'], 'projectile-explode', 0.7, 10, 9, 'point'), 2.2, {
     view: 'long',
     act: ACT_BOW(0.3),
-    // P3=421
+    // P3=402
     build(fx, o) {
       const k = kit(fx, o, FIRE), B = [4, 1.2, 0], T = 0.3;
       const P = (t) => { const u = clamp(t / T); return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u + 0.2 * Math.sin(Math.PI * u), A[2] * (1 - u)]; };
@@ -181,11 +173,9 @@ export default [
       k.orb({ kind: 'fire', r: [0.3, 1.5], pos: B, t0: T, dur: 0.7, fade: [0, 0.5], noise: 1.8 });
       k.em({ count: 80, kind: 'flame', shape: 'sphere', radius: 0.5, pos: B, delay: T, emit: 0.05, t0: T - 0.02, intensity: 0.45 });
       k.smoke({ count: 60, shape: 'sphere', radius: 0.6, pos: B, delay: 0.4, emit: 0.5 });
-      k.sparks(B, T, 80);
+      k.sparks(B, T, 60);
       k.ring({ r: [0.2, 4], normal: 'up', pos: B, t0: T, dur: 0.6 });
       k.decal({ kind: 'scorch', r: [2, 2.6], pos: [B[0], 0, 0], t0: T });
-      k.light({ pos: [B[0], 1.6, 0.8], t0: T, dur: 1.2, intensity: 200 });
-      fx.flash(T, 0.2, '#fff', 0.25);
       if (k.g >= 2) for (const [dx, t] of [[-0.5, 0.45], [0, 0.5], [0.5, 0.55]]) k.em({ count: 20, kind: 'soft', shape: 'point', pos: [B[0] + dx, B[1], 0], delay: t, emit: 0.001, t0: t - 0.02 });
       if (k.g === 3) {
         k.shell({ r: [0.2, 2], hemi: true, t0: T, dur: 0.4 });

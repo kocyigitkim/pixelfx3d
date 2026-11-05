@@ -9,32 +9,32 @@ const COMBO3 = [[-0.45, 'guard'], [-0.2, 'windupHigh'], [0, 'cut', 'snap'], [0.1
 const lerp3 = (p, q, u) => [p[0] + (q[0] - p[0]) * u, p[1] + (q[1] - p[1]) * u, p[2] + (q[2] - p[2]) * u];
 const arcPts = (cx, cy, R, a0, a1, n) => Array.from({ length: n + 1 }, (_, j) => { const a = a0 + ((a1 - a0) * j) / n; return [cx + R * Math.cos(a), cy + R * Math.sin(a), 0]; });
 /** T-MEL swing for one hit: blade surface + hot edge trail */
-const swingS = (fx, k, h) => swing(fx, { t0: h - 0.07, t1: h + 0.13, len: 0.12, inner: 0.6, outer: 1.05, c0: k.col(0), c1: k.col(1), c2: k.col(2), intensity: 1.4 * k.b, edge: 3 });
+const swingS = (fx, k, h) => swing(fx, { t0: h - 0.07, t1: h + 0.13, len: 0.12, inner: 0.6, outer: 1.05, c0: k.col(0), c1: k.col(1), c2: k.col(2), intensity: Math.min(1.5, 1.4 * k.b), edge: 3 });
 /** T-MEL contact burst with n sparks (n + 2 particles) */
-const ct = (fx, k, p, h, n) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n });
+const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n, ...o });
 
 export default [
   SKILL('warrior/crescent-chain', 'Crescent chain', m(['steel'], 'melee-combo', 0.4, 6, 2.5, 'arc'), 1.9, {
     view: 'side',
     act: { kind: 'slash', weapon: 'sword', target: [1.85, 0, 0], windup: 0.45, keys: COMBO3, hits: [{ t: 0.02, stop: 0.06, shake: 0.15, amp: 0.025, push: 0.9 }, { t: 0.49, stop: 0.07, shake: 0.2, amp: 0.03, push: 1.2 }, { t: 1.0, stop: 0.13, shake: 0.5, amp: 0.07, push: 2.4, flash: 0.25 }] },
-    // P3=233
+    // P3=234
     build(fx, o) {
       const k = kit(fx, o, STEEL);
-      for (const [h, n] of [[0.02, 30], [0.49, 30], [1.0, 60]]) { swingS(fx, k, h); ct(fx, k, C, h, n); }
-      k.slash({ center: [0.2, 1.2, 0], radius: 1.4, a0: 2.1, a1: -0.8, tilt: 0.2, width: 0.2, t0: 0, dur: 0.3 });
-      k.slash({ center: [0.15, 1.1, 0], radius: 1.5, a0: -0.6, a1: 2.3, tilt: Math.PI / 2 - 0.25, width: 0.22, t0: 0.45, dur: 0.3 });
+      for (const [h, n] of [[0.02, 30], [0.49, 30], [1.0, 60]]) { swingS(fx, k, h); ct(fx, k, C, h, n, h === 1.0 ? { lightI: 0 } : {}); }
+      k.slash({ center: [0.2, 1.2, 0], radius: 1.4, a0: 2.1, a1: -0.8, tilt: 0.2, width: 0.2, t0: 0, dur: 0.3, intensity: 1.5 / k.b });
+      k.slash({ center: [0.15, 1.1, 0], radius: 1.5, a0: -0.6, a1: 2.3, tilt: Math.PI / 2 - 0.25, width: 0.22, t0: 0.45, dur: 0.3, intensity: 1.5 / k.b });
       k.slash({ center: [0.35, 1.2, 0], radius: 1.7, a0: 1.7, a1: -0.3, tilt: -0.1, width: 0.3, t0: 0.96, dur: 0.34, intensity: 4.5 });
       k.ring({ t0: 1.0, dur: 0.6, r: [0.2, 3], normal: 'up', pos: [2, 0, 0] });
       k.smoke({ count: 26, shape: 'disc', radius: 0.3, pos: [2, 0.05, 0], ramp: DUST, delay: 1, emit: 0.15, t0: 0.98 });
       if (k.g >= 2) k.em({ count: 40, kind: 'shard', shape: 'point', pos: C, delay: 1, t0: 0.98, speed: [2, 6], gravity: [0, -9, 0], bounce: 0.3 });
-      if (k.g === 3) k.slash({ center: [1, 1, 0], radius: 2.2, tilt: 0, width: 0.4, t0: 1.02, dur: 0.35, intensity: 3.5 });
+      if (k.g === 3) k.slash({ center: [1, 1, 0], radius: 2.2, tilt: 0, width: 0.4, t0: 1.02, dur: 0.35, intensity: 1.5 / k.b });
       k.extras(C, 1.0);
     } }),
 
   SKILL('warrior/tempest-spin', 'Tempest spin', m(['steel', 'air'], 'spin', 0.3, 8, 2, 'ring'), 1.4, {
     view: 'high',
     act: { kind: 'slash', weapon: 'sword', target: [1.6, 0, 0], windup: 0.35, keys: [[-0.35, 'guard'], [-0.1, 'sideBack'], [0, 'sideCut', 'snap'], [0.7, 'sideCut'], [1.1, 'guard']], hits: [{ t: 0.15, stop: 0.05, shake: 0.2, amp: 0.03, push: 1.0 }, { t: 0.45, stop: 0.05, shake: 0.2, amp: 0.03, push: 1.0 }] },
-    // P3=273
+    // P3=274
     build(fx, o) {
       const k = kit(fx, o, STEEL), kw = kit(fx, o, AIR);
       const rotY = (t) => -TAU * 2 * sm(-0.02, 0.6, t);
@@ -50,7 +50,7 @@ export default [
       k.smoke({ count: 60, shape: 'ring', radius: 1.2, pos: [0, 1, 0], radial: 1, speed: [1, 3], ramp: DUST, delay: 0.05, emit: 0.5 });
       kw.em({ count: 60, kind: 'streak', shape: 'ring', radius: 1.5, pos: [0, 1, 0], swirl: 4, life: [0.3, 0.6], delay: 0, emit: 0.6 });
       ct(fx, k, [1.6, 1.2, 0.1], 0.15, 14);
-      ct(fx, k, [1.6, 1.2, 0.1], 0.45, 14);
+      ct(fx, k, [1.6, 1.2, 0.1], 0.45, 14, { lightI: 0 });
       if (k.g >= 2) k.smoke({ count: 40, shape: 'ring', radius: 1.8, pos: [0, 1, 0], ramp: DUST, delay: 0.45, emit: 0.2 });
       if (k.g === 3) {
         kw.ring({ t0: 0.5, dur: 0.5, r: [0.5, 4], normal: 'up', pos: [0, 1, 0] });
@@ -62,20 +62,17 @@ export default [
   SKILL('warrior/breaker-leap', 'Breaker leap', m(['earth', 'steel'], 'leap-slam', 0.5, 10, 5, 'circle'), 2.0, {
     view: 'wide',
     act: { kind: 'stomp', weapon: 'hammer', target: [2.6, 0, 0], windup: 0.65, hits: [{ t: 0, stop: 0.1, shake: 0.55, amp: 0.08, push: 2 }] },
-    // P3=175
+    // P3=212
     build(fx, o) {
       const k = kit(fx, o, EARTH);
       const Lx = 1.0, P = [Lx + 0.1, 0, 0];
       fx.on((t) => { fx.body.position.x = Lx * sm(-0.3, 0, t); });
       swing(fx, { t0: -0.07, t1: 0.02, len: 0.2, inner: 0.7, outer: 1.0, c0: k.col(0), c1: k.col(1), c2: k.col(2), intensity: 1.1, edge: 3 });
-      k.ring({ t0: 0, dur: 0.9, r: [0.2, 5.5], normal: 'up', pos: P, width: [0.35, 0.08] });
       k.decal({ kind: 'cracks', r: [3, 3.6], pos: P, t0: 0, dur: 1.9, reveal: 0.3, heat: [1, 0.1], cells: 4, y: 0.005 });
       k.decal({ kind: 'scorch', r: [1, 1.4], pos: P, t0: 0, dur: 2.0 });
       k.em({ count: 24, kind: 'rock', blend: 'normal', lit: 1, shape: 'disc', radius: 0.3, pos: [P[0], 0.1, P[2]], dir: [0, 1, 0], spread: 0.9, speed: [3, 7.5], gravity: [0, -10, 0], bounce: 0.35, size: [0.16, 0.09], ramp: [[0, '#6c5a48'], [1, '#6c5a48', 1]], delay: 0, emit: 0.001, t0: 0 });
       k.smoke({ count: 50, shape: 'ring', radius: 0.4, pos: P, radial: 0.9, speed: [1.5, 4.5], ramp: DUST, delay: 0, emit: 0.001 });
       k.sparks(P, 0, 40);
-      k.light({ pos: [P[0], 1, 0.8], t0: 0, dur: 2, env: (t) => Math.exp(-2.4 * t), intensity: 90 });
-      fx.flash(0, 0.15, k.col(0), 0.22);
       // spikes
       if (k.g >= 2) {
         k.ring({ t0: 0.1, dur: 0.4, r: [0.2, 2.4], normal: 'cam', pos: [1.1, 0.6, 0], width: [0.25, 0.04] });
@@ -115,7 +112,6 @@ export default [
         k.decal({ kind: 'rune', r: [1.4, 1.4], t0: 0.3, dur: 1.9 });
         k.ring({ t0: 1.2, dur: 0.6, r: [0.2, 2], normal: 'up' });
       }
-      fx.flash(0.3, 0.1, k.col(0), 0.12);
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: 2.6, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / 2.6), intensity: 40 });
       k.extras([0, 1.1, 0], 0.3);
     } }),
@@ -123,7 +119,7 @@ export default [
   SKILL('warrior/warcry-surge', 'Warcry surge', m(['steel', 'fire'], 'nova', 0.2, 15, 4, 'circle'), 1.8, {
     view: 'wide',
     act: { kind: 'stomp', weapon: 'sword', target: [2.6, 0, 0], windup: 0.5, keys: [[-0.5, 'guard'], [-0.25, 'crouch'], [0, 'roar', 'snap'], [0.7, 'roar'], [1.3, 'guard']], hits: [{ t: 0.05, stop: 0.05, shake: 0.3, amp: 0.04, push: 2 }] },
-    // P3=251
+    // P3=252
     build(fx, o) {
       const k = kit(fx, o, BLOOD);
       k.gather([0, 1, 0], -0.45, 0.4, 1.4, 60);
@@ -132,8 +128,6 @@ export default [
       k.shell({ r: [0.3, 2.4], hemi: true, power: 2, t0: 0, dur: 0.45, fade: [0, 0.35] });
       k.em({ count: 120, kind: 'streak', shape: 'ring', radius: 0.5, pos: [0, 0.6, 0], radial: 1, speed: [4, 8], life: [0.4, 0.9], size: [0.5, 0.2], stretch: 2, delay: 0, emit: 0.001, t0: 0 });
       k.decal({ kind: 'glow', r: [1.5, 2.5], t0: 0, dur: 1.7, fade: [0.05, 1] });
-      k.light({ pos: [0, 1.4, 0.8], t0: -0.4, dur: 1.4, env: (t) => (t < 0 ? 0.3 : Math.exp(-2.5 * t)), intensity: 120 });
-      fx.flash(0, 0.12, k.col(0), 0.2);
       // speed lines radiating from chest height
       for (let i = 0; i < 12; i++) {
         const a = (i * TAU) / 12, pts = Array.from({ length: 9 }, (_, j) => { const r = 0.4 + (2.6 * j) / 8; return [r * Math.cos(a), 1.2, r * Math.sin(a)]; });
@@ -173,7 +167,7 @@ export default [
   SKILL('warrior/rending-wave', 'Rending wave', m(['steel'], 'ground-wave', 0.4, 9, 6, 'line'), 1.8, {
     view: 'long',
     act: act('smash', 0.4, 4, { weapon: 'sword', windup: 0.55 }),
-    // P3=252
+    // P3=253
     build(fx, o) {
       const k = kit(fx, o, STEEL);
       // crescent wave that travels along x
@@ -205,7 +199,6 @@ export default [
       k.decal({ kind: 'glow', r: [1, 1] });
       k.em({ count: 60, kind: 'drop', shape: 'sphere', radius: 0.6, pos: [0, 1.1, 0], gravity: [0, 1.2, 0], speed: [0.1, 0.3], life: [1, 1.6], delay: 0.3, emit: 1.9, t0: 0.3 });
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: 2.8, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / 2.8), intensity: 40 });
-      fx.flash(0.3, 0.1, k.col(0), 0.12);
       k.extras([0, 1.1, 0], 0.3);
       if (k.g >= 2) k.em({ count: 40, kind: 'soft', shape: 'ring', radius: 0.5, swirl: 2, pos: [0, 1.1, 0], delay: 0.3, emit: 1.9, t0: 0.3 });
       if (k.g === 3) {

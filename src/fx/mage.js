@@ -1,6 +1,6 @@
 // Mage class: 12 staff skills (PLAN2 B6/B7). Built from the T-PRJ, T-GND, T-BEAM, T-BUF, T-TEL and T-PUL templates.
 import * as THREE from 'three';
-import { kit, SKILL, meta, act, sm, clamp, TAU, POSES, rock, addMat, DUST, VAPOR, FIRE, FROST, STORM, ARCANE, VOID } from './_skill.js';
+import { kit, SKILL, meta, act, sm, clamp, TAU, POSES, rock, addMat, DUST, FIRE, FROST, STORM, ARCANE, VOID } from './_skill.js';
 
 const m = meta('mage', 'class');
 const O = [0, 0, 0], A = [0.6, 1.38, 0.2]; // cast hand
@@ -8,13 +8,14 @@ const lerp3 = (p, q, u) => p.map((v, i) => v + (q[i] - v) * u);
 const bez = (p, c, q, u) => { const k = 1 - u; return [0, 1, 2].map((i) => k * k * p[i] + 2 * k * u * c[i] + u * u * q[i]); };
 const place = (R, i, n) => { const a = (i * TAU) / n; return [R * Math.cos(a), R * Math.sin(a)]; };
 const ice = () => new THREE.MeshStandardMaterial({ color: '#bfe9ff', roughness: 0.12, metalness: 0.05, transparent: true, opacity: 0.85, emissive: '#2a78cc', emissiveIntensity: 0.4, flatShading: true });
+const VAP = [[0, '#b7bcbf', 0], [0.15, '#b0b6b9', 0.55], [1, '#7a848b', 0]]; // VAPOR darkened to <= #b8c0c8 (V5)
 const hits = (ts, push) => ts.map((t) => ({ t, stop: 0.02, shake: 0.1, amp: 0.02, push }));
 
 export default [
   SKILL('mage/comet-lance', 'Comet lance', m(['fire'], 'projectile', 0.8, 6, 10, 'point'), 2.0, {
     view: 'long',
     act: act('cast', 0.4, 4.4, { weapon: 'staff' }),
-    // P3=432
+    // P3=433
     build(fx, o) {
       const k = kit(fx, o, FIRE), T = 0.4, H = 0.15, B = [3.8, 1.2, 0];
       const P = (t) => { const u = clamp(t / T); return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u + H * Math.sin(Math.PI * u), A[2] * (1 - u)]; };
@@ -40,7 +41,7 @@ export default [
   SKILL('mage/glacier-prison', 'Glacier prison', m(['frost'], 'cage', 0.6, 18, 7, 'point'), 2.6, {
     view: 'wide', sky: 'night',
     act: act('cast', 0.2, 3, { weapon: 'staff', hits: [{ t: 0.2, stop: 0.1, shake: 0.3, amp: 0.04, push: 0 }] }),
-    // P3=241
+    // P3=278
     build(fx, o) {
       const k = kit(fx, o, FROST), G = [3, 0, 0];
       for (let i = 0; i < 8; i++) {
@@ -52,11 +53,9 @@ export default [
       k.pop(lid, 0.5, 0.8, 2.1, 2.4);
       k.decal({ kind: 'frost', r: [1.4, 1.4], pos: G, t0: 0.2, dur: 2.4, cells: 6 });
       k.em({ count: 60, kind: 'flake', shape: 'disc', radius: 1, pos: [G[0], 1.1, 0], dir: [0, 1, 0], spread: 0.6, speed: [0.2, 0.6], life: [1, 1.6], size: [0.1, 0.05], intensity: 1.2, delay: 0.2, emit: 1.9, t0: 0.2 });
-      k.smoke({ count: 40, shape: 'ring', radius: 0.8, pos: [G[0], 0.2, 0], radial: 0.5, speed: [0.5, 1.2], ramp: VAPOR, delay: 0.2, emit: 1.5, t0: 0.2 });
+      k.smoke({ count: 40, shape: 'ring', radius: 0.8, pos: [G[0], 0.2, 0], radial: 0.5, speed: [0.5, 1.2], ramp: VAP, delay: 0.2, emit: 1.5, t0: 0.2 });
       k.em({ count: 40, kind: 'shard', shape: 'sphere', radius: 0.6, pos: [G[0], 1, 0], speed: [0.5, 2], gravity: [0, -4, 0], delay: 0.2, emit: 0.001, t0: 0.2 });
       k.em({ count: 60, kind: 'shard', shape: 'sphere', radius: 0.5, pos: [G[0], 1, 0], speed: [2, 5], gravity: [0, -9, 0], bounce: 0.3, size: [0.12, 0.04], delay: 2.1, emit: 0.001, t0: 2.1 });
-      k.ring({ t0: 2.1, dur: 0.5, r: [0.2, 2.5], normal: 'up', pos: G });
-      k.light({ pos: [G[0], 1.2, 0.8], t0: 2.1, dur: 0.6, fade: [0.01, 0.45], intensity: 70 });
       k.extras(G, 2.1);
       if (k.g >= 2) k.shell({ r: [0.7, 0.7], cells: 6, alpha: 0.4, pos: [G[0], 1.1, 0], t0: 0.3, dur: 1.5 });
       if (k.g === 3) {
@@ -67,7 +66,7 @@ export default [
   SKILL('mage/storm-orb', 'Storm orb', m(['storm'], 'orbit-burst', 0.5, 12, 6, 'point'), 2.6, {
     view: 'wide', sky: 'storm',
     act: act('cast', 1.8, 3.6, { weapon: 'staff' }),
-    // P3=161
+    // P3=141
     build(fx, o) {
       const k = kit(fx, o, STORM), E = [3.5, 1.2, 0];
       const J = Array.from({ length: 64 }, () => [0, 1, 2].map(() => (fx.rng() - 0.5) * 1.2));
@@ -78,7 +77,7 @@ export default [
       k.trail({ path: (t) => ORB(t), t0: 0, dur: 1.8, len: 0.5, width: 0.1 });
       for (let i = 0; i < 2; i++) k.bolt({ from: (s) => ORB(s / 24), to: (s) => { const j = J[(s + 32 * i) % 64], p = ORB(s / 24); return p.map((v, c) => v + j[c]); }, rate: 24, t0: 0, dur: 1.8 });
       k.ring({ t0: 1.8, dur: 0.5, r: [0.2, 2.5], normal: 'cam', pos: E });
-      k.sparks(E, 1.8, 80);
+      k.sparks(E, 1.8, 60);
       k.glint(E, 1.8, 1);
       for (let i = 0; i < 3; i++) k.bolt({ from: [E[0] + (i - 1) * 0.4, 3, 0], to: [E[0] + (i - 1) * 0.4, 0, 0], rate: 24, t0: 1.8, dur: 0.3 });
       k.decal({ kind: 'scorch', r: [0.8, 0.8], pos: [E[0], 0, 0], t0: 1.8, dur: 0.8 });
@@ -96,7 +95,7 @@ export default [
   SKILL('mage/arcane-barrage', 'Arcane barrage', m(['arcane'], 'volley-homing', 0.4, 8, 9, 'point'), 2.0, {
     view: 'long', sky: 'night',
     act: act('cast', 0.5, 4, { weapon: 'staff', hits: hits([0.62, 0.74, 0.86, 0.98], 0.4) }),
-    // P3=196
+    // P3=198
     build(fx, o) {
       const k = kit(fx, o, ARCANE), B = [3.9, 1.2, 0];
       const ctrl = (i) => [1.8, 1.38 + 0.6 * (i % 2 ? -1 : 1), 0.8 * ((i % 3) - 1)];
@@ -120,7 +119,7 @@ export default [
   SKILL('mage/meteor-rain', 'Meteor rain', m(['fire', 'earth'], 'ground-rain', 1.0, 20, 9, 'circle'), 3.0, {
     view: 'wide',
     act: act('castup', 0.8, 3.2, { weapon: 'staff' }),
-    // P3=651
+    // P3=688
     build(fx, o) {
       const k = kit(fx, o, FIRE), G = [3.2, 0, 0], T = 2.3;
       const rnd = () => (fx.rng() * 2 - 1) * 1.5;
@@ -132,7 +131,7 @@ export default [
         k.smoke({ count: 10, shape: 'disc', radius: 0.3, pos: L, ramp: DUST, delay: e, emit: 0.2, t0: e });
         k.ring({ t0: e, dur: 0.5, r: [0.1, 1.2], normal: 'up', pos: L });
         k.decal({ kind: 'scorch', r: [0.5, 0.5], pos: L, t0: e, dur: 2.5 });
-        fx.shake(e, 0.25, 0.04);
+        if (Math.abs(e - 0.8) > 0.05 && Math.abs(e - T) > 0.05) fx.shake(e, 0.25, 0.04); // K1: act hit / extras own those times
       };
       for (let i = 0; i < 6; i++) meteor(rnd(), rnd(), 0.5 + 0.25 * i);
       if (k.g >= 2) for (let i = 6; i < 8; i++) meteor(rnd(), rnd(), 0.5 + 0.25 * i);
@@ -140,11 +139,9 @@ export default [
       k.ring({ t0: T - 0.3, dur: 0.3, r: [2, 0.3], normal: 'up', pos: G, decay: 0.2 });
       const BP = (t) => lerp3([G[0], 7, 0], G, clamp((t - 1.95) / 0.35));
       k.orb({ kind: 'fire', r: [0.3, 0.3], pos: [G[0], 7, 0], follow: (mm, ta, t) => mm.position.set(...BP(t)), t0: 1.95, dur: 0.35 });
-      k.light({ pos: [G[0], 1, 0.8], t0: T, dur: 1.2, fade: [0.01, 0.5], intensity: 120 });
-      fx.shake(T, 0.5, 0.06);
       k.smoke({ count: 60, shape: 'disc', radius: 1.5, pos: G, radial: 0.5, speed: [0.3, 1.2], delay: T, emit: 0.8, t0: T });
       k.em({ count: 50, kind: 'soft', shape: 'disc', radius: 1.5, pos: G, dir: [0, 1, 0], speed: [0.5, 2], gravity: [0, -1, 0], life: [1, 2], size: [0.08, 0.03], intensity: 1, delay: T, emit: 0.8, t0: T });
-      if (k.g === 3) { k.sparks(G, T, 60); k.ring({ t0: T, dur: 0.6, r: [0.2, 4], normal: 'up', pos: G }); }
+      if (k.g === 3) k.sparks(G, T, 60);
       k.extras(G, T);
     } }),
 
@@ -161,7 +158,7 @@ export default [
         k.em({ count: 6, kind: 'shard', shape: 'disc', radius: 0.2, pos: [x, 0.1, z], dir: [0, 1, 0], spread: 1, speed: [1, 3], gravity: [0, -9, 0], bounce: 0.3, delay: 0.04 * i, emit: 0.001, t0: 0.04 * i });
       }
       k.decal({ kind: 'frost', r: [2.2, 2.2], pos: O, t0: 0, dur: 2.6, cells: 6 });
-      k.smoke({ count: 50, shape: 'ring', radius: 1.6, pos: [0, 0.1, 0], radial: 0.2, speed: [0.3, 1], ramp: VAPOR, delay: 0, emit: 1.2, t0: 0 });
+      k.smoke({ count: 50, shape: 'ring', radius: 1.6, pos: [0, 0.1, 0], radial: 0.2, speed: [0.3, 1], ramp: VAP, delay: 0, emit: 1.2, t0: 0 });
       k.ring({ t0: 0, dur: 0.8, r: [0.2, 2], normal: 'up', pos: O });
       k.em({ count: 40, kind: 'flake', shape: 'ring', radius: 1.6, pos: [0, 1, 0], speed: [0.1, 0.5], life: [1, 1.6], size: [0.1, 0.05], delay: 0.2, emit: 1.5, t0: 0.2 });
       k.light({ pos: [0, 1.2, 0.8], t0: 0, dur: 2.6, fade: [0.1, 0.6], intensity: 70 });
@@ -176,7 +173,7 @@ export default [
   SKILL('mage/forked-thunder', 'Forked thunder', m(['storm'], 'chain-split', 0.4, 8, 9, 'cone'), 1.6, {
     view: 'long', sky: 'storm',
     act: act('cast', 0.1, 4, { weapon: 'staff' }),
-    // P3=264
+    // P3=265
     build(fx, o) {
       const k = kit(fx, o, STORM), S = [2.2, 1.4, 0], E = [[4, 1.2, 0], [3.6, 1.3, 1.2], [3.6, 1.3, -1.2]], br = k.g >= 2 ? 5 : 3;
       k.bolt({ from: A, to: S, width: 0.06, rate: 24, t0: 0, dur: 0.35, branches: br });
@@ -188,7 +185,7 @@ export default [
         if (k.g === 3) k.em({ count: 30, kind: 'spark', shape: 'point', pos: p, dir: [0, 1, 0], spread: 1.2, speed: [1, 4], life: [0.2, 0.5], stretch: 1.5, intensity: 3, delay: 0.35, emit: 0.001, t0: 0.35 });
       }
       k.light({ pos: [2.2, 1.4, 0.6], t0: 0, dur: 1.6, intensity: 150, flicker: 0.3 });
-      fx.flash(0.1, 0.12, '#fff', 0.2);
+      fx.flash(0.1, 0.12, k.col(1), [0, 0, 0.08, 0.15][k.g]);
       k.gather(A, 0, 0.3, 0.6, 40, k.at());
       if (k.g === 3) k.ring({ t0: 0.35, dur: 0.6, r: [0.2, 1.6], normal: 'up', pos: [3.8, 0.02, 0] });
       k.extras(E[0], 0.35);
@@ -241,7 +238,6 @@ export default [
       }
       k.em({ count: 40, kind: 'soft', shape: 'sphere', radius: 1.1, pos: C, swirl: 2, speed: [0.05, 0.2], life: [1, 1.5], size: [0.05, 0.02], delay: 0.3, emit: 1.9, t0: 0.3 });
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: 2.6, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / 2.6), intensity: 40 });
-      fx.flash(0.3, 0.1, k.col(0), 0.12);
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
       k.extras([0, 1.1, 0], 0.3);
       if (k.g >= 2) k.shell({ r: [1, 1], power: 4, intensity: 0.4, pos: C, t0: 0.3, dur: 1.9 });
@@ -255,7 +251,7 @@ export default [
   SKILL('mage/gravity-well', 'Gravity well', m(['arcane', 'void'], 'pull', 0.6, 18, 6, 'circle'), 3.0, {
     view: 'wide', sky: 'dark',
     act: act('cast', null, 3, { weapon: 'staff', target: [3.6, 0, 0] }),
-    // P3=311
+    // P3=292
     build(fx, o) {
       const k = kit(fx, o, VOID), G = [3, 1, 0], R = 2.5, BURST = [3.2, 1, 0];
       fx.on((t) => { fx.target.position.x = 3.6 - 0.4 * sm(0.2, 2.5, t); });
@@ -266,8 +262,7 @@ export default [
       k.em({ count: 30, kind: 'rock', blend: 'normal', lit: 1, shape: 'sphere', radius: 2, radial: 1, speed: [-2, -1.2], pos: G, delay: 0.2, emit: 2.1, t0: 0.2 });
       for (const t of [0.4, 1.1, 1.8]) k.ring({ t0: t, dur: 0.7, r: [2.6, 0.3], normal: 'up', pos: [3, 0.02, 0] });
       k.ring({ t0: 2.5, dur: 0.5, r: [0.2, 3], normal: 'cam', pos: BURST });
-      k.sparks(BURST, 2.5, 80);
-      fx.flash(2.5, 0.15, k.col(0), 0.2);
+      k.sparks(BURST, 2.5, 60);
       k.extras(BURST, 2.5);
       if (k.g >= 2) k.shell({ r: [0.8, 0.8], power: 3, intensity: 0.3, pos: G, t0: 0.2, dur: 2.3 });
       if (k.g === 3) {
@@ -281,13 +276,13 @@ export default [
   SKILL('mage/searing-ray', 'Searing ray', m(['fire', 'holy'], 'beam', 0.5, 10, 7, 'line'), 2.6, {
     view: 'long',
     act: act('cast', null, 4, { weapon: 'staff', keys: [[-0.5, 'guard'], [-0.25, 'castCharge'], [0, 'castRelease', 'snap'], [2, 'castRelease'], [2.5, 'guard']], hits: hits([0.1, 0.5, 0.9, 1.3, 1.7], 0.5) }),
-    // P3=321
+    // P3=302
     build(fx, o) {
       const k = kit(fx, o, FIRE), D = 2, B = [4, 1.2, 0];
       k.beam({ from: A, to: B, r: [0.12, 0.16], t0: 0, dur: D, fade: [0.03, 0.2], noise: 0.6, edge: 1.4 });
       k.beam({ from: A, to: B, r: [0.05, 0.05], intensity: 2.5, t0: 0, dur: D, fade: [0.03, 0.2] });
       k.em({ count: 30, kind: 'soft', shape: 'point', pos: A, speed: [0.2, 0.8], life: [0.3, 0.6], size: [0.1, 0.03], delay: 0, emit: D, t0: 0, t1: D });
-      k.sparks(B, 0, 80, { emit: D, speed: [1, 4] });
+      k.sparks(B, 0, 60, { emit: D, speed: [1, 4] });
       k.decal({ kind: 'scorch', r: [0.4, 1], pos: [B[0], 0, 0] });
       k.light({ pos: [B[0], 1.2, 0.6], t0: 0, dur: D, env: (t) => 0.8 + 0.2 * Math.sin((TAU * 8 * t) / D), intensity: 80 });
       k.em({ count: 60, kind: 'flame', shape: 'sphere', radius: 0.2, aspect: 1.8, pos: B, speed: [0.5, 1.5], life: [0.3, 0.6], size: [0.2, 0.06], delay: 0, emit: D, t0: 0, t1: D });
@@ -319,7 +314,7 @@ export default [
       k.shell({ r: [2.2, 2.2], hemi: true, alpha: 0.3, power: 4, pos: G, t0: 0, dur: 3 });
       k.gather(G, 0, 0.4, 2, 30);
       k.light({ pos: [3, 1.2, 0.8], t0: 0, dur: 3, fade: [0.1, 0.6], intensity: 60 });
-      k.extras(G, 0.2);
+      k.extras(G, 0.2, 'E');
       if (k.g >= 2) k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 2, pos: G, speed: [0, 0], life: [2, 2], size: [0.08, 0.03], delay: 0, emit: 0.001, t0: 0 });
       if (k.g === 3) {
         const h1 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.03, 0.03), addMat(k.col(1), 2)), h2 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.03, 0.03), addMat(k.col(1), 2));

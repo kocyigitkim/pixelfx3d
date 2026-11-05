@@ -26,13 +26,13 @@ const shardMat = () => new THREE.MeshStandardMaterial({ color: '#120c10', roughn
 const m = meta('lava', 'derived');
 const ELEM = ['fire', 'earth', 'lava'];
 /** T-MEL contact burst with n sparks (n + 2 particles) */
-const ct = (fx, k, p, h, n) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n });
+const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n, ...o });
 
 export default [
   SKILL('lava/magma-surge', 'Magma surge', m(ELEM, 'line-ground', 0.6, 12, 6, 'line'), 3.0, {
     view: 'wide',
     act: act('stomp', 0.5, 3.6),
-    // P3=552
+    // P3=589
     build(fx, o) {
       const k = kit(fx, o, LAVA);
       const strip = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 1.25, 64, 4), lavaMat(fx, (t) => 2.2 - 1.9 * sm(0, 3, t), (t) => sm(0, 0.6, t)));
@@ -44,11 +44,10 @@ export default [
       k.em({ count: 40, kind: 'flame', shape: 'line', shapeSize: [1.7, 0, 0], pos: [2.2, 0.1, 0], dir: [0, 1, 0], spread: 0.3, speed: [0.5, 1.2], life: [0.4, 0.7], size: [0.2, 0.08], aspect: 1.6, intensity: 0.4, delay: 0.3, emit: 2.0 });
       k.smoke({ count: 50, shape: 'line', shapeSize: [1.7, 0, 0], pos: [2.2, 0.2, 0], dir: [0, 1, 0], speed: [0.3, 0.8], life: [1.5, 2.5], size: [0.6, 1.2], delay: 0.5, emit: 2.0 });
       k.em({ count: 110, kind: 'flame', shape: 'box', shapeSize: [3.0, 0, 0.5], pos: [2.2, 0.05, 0], dir: [0, 1, 0], spread: 0.15, speed: [0.5, 1.2], life: [0.4, 0.7], size: [0.35, 0.15], aspect: 1.5, intensity: 0.4, delay: 0.3, emit: 2.0, t0: 0.28 });
-      k.em({ count: 60, kind: 'spark', shape: 'box', shapeSize: [3.0, 0, 0.4], pos: [2.2, 0.05, 0], dir: [0, 1, 0], spread: 0.5, speed: [2, 4], gravity: [0, -8, 0], life: [0.5, 0.9], size: [0.05, 0.02], intensity: 3, bounce: 0.3, delay: 0.3, emit: 2.0, t0: 0.28 });
+      k.em({ count: 60, kind: 'spark', shape: 'box', shapeSize: [3.0, 0, 0.4], pos: [2.2, 0.05, 0], dir: [0, 1, 0], spread: 0.5, speed: [2, 4], gravity: [0, -8, 0], life: [0.5, 0.7], size: [0.05, 0.02], intensity: 3, bounce: 0.3, delay: 0.3, emit: 2.0, t0: 0.28 });
       k.smoke({ count: 40, shape: 'box', shapeSize: [3.0, 0, 0.4], pos: [2.2, 0.3, 0], size: [0.5, 1.4], life: [1.2, 2], delay: 0.3, emit: 2.0 });
       k.sparks([2.2, 0.1, 0], 0.5, 40);
-      k.ring({ t0: 0.5, dur: 0.6, r: [0.2, 2], normal: 'up', pos: [3.6, 0.05, 0] });
-      ct(fx, k, [3.6, 0.2, 0], 0.5, 40);
+      ct(fx, k, [3.6, 0.2, 0], 0.5, 40, { lightI: 0 });
       if (k.g >= 2) [1.2, 2.2, 3.2].forEach((x, i) => k.em({ count: 13, kind: 'drop', shape: 'point', pos: [x, 0.05, 0], dir: [0, 1, 0], spread: 0.5, speed: [2, 4], gravity: [0, -9, 0], bounce: 0.2, life: [0.6, 1], size: [0.07, 0.03], intensity: 1.5, delay: 0.5 + 0.2 * i, emit: 0.001 }));
       if (k.g === 3) { k.ring({ t0: 0.5, dur: 0.5, r: [0.2, 2.2], normal: 'cam', pos: [3.6, 0.6, 0] }); k.sparks([3.6, 0.4, 0], 0.5, 30); }
       k.extras([3.6, 0.2, 0], 0.5);
@@ -57,7 +56,7 @@ export default [
   SKILL('lava/obsidian-rain', 'Obsidian rain', m(ELEM, 'volley-fall', 0.6, 12, 8, 'circle'), 2.4, {
     view: 'wide',
     act: act('castup', 0.7, 3.2, { hits: [0.7, 0.9, 1.1].map((t) => ({ t, stop: 0.06, shake: 0.3, amp: 0.04, push: 1.6 })) }),
-    // P3=291
+    // P3=328
     build(fx, o) {
       const k = kit(fx, o, LAVA), C = [3.2, 0, 0];
       const shard = (i) => {
@@ -86,17 +85,17 @@ export default [
   SKILL('lava/molten-fist', 'Molten fist', m(ELEM, 'melee-strike', 0.3, 6, 2, 'point'), 1.8, {
     view: 'side',
     act: act('thrust', 0.04, 1.7, { windup: 0.45, hits: [{ t: 0.04, stop: 0.12, shake: 0.35, amp: 0.05, push: 1.8 }] }),
-    // P3=334
+    // P3=335
     build(fx, o) {
       const k = kit(fx, o, LAVA), C = [1.62, 1.2, 0.1], A = [0.6, 1.38, 0.2];
       k.em({ count: 1, kind: 'soft', shape: 'point', size: [0.5, 0.5], life: [0.6, 0.6], intensity: 1.6, delay: -0.3, t0: -0.3, emit: 0.001, follow: k.at() });
       k.em({ count: 20, kind: 'soft', shape: 'sphere', radius: 0.2, dir: [1, 0, 0], speed: [0.5, 1], life: [0.4, 0.7], size: [0.3, 0.15], intensity: 1, delay: -0.4, emit: 0.7, follow: k.at() });
       k.em({ count: 30, kind: 'flame', shape: 'sphere', radius: 0.15, dir: [1, 0, 0], speed: [0.3, 0.8], life: [0.3, 0.5], size: [0.3, 0.12], aspect: 1.6, intensity: 0.4, delay: -0.4, emit: 0.7, follow: k.at() });
       swing(fx, { t0: 0, t1: 0.12, len: 0.12, inner: 0, outer: 0.2, c0: k.col(0), c1: k.col(1), c2: k.col(2), intensity: 1.4 * k.b, edge: 3 });
-      ct(fx, k, C, 0.04, 60);
+      ct(fx, k, C, 0.04, 60, { lightI: 0 });
       k.em({ count: 25, kind: 'drop', shape: 'point', pos: A, dir: [1, 0.3, 0], spread: 0.6, speed: [1, 3], gravity: [0, -9, 0], bounce: 0.2, life: [0.6, 1], size: [0.07, 0.03], intensity: 1.5, delay: 0.04, emit: 0.001 });
       k.em({ count: 25, kind: 'drop', shape: 'point', pos: C, dir: [0, 0.5, 0.5], spread: 0.8, speed: [1, 3], gravity: [0, -9, 0], bounce: 0.2, life: [0.6, 1], size: [0.07, 0.03], intensity: 1.5, delay: 0.04, emit: 0.001 });
-      k.em({ count: 40, kind: 'drop', shape: 'point', pos: C, dir: [0, 1, 0], spread: 1, speed: [1, 3], gravity: [0, -6, 0], bounce: 0.2, life: [0.6, 1], size: [0.07, 0.03], intensity: 1.6, delay: 0.04, emit: 0.001 });
+      k.em({ count: 40, kind: 'drop', shape: 'point', pos: C, dir: [0, 1, 0], spread: 1, speed: [1, 3], gravity: [0, -6, 0], bounce: 0.2, life: [0.6, 1], size: [0.07, 0.03], intensity: 1.5, delay: 0.04, emit: 0.001 });
       [[1.4, 0, 0.2], [1.8, 0, 0.3], [1.2, 0, -0.1], [1.9, 0, -0.2]].forEach((p) => k.decal({ kind: 'glow', r: [0.2, 0.2], pos: p, t0: 0.04, dur: 1.2 }));
       k.smoke({ count: 30, shape: 'sphere', radius: 0.3, pos: C, dir: [0, 1, 0], speed: [0.5, 1.2], life: [0.8, 1.4], size: [0.4, 0.9], delay: 0.05, emit: 0.001 });
       k.em({ count: 20, kind: 'shard', shape: 'point', pos: C, dir: [0.5, 0.3, 0.8], spread: 1, speed: [2, 5], gravity: [0, -9, 0], bounce: 0.3, life: [0.6, 1], size: [0.08, 0.03], intensity: 1, delay: 0.04, emit: 0.001, ramp: [[0, '#1b1210'], [1, '#050302', 0]] });
@@ -108,18 +107,15 @@ export default [
   SKILL('lava/crust-breaker', 'Crust breaker', m(ELEM, 'leap-slam', 0.6, 14, 5, 'circle'), 2.2, {
     view: 'wide',
     act: act('stomp', 0, 2.6, { windup: 0.65, hits: [{ t: 0, stop: 0.1, shake: 0.55, amp: 0.08, push: 2 }] }),
-    // P3=385
+    // P3=422
     build(fx, o) {
       const k = kit(fx, o, LAVA), P = [1.1, 0, 0];
       fx.on((t) => { fx.body.position.x = 1.0 * sm(-0.3, 0, t); });
-      k.ring({ t0: 0, dur: 0.9, r: [0.2, 5.5], width: [0.35, 0.08], normal: 'up', pos: P });
       k.decal({ kind: 'cracks', r: [3, 3.6], pos: [P[0], 0.02, 0], t0: 0, dur: 2.1, reveal: 0.3, heat: [1, 0.4], cells: 4 });
       k.decal({ kind: 'scorch', r: [1, 1.4], pos: [P[0], 0.02, 0], t0: 0, dur: 2.2 });
       k.em({ count: 24, kind: 'rock', shape: 'disc', radius: 0.3, pos: P, dir: [0, 1, 0], spread: 1, speed: [3, 7.5], gravity: [0, -10, 0], bounce: 0.35, life: [1, 1.8], size: [0.12, 0.06], blend: 'normal', lit: 1, ramp: [[0, '#6c5a48'], [1, '#6c5a48', 1]], emit: 0.001 });
       k.smoke({ ramp: DUST, count: 50, shape: 'ring', radius: 0.4, pos: P, radial: 0.9, speed: [1.5, 4.5], life: [1.2, 2], size: [0.5, 1.2], emit: 0.001 });
       k.sparks(P, 0, 40);
-      k.light({ pos: [P[0], 1.2, 0.8], t0: 0, dur: 1.6, fade: [0.02, 0.6], intensity: 150, env: (t) => Math.exp(-2.4 * t) });
-      fx.flash(0, 0.15, k.col(0), 0.22);
       for (let i = 0; i < 10; i++) {
         const side = i % 2 ? 1 : -1, ox = (i - 4.5) * 0.25, z = ((i % 3) - 1) * 0.3;
         const slab = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.3), rock('#1b1210'));

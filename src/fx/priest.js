@@ -6,14 +6,13 @@ const m = meta('priest', 'class');
 const RAMP = HOLY;
 const O = [0, 0, 0];
 
-/** T-HEL / T-BUF base: body glow, gather, ring, light, flash, extras */
+/** T-HEL / T-BUF base: body glow, gather, ring, light, extras (extras owns the flash) */
 const bodyBase = (fx, k, D, pose) => {
   fx.body.setPose(pose);
   fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(D - 0.6, D, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u }); });
   k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
   k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
   k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: D, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / D), intensity: 40 });
-  fx.flash(0.3, 0.1, k.col(0), 0.12);
   k.extras([0, 1.1, 0], 0.3);
 };
 /** ally figure: grey capsule body and head, feet on y = 0 */
@@ -47,7 +46,7 @@ export default [
       if (k.g >= 2) k.em({ count: 30, kind: 'petal', shape: 'disc', radius: 0.8, pos: [0, 2.2, 0], dir: [0, -1, 0], speed: [0.2, 0.5], life: [1.2, 2], delay: 0.3, emit: 1.8, t0: 0.3 });
       if (k.g === 3) {
         k.ring({ t0: 0, dur: 2.4, r: [0.25, 0.25], normal: 'cam', pos: [0, 2.1, 0], decay: 0 });
-        fx.flash(1.2, 0.15, k.col(0), 0.3);
+        fx.flash(1.2, 0.15, k.col(0), 0.08);
       }
     } }),
 
@@ -84,12 +83,10 @@ export default [
       k.shell({ r: [0.3, 2.4], hemi: true, power: 2, t0: 0, dur: 0.45, fade: [0, 0.35] });
       k.em({ count: 120, kind: 'soft', shape: 'ring', radius: 0.5, pos: [0, 0.6, 0], radial: 1, speed: [4, 8], life: [0.4, 0.9], delay: 0, emit: 0.001, t0: 0 });
       k.decal({ kind: 'glow', r: [1.5, 2.5], t0: 0, dur: 1.9, fade: [0.05, 1] });
-      k.light({ pos: [0, 1.4, 0.8], t0: -0.4, dur: 1.4, env: (t) => (t < 0 ? 0.3 : Math.exp(-2.5 * t)), intensity: 120 });
-      fx.flash(0, 0.12, k.col(0), 0.2);
       // row layers: radial petals and dark violet smoke at the target
       k.em({ count: 50, kind: 'petal', shape: 'ring', radius: 0.5, pos: [0, 0.8, 0], radial: 1, speed: [2, 5], life: [0.6, 1.2], delay: 0, emit: 0.3, t0: 0 });
       k.smoke({ count: 30, shape: 'disc', radius: 0.3, pos: [2.4, 0.3, 0], radial: 1, speed: [0.5, 1.5], ramp: [[0, '#3a1a4a', 0], [0.15, '#2a1038', 0.55], [1, '#0a040e', 0]], delay: 0.05, emit: 0.5, t0: 0.05 });
-      if (k.g >= 2) k.ring({ t0: 0.2, dur: 0.7, r: [0.2, 6], normal: 'up', ramp: [[0, '#ffffff', 1], [1, '#ffffff', 0]] });
+      if (k.g >= 2) k.ring({ t0: 0.2, dur: 0.7, r: [0.2, 6], normal: 'up', ramp: [[0, '#fff2dc', 1], [1, '#fff2dc', 0]] });
       if (k.g === 3) for (let i = 0; i < 8; i++) { const a = (i * TAU) / 8, c = Math.cos(a), s = Math.sin(a); k.beam({ from: [c * 0.5, 0.1, s * 0.5], to: [c * 3, 4, s * 3], r: [0.1, 0.4], intensity: 0.08, t0: 0, dur: 2.0 }); }
       k.extras([0, 1, 0], 0.05);
     } }),
@@ -127,7 +124,7 @@ export default [
   SKILL('priest/judgment-beam', 'Judgment beam', m(['holy'], 'sky-beam', 0.6, 14, 8, 'point'), 2.2, {
     view: 'sky',
     act: act('castup', 0.3, 2.6, { hits: [{ t: 0.3, stop: 0.08, shake: 0.35, amp: 0.05, push: 1.4 }] }),
-    // P3=202
+    // P3=203
     build(fx, o) {
       const k = kit(fx, o, RAMP), G = [2.6, 0, 0];
       // ground cross: two crossed boxes, popped in and out
@@ -143,13 +140,12 @@ export default [
       k.smoke({ count: 20, shape: 'disc', radius: 0.5, pos: [G[0], 0.05, 0], ramp: DUST, delay: 0.3, emit: 0.3, t0: 0.3 });
       k.decal({ kind: 'scorch', r: [0.8, 1.2], pos: G, t0: 0.3, dur: 1.5 });
       k.light({ pos: [G[0], 1.5, 0.8], t0: 0, dur: 2.2, fade: [0.05, 0.6], intensity: 160 });
-      fx.flash(0.3, 0.12, k.col(0), 0.25);
       if (k.g >= 2) {
         k.beam({ pos: G, height: 14, r: [0.1, 0.1], intensity: 1, t0: 0.8, dur: 0.6 });
         k.sparks(G, 0.8, 60);
       }
       if (k.g === 3) for (const [y, t] of [[3, 0.3], [2, 0.4], [1, 0.5]]) k.ring({ t0: t, dur: 0.6, r: [0.2, 2], normal: 'up', pos: [G[0], y, 0] });
-      k.extras([G[0], 1, 0], 0.3);
+      k.extras([G[0], 1, 0], 0.3, 'A');
     } }),
 
   SKILL('priest/divine-chain', 'Divine chain', m(['holy'], 'chain-heal', 0.6, 10, 8, 'chain'), 2.2, {
@@ -184,7 +180,7 @@ export default [
   SKILL('priest/sun-lance', 'Sun lance', m(['holy'], 'projectile', 0.5, 6, 9, 'point'), 1.8, {
     view: 'long',
     act: act('throw', 0.35, 4),
-    // P3=322
+    // P3=323
     build(fx, o) {
       const k = kit(fx, o, RAMP), A = [0.6, 1.38, 0.2], B = [3.8, 1.2, 0], T = 0.35, H = 0.05;
       // T-PRJ path: arc from A to B over [0, T]
@@ -197,11 +193,10 @@ export default [
       k.trail({ path: P, t0: 0, dur: T + 0.05, len: 0.3, width: 0.12 });
       k.em({ count: 60, kind: 'soft', shape: 'sphere', radius: 0.1, dir: [-1, 0, 0], spread: 0.8, speed: [0.3, 1], life: [0.25, 0.45], size: [0.12, 0.03], intensity: 0.8, delay: 0, emit: T, t0: 0, t1: T + 0.5, follow: fol });
       k.impact(B, T, 60, 1.6);
-      k.extras(B, T);
+      k.extras(B, T, 'A');
       // 12 radial rays out from the impact point
       for (let i = 0; i < 12; i++) { const a = (i * TAU) / 12, c = Math.cos(a), s = Math.sin(a); k.ribbon({ points: [[B[0], B[1], 0], [B[0] + 0.8 * c, B[1] + 0.8 * s, 0]], n: 1, width: 0.02, sweep: [0, 1], t0: 0.35, dur: 0.3 }); }
       k.decal({ kind: 'glow', r: [0.8, 0.8], pos: [3.8, 0, 0], t0: 0.35, dur: 1.4 });
-      k.light({ pos: [B[0], 1.2, 0.8], t0: 0.35, dur: 1.2, fade: [0.05, 0.5], intensity: 160 });
       if (k.g >= 2) for (let i = 0; i < 6; i++) {
         k.em({ count: 20, kind: 'soft', shape: 'sphere', radius: 0.05, pos: A, speed: [0.05, 0.15], life: [0.3, 0.5], size: [0.08, 0.02], delay: 0, emit: T + 0.5, t0: 0,
           follow: (mm, ta, t) => { const p = P(t), a = (TAU * t) / 0.6 + i; mm.position.set(p[0], p[1] + 0.15 * Math.cos(a), p[2] + 0.15 * Math.sin(a)); } });

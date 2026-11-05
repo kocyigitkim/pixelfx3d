@@ -1,24 +1,24 @@
 // Hydro (water element) category: 8 base-tier skills (PLAN2 B12). Built from the T-WHP, T-BUF/T-HEL, T-PUL, T-ORB and T-NOV-style layers.
 import * as THREE from 'three';
-import { kit, SKILL, meta, act, sm, TAU, POSES, rock, addMat, WATER, VAPOR } from './_skill.js';
+import { kit, SKILL, meta, act, sm, TAU, POSES, rock, addMat, WATER } from './_skill.js';
 import { contact, bladeTable } from './melee.js';
 
 const m = meta('hydro', 'base');
 const G = [3, 0, 0];
-const MIST = [[0, '#cfe6f5', 0], [0.15, '#bcd8ea', 0.55], [1, '#6a8aa0', 0]];
+const MIST = [[0, '#a9bcc8', 0], [0.15, '#99b0bf', 0.55], [1, '#567183', 0]]; // V5 vapor cap <= #b8c0c8
+const VAPOR = [[0, '#b7bcbf', 0], [0.15, '#b0b6b9', 0.55], [1, '#7a848b', 0]]; // kit VAPOR darkened (V5)
 const lerp3 = (p, q, u) => p.map((v, i) => v + (q[i] - v) * u);
 /** T-MEL-style contact burst with n sparks (n + 2 particles) */
-const ct = (fx, k, p, h, n) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n });
+const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n, ...o });
 /** T-BUF body glow pulse over the buff duration D */
 const buffGlow = (fx, k, D) => fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(D - 0.6, D, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u }); });
-/** T-BUF / T-HEL base: body glow, gather (30), ring, light, flash, extras (41 at grade 3) */
+/** T-BUF / T-HEL base: body glow, gather (30), ring, light, extras (soft; flash from extras) */
 const buffBase = (fx, k, D, pose) => {
   fx.body.setPose(pose);
   buffGlow(fx, k, D);
   k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
   k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
   k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: D, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / D), intensity: 40 });
-  fx.flash(0.3, 0.1, k.col(0), 0.12);
   k.extras([0, 1.1, 0], 0.3);
 };
 
@@ -26,7 +26,7 @@ export default [
   SKILL('hydro/tidal-lash', 'Tidal lash', m(['water'], 'whip', 0.3, 6, 3, 'arc'), 1.4, {
     view: 'side',
     act: { kind: 'throw', weapon: 'whip', target: [2.45, 0, 0], windup: 0.45, hits: [{ t: 0, stop: 0.07, shake: 0.12, amp: 0.025, push: 1.0 }] },
-    // P3=203
+    // P3=204
     build(fx, o) {
       const k = kit(fx, o, WATER);
       const Hd = bladeTable(fx, -0.45, 0.6, 0.25), T = [2.2, 1.35, 0.1], N = 28;
@@ -43,10 +43,8 @@ export default [
       k.em({ count: 50, kind: 'drop', shape: 'sphere', radius: 0.1, pos: T, dir: [-1, 0.3, 0], spread: 1.2, speed: [1, 4], gravity: [0, -9, 0], bounce: 0.3, life: [0.4, 0.7], size: [0.03, 0.015], delay: 0, emit: 0.001 });
       k.smoke({ count: 20, shape: 'sphere', radius: 0.1, pos: T, ramp: MIST, dir: [0.3, 0.6, 0], spread: 1.4, speed: [0.3, 1.4], life: [0.6, 1.2], size: [0.2, 0.7], drag: 1.8, delay: 0, emit: 0.05 });
       k.ring({ t0: 0, dur: 0.3, r: [0.05, 0.9], width: [0.1, 0.015], normal: 'cam', pos: T, intensity: 1.4 });
-      fx.water({ r: 0.8, pos: [2.4, 0, 0], ripples: [{ t: 0, x: 0, z: 0, amp: 1 }], deep: '#0b4f9c', shallow: '#4fb3ff' });
-      ct(fx, k, T, 0, 30);
-      k.light({ pos: [2.2, 1.4, 0.8], t0: 0, dur: 0.9, env: (t) => Math.exp(-4 * t) });
-      fx.flash(0, 0.08, k.col(0), 0.1);
+      fx.water({ r: 0.8, pos: [2.4, 0, 0], y: 0.015, ripples: [{ t: 0, x: 0, z: 0, amp: 1 }], deep: '#0b4f9c', shallow: '#4fb3ff' });
+      ct(fx, k, T, 0, 30, { lightI: 0 });
       if (k.g >= 2) k.ribbon({ points: (t) => pts(t).map((p) => [p[0], p[1] + 0.06, p[2] + 0.12]), n: N, width: 0.015 * k.s, head: () => 1.001, tail: 4, intensity: 0.8, t0: -0.3, dur: 0.9, fade: [0.05, 0.2] });
       if (k.g === 3) k.ring({ t0: 0.2, dur: 0.6, r: [0.2, 2.2], normal: 'up', pos: [2.45, 0, 0] });
       k.extras(T, 0);
@@ -67,21 +65,21 @@ export default [
         k.em({ count: 20, kind: 'drop', shape: 'sphere', radius: 0.05, pos: HIT[i], dir: DIR[i], spread: 1, speed: [0.8, 2.4], gravity: [0, -9, 0], life: [0.3, 0.6], size: [0.03, 0.015], delay: ti, emit: 0.001, t0: ti - 0.02 });
         k.ring({ t0: ti, dur: 0.35, r: [0.05, 0.5], normal: 'cam', pos: HIT[i] });
       });
-      if (k.g >= 2) fx.water({ r: 1.2, ripples: [{ t: 1.0, x: 0, z: 0, amp: 0.05 }, { t: 1.6, x: 0, z: 0, amp: 0.05 }, { t: 2.2, x: 0, z: 0, amp: 0.05 }], deep: '#0b4f9c', shallow: '#4fb3ff' });
+      if (k.g >= 2) fx.water({ r: 1.2, y: 0.015, ripples: [{ t: 1.0, x: 0, z: 0, amp: 0.05 }, { t: 1.6, x: 0, z: 0, amp: 0.05 }, { t: 2.2, x: 0, z: 0, amp: 0.05 }], deep: '#0b4f9c', shallow: '#4fb3ff' });
       if (k.g === 3) {
         k.em({ count: 60, kind: 'drop', shape: 'sphere', radius: 0.9, pos: [0, 1.2, 0], dir: [0, 1, 0], spread: 3, speed: [1.5, 3.5], gravity: [0, -9, 0], life: [0.5, 0.9], size: [0.03, 0.015], delay: 2.6, emit: 0.001, t0: 2.58 });
         k.smoke({ count: 30, shape: 'sphere', radius: 0.6, pos: [0, 1.2, 0], radial: 1, speed: [0.6, 1.6], life: [0.8, 1.4], size: [0.3, 0.7], ramp: VAPOR, delay: 2.6, emit: 0.001, t0: 2.58 });
-        fx.flash(2.6, 0.1, k.col(0), 0.15);
+        fx.flash(2.6, 0.1, k.col(0), 0.08);
       }
     } }),
 
   SKILL('hydro/riptide-pull', 'Riptide pull', m(['water'], 'pull', 0.6, 16, 6, 'circle'), 3.0, {
     view: 'wide',
     act: act('cast', null, 3, { target: [3.4, 0, 0] }),
-    // P3=361
+    // P3=398
     build(fx, o) {
       const k = kit(fx, o, WATER);
-      fx.water({ r: 2.2, pos: G, vortex: 1, waves: 0.4, speed: 1.2, k: 16, deep: '#0b4f9c', shallow: '#4fb3ff' });
+      fx.water({ r: 2.2, pos: G, y: 0.015, vortex: 1, waves: 0.4, speed: 1.2, k: 16, deep: '#0b4f9c', shallow: '#4fb3ff' });
       fx.on((t) => { fx.target.position.x = 3.4 - 0.4 * sm(0.2, 1.2, t); });
       k.em({ count: 120, kind: 'drop', shape: 'ring', radius: 2, pos: G, radial: 1, speed: [-2, -1], swirl: 4, size: [0.04, 0.02], life: [0.6, 1.0], delay: 0.2, emit: 2.0, t0: 0.2 });
       k.em({ count: 60, kind: 'bubble', shape: 'disc', radius: 2, pos: G, dir: [0, 1, 0], speed: [0.3, 0.8], life: [1, 1.6], delay: 0.2, emit: 2.0, t0: 0.2 });
@@ -94,8 +92,6 @@ export default [
       k.ring({ t0: 0.6, dur: 1.6, r: [2, 0.3], normal: 'up', pos: G });
       k.light({ pos: [3, 1.2, 1], t0: 0.2, dur: 2.4, env: (t) => 0.8 + 0.2 * Math.sin((TAU * 2 * t) / 2.4) });
       k.em({ count: 80, kind: 'drop', shape: 'disc', radius: 0.4, pos: G, dir: [0, 1, 0], spread: 0.6, speed: [3, 6], gravity: [0, -9, 0], bounce: 0.3, size: [0.04, 0.02], life: [0.6, 1.0], delay: 2.4, emit: 0.001, t0: 2.38 });
-      fx.shake(2.4, 0.3, 0.03);
-      fx.flash(2.4, 0.1, k.col(0), 0.1);
       if (k.g >= 2) k.beam({ pos: G, height: 1.5, r: [0.6, 0.1], t0: 2.4, dur: 0.5, fade: [0.05, 0.3] });
       if (k.g === 3) {
         k.em({ count: 30, kind: 'drop', shape: 'disc', radius: 0.3, pos: G, dir: [0, 1, 0], spread: 0.2, speed: [5, 7], gravity: [0, -9, 0], life: [0.8, 1.2], size: [0.04, 0.02], delay: 2.4, emit: 0.5, t0: 2.4 });
@@ -120,7 +116,7 @@ export default [
   SKILL('hydro/geyser-line', 'Geyser line', m(['water'], 'line-eruption', 0.5, 10, 6, 'line'), 2.6, {
     view: 'wide',
     act: act('stomp', 0.5, 3.6),
-    // P3=421
+    // P3=422
     build(fx, o) {
       const k = kit(fx, o, WATER);
       const L = k.light({ pos: [1, 1.2, 0.8], t0: 0, dur: 2.6, intensity: 60 });
@@ -133,7 +129,6 @@ export default [
         k.decal({ kind: 'glow', r: [0.5, 0.5], pos: [x, 0, 0], t0: ti, dur: 1.2, fade: [0.05, 1] });
         if (k.g >= 2) k.em({ count: 10, kind: 'bubble', shape: 'point', pos: [x, 0.1, 0], dir: [0, 1, 0], speed: [0.5, 1.2], life: [0.6, 1.0], size: [0.04, 0.06], delay: ti, emit: 0.001, t0: ti });
       });
-      fx.flash(0.5, 0.1, k.col(0), 0.12);
       if (k.g === 3) {
         k.em({ count: 80, kind: 'drop', shape: 'disc', radius: 0.3, pos: [3.6, 0.05, 0], dir: [0, 1, 0], speed: [6, 9], gravity: [0, -9, 0], bounce: 0.2, life: [1, 1.4], size: [0.05, 0.025], delay: 0.6, emit: 0.001, t0: 0.58 });
         k.beam({ pos: [3.6, 0, 0], height: 3, r: [0.3, 0.15], t0: 0.6, dur: 1.2, fade: [0.05, 0.5] });
@@ -150,7 +145,7 @@ export default [
       k.smoke({ count: 40, shape: 'disc', radius: 0.7, pos: [0, 2.8, 0], ramp: VAPOR, speed: [0.1, 0.3], life: [1.5, 2.5], delay: 0, emit: 2.4 });
       k.em({ count: 120, kind: 'drop', shape: 'disc', radius: 0.6, pos: [0, 2.6, 0], dir: [0, -1, 0], spread: 0.1, speed: [3, 4], life: [0.5, 0.7], size: [0.03, 0.015], delay: 0.3, emit: 2.1, t0: 0.3 });
       k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 0.9, pos: [0, 1.2, 0], size: [0.05, 0.015], life: [0.25, 0.4], delay: 0.3, emit: 2.1, t0: 0.3 });
-      fx.water({ r: 0.9, ripples: [0.6, 1.1, 1.6, 2.1].map((t, i) => ({ t, x: 0.2 * Math.cos(i * 2), z: 0.2 * Math.sin(i * 2), amp: 0.05 })), waves: 0.2, speed: 1, decay: 1.2, k: 16, deep: '#0b4f9c', shallow: '#4fb3ff' });
+      fx.water({ r: 0.9, y: 0.015, ripples: [0.6, 1.1, 1.6, 2.1].map((t, i) => ({ t, x: 0.2 * Math.cos(i * 2), z: 0.2 * Math.sin(i * 2), amp: 0.05 })), waves: 0.2, speed: 1, decay: 1.2, k: 16, deep: '#0b4f9c', shallow: '#4fb3ff' });
       k.em({ count: 60, kind: 'soft', shape: 'disc', radius: 0.7, pos: [0, 0.2, 0], dir: [0, 1, 0], speed: [0.5, 1.0], life: [1.2, 1.8], delay: 0.3, emit: 2.1, t0: 0.3 });
       k.ring({ t0: 1.5, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
       k.beam({ from: [0, 3.2, 0], to: [0, 0, 0], r: [0.3, 0.5], intensity: 0.4, t0: 0.3, dur: 2.1 });
@@ -160,7 +155,7 @@ export default [
   SKILL('hydro/orb-cascade', 'Orb cascade', m(['water'], 'orbit-shoot', 0.6, 10, 8, 'point'), 2.6, {
     view: 'wide',
     act: act('cast', 1.5, 4, { hits: [{ t: 1.6, stop: 0.05, shake: 0.2, amp: 0.03, push: 0.8 }, { t: 1.7, stop: 0.05, shake: 0.2, amp: 0.03, push: 0.8 }, { t: 1.8, stop: 0.05, shake: 0.25, amp: 0.03, push: 0.8 }] }),
-    // P3=273
+    // P3=274
     build(fx, o) {
       const k = kit(fx, o, WATER);
       const TGT = [3.8, 1.2, 0];
@@ -177,20 +172,18 @@ export default [
       for (let i = 0; i < 5; i++) shot(i);
       k.em({ count: 20, kind: 'drop', shape: 'ring', radius: 0.8, pos: [0, 1.3, 0], dir: [0, -1, 0], speed: [0.2, 0.5], gravity: [0, -9, 0], life: [0.3, 0.5], size: [0.03, 0.015], delay: 0.2, emit: 1.5, t0: 0.2 });
       k.gather([0, 1.1, 0], 0.6, 0.6, 0.7, 30);
-      k.light({ pos: [3.8, 1.6, 0.8], t0: 1.5, dur: 1.1, env: (t) => Math.exp(-3 * Math.max(0, t - 1.5)) });
-      fx.flash(1.6, 0.1, k.col(0), 0.1);
       if (k.g >= 2) for (let i = 5; i < 7; i++) shot(i);
       if (k.g === 3) {
         k.ring({ t0: 1.6, dur: 0.5, r: [0.2, 2.2], normal: 'cam', pos: TGT });
-        fx.water({ r: 0.8, pos: [3.8, 0, 0], ripples: [{ t: 1.6, x: 0, z: 0, amp: 0.1 }], deep: '#0b4f9c', shallow: '#4fb3ff' });
+        fx.water({ r: 0.8, pos: [3.8, 0, 0], y: 0.015, ripples: [{ t: 1.6, x: 0, z: 0, amp: 0.1 }], deep: '#0b4f9c', shallow: '#4fb3ff' });
       }
-      k.extras(TGT, 1.6);
+      k.extras(TGT, 1.6, 'B');
     } }),
 
   SKILL('hydro/tsunami-arc', 'Tsunami arc', m(['water'], 'wave', 0.8, 18, 7, 'arc'), 2.6, {
     view: 'long',
     act: act('sideslash', 0.6, 4),
-    // P3=571
+    // P3=572
     build(fx, o) {
       const k = kit(fx, o, WATER);
       // one wave sheet: front travels x .8 -> 4.5 over [d, d+1.2], height scales in and out, crest curls forward
@@ -212,9 +205,7 @@ export default [
       // crash at the far end
       k.em({ count: 80, kind: 'drop', shape: 'disc', radius: 0.2, pos: [4.5, 0.2, 0], dir: [0, 1, 0], spread: 1, speed: [2, 5], gravity: [0, -9, 0], bounce: 0.2, life: [0.6, 1.0], size: [0.04, 0.02], delay: 1.2, emit: 0.001, t0: 1.18 });
       k.ring({ t0: 1.2, dur: 0.6, r: [0.3, 2.5], normal: 'up', pos: [4.5, 0, 0] });
-      k.light({ pos: [4.5, 1.2, 0.8], t0: 1.2, dur: 1.4, env: (t) => Math.exp(-3 * Math.max(0, t - 1.2)) });
-      fx.water({ r: 2, pos: [4, 0, 0], ripples: [{ t: 1.2, x: 0, z: 0, amp: 0.1 }], deep: '#0b4f9c', shallow: '#4fb3ff' });
-      fx.flash(1.2, 0.08, k.col(0), 0.1);
+      fx.water({ r: 2, pos: [4, 0, 0], y: 0.015, ripples: [{ t: 1.2, x: 0, z: 0, amp: 0.1 }], deep: '#0b4f9c', shallow: '#4fb3ff' });
       if (k.g >= 2) sheet(1.3, 0.3);
       if (k.g === 3) {
         k.beam({ pos: [4.5, 0, 0], height: 2.5, r: [0.3, 0.1], t0: 1.2, dur: 1.0, fade: [0.05, 0.5] });

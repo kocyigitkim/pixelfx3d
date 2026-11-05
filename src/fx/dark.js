@@ -12,7 +12,7 @@ export default [
   SKILL('dark/soul-rend', 'Soul rend', m(['void'], 'curse-beam', 0.5, 12, 7, 'line'), 2.4, {
     view: 'side', sky: 'dark',
     act: act('cast', 0.3, 3.4, { hits: [{ t: 0.7, stop: 0.02, shake: 0.15, amp: 0.04, push: 0 }, { t: 1.1, stop: 0.02, shake: 0.15, amp: 0.04, push: 0 }, { t: 1.5, stop: 0.02, shake: 0.15, amp: 0.04, push: 0 }] }),
-    // P3=201
+    // P3=202
     build(fx, o) {
       const k = kit(fx, o, VOID);
       const T = [3.4, 1.2, 0];
@@ -40,7 +40,7 @@ export default [
   SKILL('dark/shadow-spears', 'Shadow spears', m(['void'], 'line-eruption', 0.5, 10, 6, 'line'), 2.2, {
     view: 'side', sky: 'dark',
     act: act('smash', 0.45, 3.4),
-    // P3=205
+    // P3=206
     build(fx, o) {
       const k = kit(fx, o, VOID);
       const T = [3.4, 1.2, 0];
@@ -72,7 +72,7 @@ export default [
   SKILL('dark/dread-howl', 'Dread howl', m(['void'], 'nova-fear', 0.4, 18, 5, 'circle'), 2.2, {
     view: 'wide', sky: 'dark',
     act: act('none', null, 2.6, { keys: [[-0.5, 'guard'], [-0.25, 'crouch'], [0, 'roar', 'snap'], [0.8, 'roar'], [1.4, 'guard']], hits: [{ t: 0.1, stop: 0.06, shake: 0.2, amp: 0.03, push: 1.5 }] }),
-    // P3=261
+    // P3=262
     build(fx, o) {
       const k = kit(fx, o, VOID);
       k.gather([0, 1, 0], -0.45, 0.4, 1.4, 60);
@@ -81,8 +81,6 @@ export default [
       k.shell({ r: [0.3, 2.4], hemi: true, power: 2, t0: 0, dur: 0.45, fade: [0, 0.35], ramp: [[0, '#0a0218', 1], [1, '#3a1080', 0.6]] });
       k.smoke({ count: 80, shape: 'sphere', radius: 0.3, pos: [0, 1, 0], radial: 1, speed: [1.5, 3], ramp: VDARK, delay: 0, emit: 0.5 });
       k.em({ count: 80, kind: 'soft', shape: 'sphere', radius: 0.3, pos: [0, 1, 0], radial: 1, speed: [2, 4], delay: 0, emit: 0.5 });
-      k.light({ pos: [0, 1.4, 0.8], t0: -0.4, dur: 1.4, env: (t) => (t < 0 ? 0.3 : Math.exp(-2.5 * t)), intensity: 120 });
-      fx.flash(0, 0.15, '#2a0040', 0.2);
       // 6 fear faces radiating out from head height and fading
       const FEAR = new THREE.MeshStandardMaterial({ color: '#15101c', roughness: 0.9 }), EYE = new THREE.MeshBasicMaterial({ color: '#000000' });
       for (let i = 0; i < 6; i++) {
@@ -97,7 +95,6 @@ export default [
       if (k.g >= 2) k.ring({ t0: 0.3, dur: 0.5, r: [0.2, 2.2], normal: 'cam', pos: [0, 1.2, 0] });
       if (k.g === 3) {
         k.decal({ kind: 'cracks', r: [2.5, 2.5], t0: 0.1, dur: 1.9, reveal: 0.3, heat: [1, 0.1], cells: 4, y: 0.005 });
-        fx.shake(0.1, 0.3, 0.05);
       }
     } }),
 
@@ -127,13 +124,13 @@ export default [
         k.em({ count: 60, kind: 'soft', shape: 'sphere', radius: 0.3, pos: [0, 1, 0], dir: [0, 1, 0], speed: [0.5, 1.2], life: [0.5, 0.9], delay: 1, emit: 1, t0: 1 });
         k.ring({ t0: 1.0, dur: 0.5, r: [0.2, 1.6], normal: 'cam', pos: [0, 1.2, 0] });
       }
-      k.extras([0, 1.2, 0], 1.0);
+      k.extras([0, 1.2, 0], 1.0, 'E');
     } }),
 
   SKILL('dark/void-chains', 'Void chains', m(['void'], 'bind', 0.4, 14, 6, 'point'), 2.6, {
     view: 'wide', sky: 'dark',
     act: act('throw', 0.35, 3, { hits: [{ t: 0.35, stop: 0.1, shake: 0.3, amp: 0.04, push: 0 }] }),
-    // P3=131
+    // P3=132
     build(fx, o) {
       const k = kit(fx, o, VOID);
       const CH = [3, 1.2, 0];
@@ -171,7 +168,7 @@ export default [
   SKILL('dark/bane-sigil', 'Bane sigil', m(['void', 'blood'], 'delayed-blast', 0.6, 16, 6, 'circle'), 2.8, {
     view: 'wide', sky: 'dark',
     act: act('cast', 1.5, 3),
-    // P3=329
+    // P3=310
     build(fx, o) {
       const k = kit(fx, o, VOID);
       const G = [3, 0, 0];
@@ -183,13 +180,9 @@ export default [
       k.beam({ pos: G, height: 5, r: [1.2, 0.6], intensity: 0.5, t0: 1.5, dur: 1.3 });
       k.orb({ kind: 'void', r: [0.3, 1.4], pos: [3, 1, 0], intensity: 0.5, t0: 1.5, dur: 1.3 });
       k.ring({ t0: 1.5, dur: 0.8, r: [0.2, 5], normal: 'up', pos: [3, 0.02, 0] });
-      fx.flash(1.5, 0.12, k.col(0), 0.3);
       k.ring({ r: [0.3, 3.2], normal: 'cam', pos: [3, 1, 0], t0: 1.5, dur: 0.45, intensity: 1.8 });
-      k.sparks([3, 0.5, 0], 1.5, 80);
+      k.sparks([3, 0.5, 0], 1.5, 60);
       k.smoke({ count: 50, shape: 'disc', radius: 1, pos: [3, 0.05, 0], radial: 1, speed: [1, 3], delay: 1.5, emit: 0.001, t0: 1.5 });
-      k.light({ pos: [3, 1.2, 0.8], t0: 1.5, dur: 1.3, env: (t) => Math.exp(-2.4 * t), intensity: 90 });
-      fx.shake(1.5, 0.5, 0.06);
-      fx.flash(1.5, 0.15, k.col(0), 0.2);
       k.decal({ kind: 'scorch', r: [1.2, 1.6], pos: G, t0: 1.5, dur: 1.3 });
       if (k.g >= 2) for (const p of PENT) k.beam({ pos: p, height: 1.5, r: [0.1, 0.1], t0: 1.3, dur: 1.5 });
       if (k.g === 3) {

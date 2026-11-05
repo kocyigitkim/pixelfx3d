@@ -9,7 +9,7 @@ const cl = (x) => Math.min(1, Math.max(0, x));
 const lerp3 = (p, q, u) => [p[0] + (q[0] - p[0]) * u, p[1] + (q[1] - p[1]) * u, p[2] + (q[2] - p[2]) * u];
 const HIT = (t) => ({ t, stop: 0.06, shake: 0.3, amp: 0.04, push: 1.6 });
 /** T-MEL contact burst with n sparks (n + 2 particles) */
-const ct = (fx, k, p, h, n) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n });
+const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n, ...o });
 /** rock chips thrown from a point at time t (n particles) */
 const rockBurst = (k, pos, n, t, p = {}) => k.em({ count: n, kind: 'rock', blend: 'normal', lit: 1, shape: 'disc', radius: 0.3, pos, dir: [0, 1, 0], spread: 0.9, speed: [3, 7.5], gravity: [0, -10, 0], bounce: 0.35, size: [0.16, 0.09], ramp: ROCK, delay: t, t0: t - 0.02, emit: 0.001, ...p });
 /** dust puff at time t (n particles) */
@@ -21,7 +21,7 @@ export default [
   SKILL('geo/stone-fist', 'Stone fist', m(['earth'], 'summon-punch', 0.6, 10, 4, 'point'), 2.4, {
     view: 'wide',
     act: act('cast', 0.5, 3.4, { keys: [[-0.5, 'castCharge'], [0.35, 'castRelease', 'snap']] }),
-    // P3=293
+    // P3=294
     build(fx, o) {
       const k = kit(fx, o, EARTH), rm = rock();
       const fist = new THREE.Group(), body = new THREE.Group(), core = new THREE.Mesh(new THREE.DodecahedronGeometry(0.45), rm);
@@ -31,14 +31,13 @@ export default [
       k.pop(fist, 0, 0.3, 1.6, 2.1, (t) => { fist.position.x = 1.6 + 1.4 * sm(0.35, 0.5, t); });
       dustBurst(k, [1.6, 0.05, 0], 40, 0);
       rockBurst(k, [1.6, 0.2, 0], 20, 0);
-      ct(fx, k, [3.2, 1.2, 0], 0.5, 50);
+      ct(fx, k, [3.2, 1.2, 0], 0.5, 50, { lightI: 0 });
       dustBurst(k, [3.4, 0.1, 0], 40, 0.5);
       rockBurst(k, [3.4, 0.2, 0], 20, 0.5);
       rockBurst(k, [3.4, 0.2, 0], 40, 0.5);
       k.decal({ kind: 'cracks', r: [1.2, 1.6], pos: [3.4, 0, 0], t0: 0.5, dur: 1.5, reveal: 0.3, cells: 4 });
       rockBurst(k, [3.0, 0.3, 0], 20, 1.6); // crumble
       k.light({ pos: [2.6, 1.2, 0.8], t0: 0, dur: 2.4, fade: [0.05, 0.6], intensity: 60 });
-      fx.flash(0.5, 0.1, k.col(0), 0.12);
       if (k.g >= 2) k.em({ count: 20, kind: 'rock', blend: 'normal', lit: 1, shape: 'ring', radius: 0.5, pos: [3.0, 0.4, 0], swirl: 3, speed: [0.2, 0.6], life: [0.6, 1], size: [0.1, 0.06], ramp: ROCK, delay: 0.5, t0: 0.5, emit: 1.0 });
       if (k.g === 3) {
         k.ring({ t0: 0.5, dur: 0.45, r: [0.2, 2.4], normal: 'cam', pos: [3.4, 1, 0] });
@@ -50,7 +49,7 @@ export default [
   SKILL('geo/rubble-orbit', 'Rubble orbit', m(['earth'], 'orbit-release', 0.6, 12, 7, 'ring'), 2.6, {
     view: 'wide',
     act: act('cast', 1.7, 4),
-    // P3=281
+    // P3=282
     build(fx, o) {
       const k = kit(fx, o, EARTH), rm = rock(), TF = 1.4, TGT = [4, 1, 0];
       // rise from the ground at the caster, orbit at radius 1 (angular speed 4), then fly to the target
@@ -66,7 +65,6 @@ export default [
         dustBurst(k, TGT, 15, TF + 0.3);
       }
       k.light({ pos: [2, 1.4, 0.8], t0: 0, dur: 2.6, fade: [0.1, 0.6], intensity: 50 });
-      fx.flash(TF + 0.3, 0.1, k.col(0), 0.12);
       if (k.g >= 2) k.em({ count: 40, kind: 'rock', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.5, pos: [0, 0.9, 0], swirl: 2, speed: [0.1, 0.3], life: [0.8, 1.2], size: [0.06, 0.03], ramp: ROCK, delay: 0.3, t0: 0.3, emit: 1.3 });
       if (k.g === 3) {
         k.ring({ t0: TF + 0.3, dur: 0.6, r: [0.2, 2.6], normal: 'up', pos: TGT });
@@ -78,7 +76,7 @@ export default [
   SKILL('geo/fault-line', 'Fault line', m(['earth'], 'line-crack', 0.5, 10, 6, 'line'), 2.4, {
     view: 'wide',
     act: act('stomp', 0.3, 3.6),
-    // P3=203
+    // P3=204
     build(fx, o) {
       const k = kit(fx, o, EARTH), rm = rock();
       // flat strip from x 0.5 to 3.5 that grows along x over [0, 0.3]
@@ -90,8 +88,7 @@ export default [
       rockBurst(k, [2, 0.2, 0], 30, 0.3, { shape: 'line', shapeSize: [1.5, 0, 0] });
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 2.2], normal: 'up', pos: [3.6, 0, 0] });
       k.sparks([3.6, 0.4, 0], 0.3, 30);
-      ct(fx, k, [3.6, 0.6, 0], 0.3, 40);
-      fx.flash(0.3, 0.1, k.col(0), 0.12);
+      ct(fx, k, [3.6, 0.6, 0], 0.3, 40, { lightI: 0 });
       k.light({ pos: [2, 1.2, 0.8], t0: 0, dur: 2.4, fade: [0.05, 0.6], intensity: 60 });
       if (k.g >= 2) for (const [x, a] of [[1.0, 0.7], [1.6, -0.6], [2.2, 0.6], [2.8, -0.7]]) { const g = new THREE.PlaneGeometry(0.8, 0.05); g.translate(0.4, 0, 0); g.rotateX(-Math.PI / 2); const br = new THREE.Mesh(g, addMat(k.col(1), 1.0)); br.position.set(x, 0.01, 0); br.rotation.y = a; fx.mesh(br, (t) => { br.scale.x = Math.max(1e-3, sm(0.3, 0.6, t)); }, { t0: 0, dur: 2.4 }); }
       if (k.g === 3) { const big = new THREE.Mesh(new THREE.ConeGeometry(0.25, 1.6, 7), rm); big.position.set(3.6, 0.8, 0); k.pop(big, 0.3, 0.55, 2.0, 2.4); }
@@ -108,7 +105,6 @@ export default [
       k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: D, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / D), intensity: 40 });
-      fx.flash(0.3, 0.1, k.col(0), 0.12);
       // 8 plates fly from the ground onto the torso, then fall off after 2.3 s
       const plateG = new THREE.BoxGeometry(0.16, 0.22, 0.06);
       for (let i = 0; i < 8; i++) {
@@ -129,10 +125,10 @@ export default [
   SKILL('geo/quake-ring', 'Quake ring', m(['earth'], 'pulse', 0.4, 14, 0, 'ring'), 2.8, {
     view: 'wide',
     act: act('stomp', 0, 2.6, { hits: [HIT(0), HIT(0.6), HIT(1.2)] }),
-    // P3=249
+    // P3=250
     build(fx, o) {
       const k = kit(fx, o, EARTH), rm = rock();
-      const pulse = (t) => { k.ring({ t0: t, dur: 0.6, r: [0.2, 4.5], normal: 'up' }); dustBurst(k, [0, 0.05, 0], 40, t); rockBurst(k, [0, 0.1, 0], 12, t); fx.shake(t, 0.4, 0.03); };
+      const pulse = (t) => { k.ring({ t0: t, dur: 0.6, r: [0.2, 4.5], normal: 'up' }); dustBurst(k, [0, 0.05, 0], 40, t); rockBurst(k, [0, 0.1, 0], 12, t); }; // K1: act hits own the shake
       pulse(0); pulse(0.6); pulse(1.2);
       k.decal({ kind: 'cracks', r: [1, 4], pos: [0, 0, 0], t0: 0, dur: 2.8, reveal: 1.2, cells: 5 });
       // 12 slabs pop up in sequence, outward from the center
@@ -142,15 +138,15 @@ export default [
         k.pop(slab, 0.05 * i, 0.05 * i + 0.2, 2.2, 2.6);
       }
       k.light({ pos: [0, 1, 0.8], t0: 0, dur: 2.4, env: (t) => Math.exp(-2 * t), intensity: 40 });
-      if (k.g >= 2) pulse(1.8);
-      if (k.g === 3) { const sp = new THREE.Mesh(new THREE.ConeGeometry(0.25, 1.2, 6), rm); sp.position.y = 0.6; k.pop(sp, 0.2, 0.5, 2.0, 2.5); fx.flash(0.6, 0.12, k.col(0), 0.2); }
+      if (k.g >= 2) { pulse(1.8); fx.shake(1.8, 0.4, 0.03); }
+      if (k.g === 3) { const sp = new THREE.Mesh(new THREE.ConeGeometry(0.25, 1.2, 6), rm); sp.position.y = 0.6; k.pop(sp, 0.2, 0.5, 2.0, 2.5); fx.flash(0.6, 0.12, k.col(0), 0.15); }
       k.extras([0, 0.5, 0], 1.2);
     } }),
 
   SKILL('geo/boulder-roll', 'Boulder roll', m(['earth'], 'rolling-projectile', 0.6, 12, 6, 'line'), 2.8, {
     view: 'long',
     act: act('thrust', 1.2, 4.5),
-    // P3=303
+    // P3=304
     build(fx, o) {
       const k = kit(fx, o, EARTH), rm = rock();
       const bx = (t) => 0.9 + 4.1 * cl(t / 1.4); // rolls from x 0.9 to 5 over [0, 1.4]
@@ -158,19 +154,18 @@ export default [
       k.pop(boulder, -0.2, 0, 1.6, 1.7, (t) => { const x = bx(t); boulder.position.set(x, 0.6, 0); boulder.rotation.z = -x / 0.6; });
       k.smoke({ count: 80, shape: 'disc', radius: 0.3, size: 0.4, ramp: DUST, speed: [0.2, 0.6], delay: 0, emit: 1.4, t0: 0, follow: (mm, a, t) => mm.position.set(bx(t), 0.1, 0) });
       k.em({ count: 30, kind: 'rock', blend: 'normal', lit: 1, shape: 'disc', radius: 0.25, dir: [0, 1, 0], spread: 1, speed: [1, 3], gravity: [0, -10, 0], bounce: 0.35, size: [0.12, 0.07], ramp: ROCK, delay: 0, emit: 1.4, t0: 0, follow: (mm, a, t) => mm.position.set(bx(t), 0.2, 0) });
-      ct(fx, k, [4.5, 0.8, 0], 1.2, 40);
+      ct(fx, k, [4.5, 0.8, 0], 1.2, 40, { lightI: 0 });
       dustBurst(k, [4.5, 0.2, 0], 30, 1.2);
       k.light({ pos: [2.5, 1.2, 0.8], t0: 0, dur: 1.6, fade: [0.1, 0.4], intensity: 50 });
-      fx.flash(1.2, 0.1, k.col(0), 0.12);
       if (k.g >= 2) { const small = new THREE.Mesh(jitGeo(0.35, 2), rm); fx.mesh(small, (t) => { const x = bx(t - 0.3); small.position.set(x, 0.35, 0); small.rotation.z = -x / 0.35; }, { t0: 0, dur: 1.6 }); }
       if (k.g === 3) { rockBurst(k, [5, 0.6, 0], 40, 1.6); dustBurst(k, [5, 0.4, 0], 40, 1.6); }
-      k.extras([4.5, 0.8, 0], 1.2);
+      k.extras([4.5, 0.8, 0], 1.2, 'B');
     } }),
 
   SKILL('geo/crystal-spire', 'Crystal spire', m(['earth'], 'summon-pulse', 0.8, 20, 7, 'point'), 3.0, {
     view: 'wide',
     act: act('castup', 0.9, 3, { hits: [HIT(1.6), HIT(2.3)] }),
-    // P3=135
+    // P3=136
     build(fx, o) {
       const k = kit(fx, o, EARTH), P = [1.6, 0, 0];
       const cm = new THREE.MeshStandardMaterial({ color: '#e8d8a8', roughness: 0.1, emissive: k.col(1), emissiveIntensity: 0.4 });
@@ -181,7 +176,7 @@ export default [
       for (const p of [0.9, 1.6, 2.3]) {
         k.ring({ t0: p, dur: 0.6, r: [0.2, 2.4], normal: 'up', pos: P });
         k.glint([P[0], 1.5, 0], p, 1.2);
-        k.light({ pos: [P[0], 1.5, 0.6], t0: p - 0.05, dur: 0.5, fade: [0.01, 0.4], intensity: 50 });
+        if (p !== 2.3) k.light({ pos: [P[0], 1.5, 0.6], t0: p - 0.05, dur: 0.5, fade: [0.01, 0.4], intensity: 50 }); // K2: extras owns the 2.3 light
         k.beam({ from: [P[0], 1.5, 0], to: [3, 1, 0], r: [0.15, 0.04], t0: p, dur: 0.25, fade: [0.03, 0.15] });
       }
       k.decal({ kind: 'cracks', r: [1, 1], pos: P, t0: 0, dur: 3.0, reveal: 0.4, cells: 4 });
@@ -189,7 +184,7 @@ export default [
       k.em({ count: 40, kind: 'shard', blend: 'normal', lit: 1, shape: 'point', pos: [P[0], 0.3, 0], delay: 0.9, t0: 0.88, emit: 0.001, speed: [2, 6], gravity: [0, -9, 0], bounce: 0.3, size: [0.1, 0.06], ramp: ROCK });
       if (k.g >= 2) k.em({ count: 20, kind: 'soft', shape: 'ring', radius: 0.9, pos: [P[0], 0.8, 0], swirl: 3, speed: [0, 0.2], life: [0.6, 1], size: [0.08, 0.04], delay: 0.9, t0: 0.9, emit: 1.5 });
       if (k.g === 3) { k.glint([P[0], 1.6, 0], 1.6, 2.2); k.ring({ t0: 2.3, dur: 0.7, r: [0.3, 3], normal: 'up', pos: P }); }
-      fx.flash(1.6, 0.1, k.col(0), 0.12);
+      fx.flash(1.6, 0.1, k.col(0), 0.08);
       k.light({ pos: [P[0], 1.2, 0.8], t0: 0, dur: 3, fade: [0.2, 0.6], intensity: 30 });
       k.extras([P[0], 1.4, 0], 2.3);
     } }),
