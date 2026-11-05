@@ -37,19 +37,19 @@ export function band({ r = 1, h = 0.4 } = {}) {
 /* ------------------------------------------------------------------ ERODE (eroding UV-scrolled surface) */
 const ERODE_V = `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
 const ERODE_F = `${DEPTH}
-uniform sampler2D tNoise, uRamp; uniform float uA, uPr, uInt, uTime, uSeed, uE0, uE1, uHead, uSoft, uChan; uniform vec2 uTile, uScroll; varying vec2 vUv;
+uniform sampler2D tNoise, uRamp; uniform float uA, uPr, uInt, uTime, uSeed, uE0, uE1, uHead, uSoft, uChan, uFade; uniform vec2 uTile, uScroll; varying vec2 vUv;
 void main(){ float ph=uTime; vec2 tuv=vUv*uTile+uScroll*ph+uSeed*.37;
   float n = uChan>.5 ? texture2D(tNoise,tuv).a : texture2D(tNoise,tuv).r;
-  float e=mix(uE0,uE1,uPr); float mask=sin(vUv.y*3.14159);
+  float e=mix(uE0,uE1,uPr*uFade); float mask=sin(vUv.y*3.14159);
   float head = uHead<0. ? 0. : smoothstep(uHead-.15,uHead,vUv.x)*step(vUv.x,uHead);
-  float a=smoothstep(e,e+uSoft,n*mask)*uA*softF(uSoft*.5)*(1.-uPr*uPr);
+  float a=smoothstep(e,e+uSoft,n*mask)*uA*softF(uSoft*.5)*(1.-uFade*uPr*uPr);
   vec3 col=texture2D(uRamp,vec2(clamp(n*mask,0.,1.),.5)).rgb*uInt*(1.+3.*head);
   gl_FragColor=vec4(col*a,a); }`;
 export class Erode extends Prim {
   constructor(fx, p) {
     super(fx, p); const e = p.erode ?? [0, 1];
     this.u = { uA: { value: 1 }, uPr: { value: 0 }, uInt: { value: p.intensity ?? 1.5 }, uRamp: { value: makeRamp(p.ramp || [[0, '#fff'], [0.5, '#9cf'], [1, '#26c']]) }, uTile: { value: new THREE.Vector2(...(p.tile ?? [4, 1])) }, uScroll: { value: new THREE.Vector2(...(p.scroll ?? [2, 0])) },
-      uE0: { value: e[0] }, uE1: { value: e[1] }, uHead: { value: -1 }, uSoft: { value: p.soft ?? 0.2 }, uSeed: { value: this.seed }, uTime: { value: 0 }, uChan: { value: p.channel === 'a' ? 1 : 0 }, ...SU };
+      uE0: { value: e[0] }, uE1: { value: e[1] }, uFade: { value: p.lifeFade ?? (this.dur >= fx.duration ? 0 : 1) }, uHead: { value: -1 }, uSoft: { value: p.soft ?? 0.2 }, uSeed: { value: this.seed }, uTime: { value: 0 }, uChan: { value: p.channel === 'a' ? 1 : 0 }, ...SU };
     const o = new THREE.Mesh(p.geo, new THREE.ShaderMaterial({ vertexShader: ERODE_V, fragmentShader: ERODE_F, uniforms: this.u, ...bl(p.blend !== 'normal'), side: THREE.DoubleSide }));
     o.renderOrder = 25; if (p.rot3) o.rotation.set(...p.rot3); if (p.scale) o.scale.setScalar(p.scale); this.place(o);
   }

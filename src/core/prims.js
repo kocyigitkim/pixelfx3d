@@ -358,7 +358,7 @@ export class Water extends Prim {
     super(fx, p); const R = p.r ?? 3; this.u = { uTime: { value: 0 }, uVort: { value: p.vortex ?? 0 }, uWave: { value: p.waves ?? 1 }, uA: { value: 1 }, uR: { value: R }, uSpeed: { value: p.speed ?? 1.6 }, uK: { value: p.k ?? 14 }, uDecay: { value: p.decay ?? 1.1 }, uWid: { value: p.width ?? 25 },
       uRip: { value: Array.from({ length: 8 }, () => new THREE.Vector4(0, 0, 0, 0)) }, uDeep: { value: new THREE.Color(p.deep || '#021a2b') }, uShallow: { value: new THREE.Color(p.shallow || '#1b6a86') }, uSky: { value: new THREE.Color(p.sky || '#6aa0d8') }, uHor: { value: new THREE.Color(p.horizon || '#cfe6f2') }, ...per(fx), ...lightU(fx) };
     const v = `varying vec3 vWP, vP; void main(){ vP=position; vec4 wp=modelMatrix*vec4(position,1.); vWP=wp.xyz; gl_Position=projectionMatrix*viewMatrix*wp; }`;
-    const g = new THREE.CircleGeometry(R, 96); g.rotateX(-Math.PI / 2); const o = new THREE.Mesh(g, new THREE.ShaderMaterial({ vertexShader: v, fragmentShader: WATER_F, uniforms: this.u, ...bl(false), side: THREE.DoubleSide })); o.renderOrder = 7; this.place(o); o.position.y = p.y ?? 0.012;
+    const g = new THREE.CircleGeometry(R, 96); g.rotateX(-Math.PI / 2); const o = new THREE.Mesh(g, new THREE.ShaderMaterial({ vertexShader: v, fragmentShader: WATER_F, uniforms: this.u, ...bl(false), side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); o.renderOrder = 7; this.place(o); o.position.y = Math.max(p.y ?? 0.012, 0.012);
     this.ripples = (typeof p.ripples === 'function' ? [] : (p.ripples || [])).map((r) => ({ ...r }));
   }
   update(tAbs, t) {

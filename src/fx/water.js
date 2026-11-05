@@ -179,14 +179,14 @@ export default [
       const NU = 70, NZ = 26, W = 3.6; const geo = new THREE.BufferGeometry(); const pos = new Float32Array(NU * NZ * 3); const idx = [];
       for (let i = 0; i < NU - 1; i++) for (let j = 0; j < NZ - 1; j++) { const a = i * NZ + j, b = a + 1, c = a + NZ, d = c + 1; idx.push(a, c, b, b, c, d); }
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setIndex(idx);
-      const wm = new THREE.MeshPhysicalMaterial({ color: '#1f8aa0', roughness: 0.12, metalness: 0, transparent: true, opacity: 0.93, side: THREE.DoubleSide, clearcoat: 0.6 });
+      const wm = new THREE.MeshPhysicalMaterial({ color: '#2a9ab8', roughness: 0.28, metalness: 0, transmission: 0, transparent: true, opacity: 0.82, side: THREE.DoubleSide, clearcoat: 0.15 });
       const wave = new THREE.Mesh(geo, wm); const TC = 1.45;
       const prof = (t) => { // returns {xc,H,curl}
         if (t < TC) { const u = t / TC; return { xc: -5.5 + 5.0 * (u * u * 0.4 + u * 0.6), H: 0.45 + 1.9 * Math.pow(u, 0.9), curl: Math.min(1, u * 1.15) }; }
         const u = (t - TC) / 1.0; return { xc: -0.5 + 1.8 * Math.min(1, u), H: Math.max(0.05, 2.35 * (1 - Math.min(1, u * 1.1)) * (1 - Math.min(1, u * 1.1))), curl: Math.max(0.1, 1 - u * 2) };
       };
       const pts = []; for (let i = 0; i < NU; i++) pts.push([0, 0]);
-      fx.mesh(wave, (t, pr, f, w) => { wm.opacity = 0.93 * w;
+      fx.mesh(wave, (t, pr, f, w) => { wm.opacity = 0.82 * w;
         const { xc, H, curl } = prof(t), R = H * 0.42, al = curl * Math.PI * 0.92; const N1 = 28, N2 = 24, N3 = NU - N1 - N2;
         for (let i = 0; i < N1; i++) { const f = i / N1; pts[i][0] = xc - 6 * (1 - f) * (1 - f * 0.2) - (1 - f) * 0; pts[i][1] = H * Math.pow(Math.sin(f * Math.PI / 2), 2.2); }
         for (let k = 0; k < N2; k++) { const a = (k / (N2 - 1)) * al, i = N1 + k; pts[i][0] = xc + R * Math.sin(a); pts[i][1] = H - R + R * Math.cos(a); }
@@ -195,7 +195,7 @@ export default [
         for (let i = 0; i < NU; i++) for (let j = 0; j < NZ; j++) { const z = (j / (NZ - 1) - 0.5) * 2 * W, tw = 0.12 * Math.sin(z * 2.1 + i * 0.1) * H * (i > N1 ? 1 : 0.3); const o = (i * NZ + j) * 3; pos[o] = pts[i][0] + tw * 0.5; pos[o + 1] = Math.max(0.01, pts[i][1] + tw * 0.3); pos[o + 2] = z; }
         geo.attributes.position.needsUpdate = true; geo.computeVertexNormals();
       }, { dur: TC + 0.5, fade: [0, 0.35] });
-      fx.water({ r: 7, y: 0.0, deep: '#0f6a82', shallow: '#3ab0c0', waves: 1.2, ripples: [], speed: 1.4, decay: 0.8 });
+      fx.water({ r: 7, y: 0.015, deep: '#0f6a82', shallow: '#3ab0c0', waves: 1.2, ripples: [], speed: 1.4, decay: 0.8 });
       const sand = new THREE.Mesh(new THREE.PlaneGeometry(6, 8), mat('#c8b080', 1)); sand.rotation.set(-Math.PI / 2 + 0.06, 0, 0); sand.rotation.order = 'ZXY'; sand.rotation.z = 0; sand.position.set(0, 0, 0);
       const beach = new THREE.Mesh(new THREE.BoxGeometry(6, 0.3, 9), mat('#cbb283', 1)); beach.position.set(5.2, -0.1, 0); beach.rotation.z = 0.07; fx.mesh(beach, null, { dur: 99 });
       fx.light({ color: '#ffeedd', intensity: 14, pos: [2, 4, 5], norm: 14 });

@@ -111,12 +111,11 @@ export default [
       fx.light({ color: '#dfe8ff', intensity: 80, pos: [0, 2.2, 0.8], range: 12, t0: TS - 0.02, dur: 1.2, env: (t) => ENV.impact(t - TS, 12) });
       fx.flash(TS, 0.2, '#e6ecff', 0.15); fx.shake(TS, 0.6, 0.09);
       fx.impact({ t: TS, strength: 1, dir: [0, -1, 0], pos: G });
-      fx.ring({ t0: TS, dur: 0.9, r: [0.2, 5.5], width: [0.25, 0.06], normal: 'up', intensity: 0.3, fill: 0, ramp: [[0, '#dfe8ff'], [1, '#3a4a8a']] });
-      fx.decal({ kind: 'scorch', t0: TS, dur: 2.0, r: [1.8, 2.2], fade: [0.05, 1.0], heat: [0, 0], alpha: 0.9, ramp: [[0, '#000'], [1, '#000']] });
+      fx.ring({ t0: TS, dur: 0.9, r: [0.2, 3.5], width: [0.25, 0.06], normal: 'up', intensity: 0.3, fill: 0, ramp: [[0, '#dfe8ff'], [1, '#3a4a8a']] });
       fx.decal({ kind: 'cracks', t0: TS, dur: 2.0, r: [2.6, 3.0], fade: [0.05, 1.0], heat: [1, 0], reveal: 0.3, cells: 4, ramp: [[0, '#001'], [0.5, '#8ab4ff'], [1, '#f0f6ff']] });
       fx.emitter({ count: 40, kind: 'spark', shape: 'sphere', radius: 0.15, pos: [0, 0.2, 0], dir: [0, 1, 0], spread: 1.5, speed: [4, 11], life: [0.4, 1.2], gravity: [0, -9, 0], size: [0.09, 0.03], stretch: 1.4, ramp: sparkRamp, intensity: 3, delay: TS, bounce: 0.35 });
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: [0, 0.3, 0], size: [1.4, 0.4], life: [0.35, 0.35], ramp: glintRamp, intensity: 2, delay: TS });
-      fx.emitter({ count: 30, kind: 'dust', blend: 'normal', shape: 'ring', radius: 1.2, radiusIn: 0.8, pos: [0, 0.1, 0], dir: [0, 0.3, 0], spread: 0.3, radial: 1, speed: [2, 4], drag: 1.2, life: [1.2, 2.2], size: [0.7, 2.2], ramp: [[0, '#6a6f7a', 0], [0.15, '#555b66', 0.55], [1, '#2a2d34', 0]], lit: 1, delay: TS, emit: 0.1, order: -1 });
+      fx.emitter({ count: 30, kind: 'dust', blend: 'normal', shape: 'ring', radius: 1.2, radiusIn: 0.8, pos: [0, 0.1, 0], dir: [0, 0.3, 0], spread: 0.3, radial: 1, speed: [2, 4], drag: 1.2, life: [1.2, 2.2], size: [0.7, 2.2], ramp: [[0, '#8a909c', 0], [0.15, '#747a86', 0.55], [1, '#444952', 0]], lit: 1, delay: TS, emit: 0.1, order: -1 });
       fx.emitter({ count: 16, kind: 'smoke', blend: 'normal', shape: 'disc', radius: 0.3, pos: [0, 0.3, 0], dir: [0, 1, 0], spread: 0.3, speed: [0.4, 1.0], life: [0.8, 1.4], size: [0.3, 1.1], ramp: [[0, '#333', 0], [0.2, '#3a3d44', 0.35], [1, '#1a1b1f', 0]], lit: 1, delay: TS, emit: 0.2, order: -1 });
     } },
 
