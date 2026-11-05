@@ -7,7 +7,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { NOISE } from './glsl.js';
+import { NOISE, SU } from './glsl.js';
 import { createFx, Fx } from './fx.js';
 import { makeRng } from './rng.js';
 
@@ -28,21 +28,23 @@ const SKIES = {
 const QUALITY = { low: { pr: 0.75, count: 0.5, samples: 0 }, medium: { pr: 1, count: 0.75, samples: 2 }, high: { pr: 1.5, count: 1, samples: 4 } };
 const TONE = { aces: THREE.ACESFilmicToneMapping, agx: THREE.AgXToneMapping, neutral: THREE.NeutralToneMapping, none: THREE.NoToneMapping };
 
-const MAIN_OPAQUE = 'vec3 c=texture2D(tDiffuse,vUv).rgb; if(any(isnan(c))||any(isinf(c))) c=vec3(0.); if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=mix(c,uFlashCol,clamp(uFlash,0.,1.)); vec2 q=vUv-.5; c*=1.-uVig*dot(q,q)*1.6; gl_FragColor=vec4(c,1.);';
+// refraction: rg offset written by layer-2 meshes into depthRT colour (half res). uDist=0 -> exact old path.
+const DIST = 'vec2 uv=vUv; if(uDist>.5){ vec2 o=texture2D(tDist,vUv).rg; if(!any(isnan(o))&&!any(isinf(o))) uv=clamp(vUv+clamp(o,-.05,.05),.001,.999); }';
+const MAIN_OPAQUE = DIST + 'vec3 c=texture2D(tDiffuse,uv).rgb; if(any(isnan(c))||any(isinf(c))) c=vec3(0.); if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=mix(c,uFlashCol,clamp(uFlash,0.,1.)); vec2 q=vUv-.5; c*=1.-uVig*dot(q,q)*1.6; gl_FragColor=vec4(c,1.);';
 // transparent: keep scene alpha; glow adds coverage = its brightness, so rgb <= a (valid premultiplied). No vignette (would darken edges).
-const MAIN_ALPHA = 'vec4 s=texture2D(tDiffuse,vUv); if(any(isnan(s))||any(isinf(s))) s=vec4(0.); vec3 c=s.rgb; if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=clamp(c,0.,1.); float g=max(c.r,max(c.g,c.b)); float k=mix(smoothstep(.03,.1,g),1.,s.a); c*=k; float a=clamp(max(s.a,g*k),0.,1.); c=mix(c,uFlashCol*a,clamp(uFlash,0.,1.)); gl_FragColor=vec4(c,a);';
+const MAIN_ALPHA = DIST + 'vec4 s=texture2D(tDiffuse,uv); if(any(isnan(s))||any(isinf(s))) s=vec4(0.); vec3 c=s.rgb; if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=clamp(c,0.,1.); float g=max(c.r,max(c.g,c.b)); float k=mix(smoothstep(.03,.1,g),1.,s.a); c*=k; float a=clamp(max(s.a,g*k),0.,1.); c=mix(c,uFlashCol*a,clamp(uFlash,0.,1.)); gl_FragColor=vec4(c,a);';
 function finalShader(fn, tr) {
-  return { uniforms: { tDiffuse: { value: null }, uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 1, 1) }, uP: { value: 0 }, uTime: { value: 0 }, uAspect: { value: 1 }, uVig: { value: 0.35 }, uOn: { value: 0 } },
+  return { uniforms: { tDiffuse: { value: null }, tDist: { value: null }, uDist: { value: 0 }, uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 1, 1) }, uP: { value: 0 }, uTime: { value: 0 }, uAspect: { value: 1 }, uVig: { value: 0.35 }, uOn: { value: 0 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
     fragmentShader: `${NOISE}
-uniform sampler2D tDiffuse; uniform float uFlash,uP,uTime,uAspect,uVig,uOn; uniform vec3 uFlashCol; varying vec2 vUv;
+uniform sampler2D tDiffuse, tDist; uniform float uFlash,uP,uTime,uAspect,uVig,uOn,uDist; uniform vec3 uFlashCol; varying vec2 vUv;
 ${fn || 'vec3 trans(vec2 uv, vec3 c, float p, float t, float a){ return c; }'}
 void main(){ ${tr ? MAIN_ALPHA : MAIN_OPAQUE} }` };
 }
 
 // transparent mode: additive materials must add light, not coverage (dark fringes / opaque quads otherwise). RGB unchanged.
 function fixAlpha(root) {
-  root.traverse((o) => { for (const m of [].concat(o.material || [])) {
+  root.traverse((o) => { if (o.userData.opaqueOnly) o.visible = false; for (const m of [].concat(o.material || [])) {
     if (m.blending === THREE.AdditiveBlending) Object.assign(m, { blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor });
     else if (m.blending === THREE.CustomBlending && m.blendDst === THREE.OneFactor) Object.assign(m, { blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor });
   } });
@@ -51,7 +53,7 @@ function fixAlpha(root) {
 export class Stage {
   constructor(container, o = {}) {
     this.container = container; this.opts = o; this.transparent = !!o.transparent; const q = QUALITY[o.quality]; this.quality = q ? o.quality : 'high';
-    this.bloomScale = o.bloomScale ?? 0.8; this.flashMax = o.flashMax ?? 0.6; // global anti-overbright (bloom is ~strength^2, so 0.8 -> 0.64x energy)
+    this.real = o.realism !== false; this.bloomScale = o.bloomScale ?? (this.real ? 0.55 : 0.8); this.flashMax = o.flashMax ?? 0.6; // global anti-overbright (bloom is ~strength^2, so 0.8 -> 0.64x energy)
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: !!o.preserve, alpha: this.transparent, premultipliedAlpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, o.maxPixelRatio ?? 1.5, q ? q.pr : Infinity)); this.renderer.toneMapping = TONE[o.toneMapping] ?? THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = o.exposure ?? 1.0;
     container.appendChild(this.renderer.domElement); this.canvas = this.renderer.domElement;
@@ -67,6 +69,7 @@ export class Stage {
     this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), o.bloom ?? 0.45, 0.5, 1.0); this.composer.addPass(this.bloom); this.composer.addPass(new OutputPass());
     { const hp = this.bloom.materialHighPassFilter; hp.fragmentShader = hp.fragmentShader.replace('vec4 texel = texture2D( tDiffuse, vUv );', 'vec4 texel = texture2D( tDiffuse, vUv ); if(any(isnan(texel))||any(isinf(texel))) texel=vec4(0.);'); hp.needsUpdate = true; } // one NaN pixel must not blank the frame via bloom (Metal propagates NaN)
     if (this.transparent) Object.assign(this.bloom.blendMaterial, { blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor }); // same RGB as AdditiveBlending, keeps scene alpha
+    this.depthRT = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, depthTexture: new THREE.DepthTexture(4, 4) }); this._depthMat = new THREE.MeshBasicMaterial({ colorWrite: false, side: THREE.DoubleSide }); // realism pre-pass (half res): depth for soft particles, rg = refraction offsets
     this.finalPass = new ShaderPass(finalShader(null, this.transparent)); this.composer.addPass(this.finalPass); this.fx = null; this.clock = new THREE.Clock(); this.running = false; this.replayDelay = 1.2; this._rest = 0;
     this.resize(); this._ro = new ResizeObserver(() => this.resize()); this._ro.observe(container);
   }
@@ -75,23 +78,36 @@ export class Stage {
     for (let i = 0; i < 9000; i++) { const v = 40 + rnd() * 40; x.fillStyle = `rgba(${v},${v},${v + 6},${rnd() * 0.25})`; x.fillRect(rnd() * 512, rnd() * 512, 1 + rnd() * 3, 1 + rnd() * 3); }
     x.strokeStyle = 'rgba(0,0,0,.35)'; x.lineWidth = 2; for (let i = 0; i <= 512; i += 128) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, 512); x.moveTo(0, i); x.lineTo(512, i); x.stroke(); }
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(16, 16); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-    this.ground = new THREE.Mesh(new THREE.CircleGeometry(60, 64), new THREE.MeshStandardMaterial({ map: t, roughness: 0.82, metalness: 0.05, color: '#aab' })); this.ground.rotation.x = -Math.PI / 2; this.scene.add(this.ground);
+    this.ground = new THREE.Mesh(new THREE.CircleGeometry(60, 64), new THREE.MeshStandardMaterial({ map: t, roughness: 0.82, metalness: 0.05, color: '#aab' })); this.ground.rotation.x = -Math.PI / 2; this.scene.add(this.ground); this.ground.layers.enable(1);
   }
   setSky(name = 'night') {
     const s = SKIES[name] || SKIES.night; const u = this.sky.material.uniforms; u.uTop.value.set(s.top); u.uHor.value.set(s.hor); u.uBot.value.set(s.bot); u.uStars.value = s.stars;
     this.scene.fog = s.fogD && !this.transparent ? new THREE.FogExp2(s.fog, s.fogD) : null; this.hemi.intensity = s.amb; this.moon.intensity = s.moon; this.skyName = name;
   }
-  resize() { const w = this.container.clientWidth || 800, h = this.container.clientHeight || 450; this.renderer.setSize(w, h, false); this.composer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.bloom.resolution.set(w, h); this.finalPass.uniforms.uAspect.value = w / h; }
+  resize() { const w = this.container.clientWidth || 800, h = this.container.clientHeight || 450; this.renderer.setSize(w, h, false); this.composer.setSize(w, h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.bloom.resolution.set(w, h); this.finalPass.uniforms.uAspect.value = w / h; const db = this.renderer.getDrawingBufferSize(SU.uRes.value); this.depthRT.setSize(Math.max(1, db.x >> 1), Math.max(1, db.y >> 1)); }
   /** Play an effect (id | definition | Fx). Replaces the current one. */
   play(def, opts = {}) {
     if (this.fx) { this.fx.dispose(); this.fx = null; }
     const q = QUALITY[this.opts.quality]; const fx = def instanceof Fx ? def : createFx(def, q ? { countScale: q.count, ...opts } : opts); this.fx = fx; this.scene.add(fx); const st = fx.def.stage || {};
-    this.setSky(st.sky || 'night'); this.ground.visible = !this.transparent && st.ground !== false; this.bloom.strength = (st.bloom ?? this.opts.bloom ?? 0.45) * this.bloomScale; this.bloom.threshold = st.threshold ?? this.opts.threshold ?? 1.0; this.bloom.radius = st.radius ?? this.opts.radius ?? 0.5; this.renderer.toneMappingExposure = st.exposure ?? this.opts.exposure ?? 1;
+    this.setSky(st.sky || 'night'); this.ground.visible = !this.transparent && st.ground !== false; this.bloom.strength = (st.bloom ?? this.opts.bloom ?? 0.45) * this.bloomScale; this.bloom.threshold = st.threshold ?? this.opts.threshold ?? (this.real ? 0.7 : 1.0); this.bloom.radius = st.radius ?? this.opts.radius ?? (this.real ? 0.85 : 0.5); this.bloom.highPassUniforms.smoothWidth.value = this.real ? 0.6 : 0.01; this.renderer.toneMappingExposure = st.exposure ?? this.opts.exposure ?? 1;
     const v = st.view || {}; this.camera.fov = v.fov ?? 40; this.camera.updateProjectionMatrix(); this.camera.position.set(...(v.pos || [4.6, 2.3, 5.4])); this.controls.target.set(...(v.target || [0, 1.0, 0])); this.controls.update();
-    this.hemi.intensity *= st.ambient ?? 1; if (this.transparent) { fixAlpha(fx); fx.lu.uAmbient.value.setScalar(this.opts.ambient ?? 0.5); } // no sky to light smoke: brighter lit-particle ambient this.setupScreen(fx); this._rest = 0; return fx;
+    this.hemi.intensity *= st.ambient ?? 1; if (this.transparent) { fixAlpha(fx); fx.lu.uAmbient.value.setScalar(this.opts.ambient ?? 0.5); } // no sky to light smoke: brighter lit-particle ambient
+    fx.traverse((o) => { if (o.isMesh && [].concat(o.material).some((m) => m.depthWrite)) o.layers.enable(1); }); // depth-writing meshes (body, target, props) feed soft-particle depth
+    this.setupScreen(fx); this._rest = 0; return fx;
   }
   setupScreen(fx) {
     const sc = fx.def.screen; const idx = this.composer.passes.indexOf(this.finalPass); this.finalPass = new ShaderPass(finalShader(sc ? sc.glsl : null, this.transparent)); this.composer.passes[idx] = this.finalPass; this.finalPass.uniforms.uAspect.value = this.camera.aspect; this.finalPass.uniforms.uOn.value = sc ? 1 : 0; this.finalPass.renderToScreen = true;
+  }
+  /** realism pre-pass into depthRT (half res): layer 1 depth only, then layer-2 distortion meshes add rg offsets (depth-tested, no clear) */
+  prepass() {
+    const r = this.renderer, c = this.camera, s = this.scene, rt = this.depthRT, fp = this.finalPass.uniforms;
+    SU.uReal.value = this.real ? 1 : 0; SU.uNF.value.set(c.near, c.far); r.getDrawingBufferSize(SU.uRes.value);
+    SU.tDepth.value = this.real ? rt.depthTexture : null; fp.tDist.value = rt.texture; fp.uDist.value = this.real ? 1 : 0;
+    if (!this.real) return;
+    const lm = c.layers.mask, ac = r.autoClear;
+    r.setRenderTarget(rt); r.autoClear = true; s.overrideMaterial = this._depthMat; c.layers.set(1); r.render(s, c);
+    s.overrideMaterial = null; c.layers.set(2); r.autoClear = false; r.render(s, c);
+    c.layers.mask = lm; r.autoClear = ac; r.setRenderTarget(null);
   }
   /** advance and render one frame */
   frame(dt) {
@@ -102,11 +118,11 @@ export class Stage {
       fp.uFlash.value = Math.min(this.flashMax, fx.flashAmt); fp.uFlashCol.value.copy(fx.flashColor); fp.uTime.value = fx.time;
       if (fx.def.screen) fp.uP.value = Math.min(1, Math.max(0, fx.time / fx.duration));
     }
-    this.controls.update(); const base = this.camera.position.clone(); if (fx) this.camera.position.add(fx.shakeV); this.composer.render(dt); this.camera.position.copy(base);
+    this.controls.update(); const base = this.camera.position.clone(); if (fx) this.camera.position.add(fx.shakeV); this.prepass(); this.composer.render(dt); this.camera.position.copy(base);
   }
   start() { if (this.running) return; this.running = true; this.clock.start(); const loop = () => { if (!this.running) return; requestAnimationFrame(loop); this.frame(Math.min(0.05, this.clock.getDelta())); }; loop(); }
   stop() { this.running = false; }
   /** deterministic seek (for tests / screenshots) */
   seek(t, step = 1 / 30) { const fx = this.fx; fx.reset(); const start = -(fx.lead || 0); let n = Math.max(0, Math.round((t - start) / step)); for (let i = 0; i < n; i++) { fx.camQuat.copy(this.camera.quaternion); fx.update(step); } this.frame(0); }
-  dispose() { this.stop(); this._ro.disconnect(); this.renderer.dispose(); this.canvas.remove(); }
+  dispose() { this.stop(); this._ro.disconnect(); this.depthRT.dispose(); this.renderer.dispose(); this.canvas.remove(); }
 }

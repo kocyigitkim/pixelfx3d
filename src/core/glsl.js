@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 // Shared GLSL chunks.
 export const NOISE = /* glsl */ `
 float hash11(float p){ p=fract(p*.1031); p*=p+33.33; p*=p+p; return fract(p); }
@@ -22,4 +23,12 @@ vec2 voronoi(vec3 p){
 }
 vec3 fireRamp(float t){ t=clamp(t,0.,1.); return vec3(smoothstep(0.,.3,t)*1.25, smoothstep(.2,.8,t), smoothstep(.65,1.,t)*.85)*(.15+1.9*t); }
 mat2 rot2(float a){ float c=cos(a), s=sin(a); return mat2(c,-s,s,c); }
+`;
+// realism shared uniforms; module-level on purpose: each Stage writes them in prepass() right before it renders (multi-stage safe)
+export const SU = { tDepth: { value: null }, uRes: { value: new THREE.Vector2(1, 1) }, uNF: { value: new THREE.Vector2(0.05, 400) }, uReal: { value: 0 } };
+// softF(s): 0..1 fade where the fragment is within s metres in front of opaque depth, plus near-camera fade; 1 when realism is off
+export const DEPTH = /* glsl */ `
+uniform sampler2D tDepth; uniform vec2 uRes, uNF; uniform float uReal;
+float linZ(float d){ return uNF.x*uNF.y/max(uNF.y-d*(uNF.y-uNF.x),1e-6); }
+float softF(float s){ if(uReal<.5||s<=0.) return 1.; float fz=linZ(gl_FragCoord.z); float sz=linZ(texture2D(tDepth,gl_FragCoord.xy/max(uRes,vec2(1.))).x); return smoothstep(0.,s,sz-fz)*smoothstep(uNF.x,uNF.x+.3,fz); }
 `;
