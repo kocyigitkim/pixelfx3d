@@ -1,7 +1,7 @@
 // Analytic GPU particle emitter. Every particle is a pure function of (time, seed): deterministic,
 // loop-safe, no CPU simulation. Billboards with procedural fragment "kinds" (smoke, flame, spark...).
 import * as THREE from 'three';
-import { NOISE } from './glsl.js';
+import { NOISE, DEPTH, SU } from './glsl.js';
 
 export const KINDS = { soft: 0, spark: 1, smoke: 2, flame: 3, ring: 4, shard: 5, flake: 6, drop: 7, glint: 8, petal: 9, bubble: 10, rock: 11, streak: 12, dust: 13 };
 const SHAPES = { point: 0, sphere: 1, disc: 2, ring: 3, box: 4, line: 5 };
@@ -27,12 +27,12 @@ export function makeRamp(stops, n = 128) {
 const VERT = /* glsl */ `
 ${NOISE}
 attribute vec4 aRnd; attribute vec4 aRnd2;
-uniform float uTime, uDelay, uSpan, uPeriod, uSpread, uDrag, uRadial, uBounce, uFloorFade, uLit, uInt, uStretch, uRot, uSwirl, uSizePow, uSizeVar, uLightRange, uFlipY, uAspect;
+uniform float uTime, uDelay, uSpan, uPeriod, uSpread, uDrag, uRadial, uBounce, uFloorFade, uLit, uInt, uStretch, uRot, uSwirl, uSizePow, uSizeVar, uLightRange, uFlipY, uAspect, uReal;
 uniform vec2 uLife, uSpeed, uSize, uTurb;
 uniform vec3 uDir, uGravity, uShapeSize, uAmbient, uLightPos, uLightCol, uWind;
 uniform int uShape, uKind;
 uniform sampler2D uRamp;
-varying vec2 vUv; varying float vU; varying vec4 vRnd; varying vec4 vCol; varying float vSp; varying float vL;
+varying vec2 vUv; varying float vU; varying vec4 vRnd; varying vec4 vCol; varying float vSp; varying float vL; varying vec3 vLd, vLc, vUp;
 
 vec3 shapePos(vec4 r, vec4 r2){
   if(uShape==1){ float th=r.x*6.2831853, z=r.y*2.-1.; float s=sqrt(1.-z*z); vec3 d=vec3(s*cos(th),z,s*sin(th)); return d*mix(uShapeSize.y,uShapeSize.x,pow(max(r2.x,0.),.3333)); }
@@ -77,6 +77,7 @@ void main(){
   vec2 q=position.xy;
   vec3 vel=v*exp(-k*t)+uGravity*t;
   float sp=length(vel); vSp=sp;
+  mat2 R=mat2(1.); vLd=vec3(0.,0.,1.); vLc=vec3(0.); vUp=vec3(0.,1.,0.);
   if(uStretch>0.){
     vec2 vv=(modelViewMatrix*vec4(vel,0.)).xy; float l=length(vv);
     vec2 d=l>1e-4?vv/l:vec2(0.,1.);
@@ -86,22 +87,26 @@ void main(){
   } else {
     float rt=(uKind==3?0.:aRnd2.w*6.2831853)+uRot*t*(aRnd2.y-.5)*2.; float c=cos(rt), sn=sin(rt);
     if(uKind==3) q.y+=.5; q.y*=uAspect;
-    q=mat2(c,-sn,sn,c)*q; mv.xy+=q*s;
+    R=mat2(c,-sn,sn,c); q=R*q; mv.xy+=q*s;
   }
   gl_Position=projectionMatrix*mv;
   vUv=position.xy+.5; vU=u; vRnd=aRnd2;
   vec4 col=texture2D(uRamp,vec2(u,.5)); col.rgb*=uInt;
   vec3 wp=(modelMatrix*vec4(pos,1.)).xyz;
   vec3 dl=uLightPos-wp; float att=1./(1.+dot(dl,dl)/(uLightRange*uLightRange));
-  vec3 L=uAmbient+uLightCol*att; col.rgb*=mix(vec3(1.),L,uLit); vL=att;
+  if(uReal>.5){ float d2=dot(dl,dl), Rw=uLightRange*2.857; float x=d2/max(Rw*Rw,1e-4); float wn=clamp(1.-x*x,0.,1.); att=2.*wn*wn/(d2+1.); } // windowed inverse-square (UE/Frostbite); x2 = same as old at 1 m; Rw = light range
+  vL=att;
+  if(uReal>.5&&uLit>0.){ mat2 Rt=transpose(R); vec3 lv=(viewMatrix*vec4(dl,0.)).xyz; lv/=max(length(lv),1e-4); vLd=vec3(Rt*lv.xy,lv.z); vec3 uw=(viewMatrix*vec4(0.,1.,0.,0.)).xyz; vUp=vec3(Rt*uw.xy,uw.z); vLc=uLightCol*att; }
+  else { vec3 L=uAmbient+uLightCol*att; col.rgb*=mix(vec3(1.),L,uLit); }
   if(uFloorFade>0.) col.a*=smoothstep(0.,uFloorFade,wp.y+s*.15);
   vCol=col;
 }`;
 
 const FRAG = /* glsl */ `
 ${NOISE}
-uniform int uKind; uniform float uTime, uNoise;
-varying vec2 vUv; varying float vU; varying vec4 vRnd; varying vec4 vCol; varying float vSp; varying float vL;
+uniform int uKind; uniform float uTime, uNoise, uLit, uSoft; uniform vec3 uAmbient;
+${DEPTH}
+varying vec2 vUv; varying float vU; varying vec4 vRnd; varying vec4 vCol; varying float vSp; varying float vL; varying vec3 vLd, vLc, vUp;
 void main(){
   if(vU>1.5) discard;
   vec2 p=vUv*2.-1.; float d=length(p); float a=0.; vec3 col=vCol.rgb; float seed=vRnd.x*17.+vRnd.z*5.;
@@ -121,6 +126,7 @@ void main(){
     float core=pow(m,2.2)*(1.-y*.8); float fl=.85+.3*sin(vU*31.+seed*7.);
     vec3 deep=col*col/max(max(col.r,max(col.g,col.b)),1e-3);
     a=m*(.4+.4*n); col=mix(deep*.55,col*1.3,clamp(core*1.6+n*.25,0.,1.))*fl;
+    if(uReal>.5){ float hot=clamp(pow(max(core,0.),.7)*1.6+n*.25,0.,1.); col=mix(deep*.45,vCol.rgb*1.6,hot)*fl; col=mix(col,vec3(.08,.05,.04),smoothstep(.6,1.,y)*.6*(1.-hot)); } // HDR core, cooler sooty tips
   }
   else if(uKind==4){ float rr=abs(d-.78); a=exp(-rr*rr*160.)*(.6+.5*vnoise(vec3(atan(p.y,p.x)*3.,seed,uTime*2.))); }
   else if(uKind==5){ // faceted shard
@@ -132,10 +138,13 @@ void main(){
   else if(uKind==10){ float rr=abs(d-.82); a=exp(-rr*rr*90.)*.9+smoothstep(.85,.3,d)*.12; a+=exp(-pow(length(p-vec2(-.35,.4))*5.,2.))*.9; col*=1.; }
   else if(uKind==11){ float n=vnoise(vec3(p*2.2,seed)); a=step(d+(n-.5)*.7,.78); vec3 nr=normalize(vec3(p*.8,.7)); float lam=clamp(dot(nr,normalize(vec3(.4,.8,.5))),0.,1.); col*=.35+.9*lam; col*=.6+.7*vnoise(vec3(p*7.,seed)); }
   else if(uKind==13){ float n=fbm(vec3(vUv*4.+seed,vU)); a=smoothstep(1.,.3,d)*smoothstep(.2,.7,n+.25)*.8; }
-  a*=vCol.a; if(a<.003) discard;
+  if(uReal>.5&&uLit>0.){ vec3 N=normalize(vec3(p,sqrt(max(0.,1.-dot(p,p)))+.2)); float wr=max(0.,dot(N,vLd)*.5+.5); float bk=pow(max(0.,-vLd.z),2.)*(1.-N.z)*.6;
+    vec3 L=uAmbient*mix(.7,1.3,dot(N,vUp)*.5+.5)+vLc*(wr+bk); col*=mix(vec3(1.),min(L,vec3(2.5)),uLit); } // sphere-normal sprite: wrap diffuse + back-light rim + hemi ambient
+  a*=vCol.a*softF(uSoft); if(a<.003) discard;
   gl_FragColor=vec4(col*a,a);
 }`;
 
+const SOFT = [0.35, 0.05, 0.6, 0.15, 0.35, 0.05, 0.1, 0.1, 0.05, 0.1, 0.2, 0.05, 0.05, 0.6]; // depth-fade metres by KINDS index
 const DEF = {
   count: 100, shape: 'point', size: 0.3, radius: 0, radiusIn: 0, shapeSize: null, dir: [0, 1, 0], spread: 0.3, speed: [1, 2],
   gravity: [0, 0, 0], wind: [0, 0, 0], drag: 0, life: [1, 2], delay: 0, emit: 0.001, loop: null, kind: 'soft', blend: 'add',
@@ -170,7 +179,7 @@ export class Emitter {
       uSizePow: { value: p.sizePow }, uSizeVar: { value: p.sizeVar }, uStretch: { value: p.stretch }, uRot: { value: p.rot },
       uInt: { value: p.intensity }, uLit: { value: p.lit }, uFloorFade: { value: p.floorFade }, uFlipY: { value: 0 }, uAspect: { value: p.aspect ?? 1 },
       uRamp: { value: makeRamp(p.ramp) },
-      uAmbient: lu.uAmbient, uLightPos: lu.uLightPos, uLightCol: lu.uLightCol, uLightRange: lu.uLightRange,
+      uAmbient: lu.uAmbient, uLightPos: lu.uLightPos, uLightCol: lu.uLightCol, uLightRange: lu.uLightRange, uSoft: { value: p.soft ?? SOFT[kind] ?? 0.35 }, ...SU,
     };
     const add = p.blend === 'add';
     const mat = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: this.u, transparent: true, depthWrite: false, blending: THREE.CustomBlending,
