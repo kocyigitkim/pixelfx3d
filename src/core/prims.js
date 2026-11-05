@@ -1,7 +1,7 @@
 // Shader-driven primitives. Each is created through an Fx (fx.orb(...), fx.ring(...), ...), lives in the
 // Fx group, and is driven by fx time: t0 (start s), dur (length s), fade [in, out] seconds.
 import * as THREE from 'three';
-import { NOISE } from './glsl.js';
+import { NOISE, DEPTH, SU } from './glsl.js';
 import { makeRamp } from './emitter.js';
 import { win, clamp, lerp, easeOut } from './rng.js';
 
@@ -33,9 +33,10 @@ ${PER}
 void main(){ float n=fbm3T(position*uNS,vec3(0.,-uScroll,.3*uScroll)); vec3 pp=position*(1.+(n-.5)*uDisp); vP=position;
   vec4 wp=modelMatrix*vec4(pp,1.); vWP=wp.xyz; vN=normalize(mat3(modelMatrix)*normal); gl_Position=projectionMatrix*viewMatrix*wp; }`;
 const ORB_F = `${NOISE}
-uniform float uTime, uNS, uScroll, uInt, uAlpha, uPow; uniform int uMode; uniform sampler2D uRamp; uniform vec3 uLightPos, uLightCol;
+uniform float uTime, uNS, uScroll, uInt, uAlpha, uPow, uSoft; uniform int uMode; uniform sampler2D uRamp; uniform vec3 uLightPos, uLightCol;
 varying vec3 vN, vWP, vP;
 ${PER}
+${DEPTH}
 void main(){
   vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP);
   if(uMode==4){ N=normalize(cross(dFdx(vWP),dFdy(vWP))); if(dot(N,V)<0.) N=-N; }
@@ -56,12 +57,13 @@ void main(){
     vec3 col=tint*(.2+.5*n)*facet+rimc*fres*uInt+spec*uLightCol; float a=clamp(.16+fres*.8+spec*.4,0.,1.)*uAlpha;
     gl_FragColor=vec4(col*uAlpha,a);
   }
+  gl_FragColor*=softF(uSoft);
 }`;
 const MODES = { fire: 0, plasma: 1, void: 2, glass: 3, water: 3, ice: 4, energy: 5 };
 export class Orb extends Prim {
   constructor(fx, p) {
     super(fx, p); const mode = MODES[p.kind || 'fire'];
-    this.u = { uTime: { value: 0 }, uNS: { value: p.noise ?? 2.2 }, uScroll: { value: p.scroll ?? 1.2 }, uDisp: { value: p.disp ?? 0.25 }, uInt: { value: p.intensity ?? 1.6 }, uAlpha: { value: 1 }, uPow: { value: p.power ?? 2.2 },
+    this.u = { uTime: { value: 0 }, uNS: { value: p.noise ?? 2.2 }, uScroll: { value: p.scroll ?? 1.2 }, uDisp: { value: p.disp ?? 0.25 }, uInt: { value: p.intensity ?? 1.6 }, uAlpha: { value: 1 }, uPow: { value: p.power ?? 2.2 }, uSoft: { value: p.soft ?? 0.3 }, ...SU,
       uMode: { value: mode }, ...per(fx), uRamp: { value: makeRamp(p.ramp || [[0, '#300'], [.35, '#e30'], [.7, '#fb3'], [1, '#fff']]) }, ...lightU(fx) };
     const m = new THREE.ShaderMaterial({ vertexShader: ORB_V, fragmentShader: ORB_F, uniforms: this.u, ...bl(mode === 0 || mode === 1 || mode === 5), side: mode === 3 || mode === 4 ? THREE.FrontSide : THREE.FrontSide });
     const o = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), m); o.renderOrder = mode < 2 || mode === 5 ? 25 : 12; this.place(o);
@@ -75,48 +77,70 @@ export class Orb extends Prim {
 }
 
 /* ------------------------------------------------------------------ RING (shockwave) */
+const RING_N = /* glsl */ `float ringN(float r, float ang){ float tn=uReal>.5?uSeed*.1+(1.-exp(-3.*uPr))*3.:uTime*1.5; return vnoise(vec3(cos(ang)*2.+uSeed,sin(ang)*2.,r*3.+tn)); }`; // realism: pan fast->slow, loop-safe
 const RING_F = `${NOISE}
-uniform float uR, uW, uInt, uFill, uTime, uSeed, uBreak, uA; uniform sampler2D uRamp; varying vec2 vUv;
+uniform float uR, uW, uInt, uFill, uTime, uSeed, uBreak, uA, uPr, uSoft; uniform sampler2D uRamp; varying vec2 vUv;
+${DEPTH}
+${RING_N}
 void main(){ vec2 p=vUv*2.-1.; float r=length(p); float ang=atan(p.y,p.x);
-  float n=vnoise(vec3(cos(ang)*2.+uSeed,sin(ang)*2.,r*3.+uTime*1.5)); float rr=uR+(n-.5)*uBreak*uW*2.; float d=(r-rr)/uW;
+  float n=ringN(r,ang); float rr=uR+(n-.5)*uBreak*uW*2.; float d=(r-rr)/uW;
   float a=exp(-d*d*2.)*(1.-smoothstep(.88,1.,r)); float inner=uFill*smoothstep(rr,rr-uW*6.,r)*smoothstep(0.,rr*.7,r)*(.35+.65*n)*step(r,rr+.001);
   float tt=clamp(abs(d)*.55+(1.-a)*.25,0.,1.); vec3 c=texture2D(uRamp,vec2(tt,.5)).rgb;
-  float s=(a+inner)*uA; gl_FragColor=vec4(c*uInt*s,s); }`;
+  float s=(a+inner)*uA;
+  if(uReal>.5){ float e=uPr*.6; s*=smoothstep(e,e+.25,fbm3(vec3(cos(ang)*3.+uSeed,sin(ang)*3.,r*5.))+.1)*softF(uSoft); } // erosion grows over life
+  gl_FragColor=vec4(c*uInt*s,s); }`;
 const PLANE_V = `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
+const RDIST_F = `${NOISE}
+uniform float uR, uW, uTime, uSeed, uBreak, uA, uPr, uRefract, uReal; varying vec2 vUv;
+${RING_N}
+void main(){ vec2 p=vUv*2.-1.; float r=length(p); float ang=atan(p.y,p.x); float rr=uR+(ringN(r,ang)-.5)*uBreak*uW*2.; float d=(r-rr)/max(uW*1.6,1e-4);
+  vec2 g=vec2(dFdx(r),dFdy(r)); float l=length(g); vec2 dir=l>1e-7?g/l:vec2(0.);
+  float m=-d*exp(-d*d*2.)*1.65*(1.-smoothstep(.88,1.,r))*uA*(1.-.5*uPr); gl_FragColor=vec4(dir*m*uRefract,0.,0.); }`;
+const RDARK_F = `${NOISE}
+uniform float uR, uW, uTime, uSeed, uBreak, uA, uPr, uDark, uReal; varying vec2 vUv;
+${RING_N}
+void main(){ vec2 p=vUv*2.-1.; float r=length(p); float ang=atan(p.y,p.x); float rr=uR+(ringN(r,ang)-.5)*uBreak*uW*2.; float d=(r-rr-uW*1.8)/max(uW*1.4,1e-4);
+  float a=exp(-d*d*2.)*(1.-smoothstep(.88,1.,r))*uDark*uA*uReal; if(a<.003) discard; gl_FragColor=vec4(vec3(.015)*a,a); }`;
 export class Ring extends Prim {
   constructor(fx, p) {
-    super(fx, p); this.R1 = A(p.r)[1]; this.size = this.R1 * 1.15;
-    this.u = { uR: { value: 0 }, uW: { value: 0.05 }, uInt: { value: p.intensity ?? 2 }, uFill: { value: p.fill ?? 0 }, uTime: { value: 0 }, uSeed: { value: this.seed }, uBreak: { value: p.breakup ?? 0.6 }, uA: { value: 1 },
+    super(fx, p); this.R1 = A(p.r)[1]; this.size = this.R1 * 1.15; const nrm = p.normal || 'up';
+    this.u = { uR: { value: 0 }, uW: { value: 0.05 }, uInt: { value: p.intensity ?? 2 }, uFill: { value: p.fill ?? 0 }, uTime: { value: 0 }, uSeed: { value: this.seed }, uBreak: { value: p.breakup ?? 0.6 }, uA: { value: 1 }, uPr: { value: 0 }, uSoft: { value: p.soft ?? (nrm === 'up' ? 0 : 0.25) }, uRefract: { value: p.refract ?? 0 }, uDark: { value: p.dark ?? 0 }, ...SU,
       uRamp: { value: makeRamp(p.ramp || [[0, '#fff'], [.4, '#fc8'], [1, '#f60']]) } };
     const o = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ vertexShader: PLANE_V, fragmentShader: RING_F, uniforms: this.u, ...bl(true), side: THREE.DoubleSide }));
     o.scale.setScalar(this.size); o.renderOrder = 22;
-    const nrm = p.normal || 'up'; if (nrm === 'up') { o.rotation.x = -Math.PI / 2; o.position.y = p.y ?? 0.01; } else if (Array.isArray(nrm)) o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(...nrm).normalize());
+    if (p.refract) { const m = new THREE.Mesh(o.geometry, new THREE.ShaderMaterial({ vertexShader: PLANE_V, fragmentShader: RDIST_F, uniforms: this.u, ...bl(true), side: THREE.DoubleSide })); m.layers.set(2); m.frustumCulled = false; o.add(m); } // refraction offset, drawn only in Stage.prepass
+    if (p.dark) { const m = new THREE.Mesh(o.geometry, new THREE.ShaderMaterial({ vertexShader: PLANE_V, fragmentShader: RDARK_F, uniforms: this.u, ...bl(false), side: THREE.DoubleSide })); m.renderOrder = 21; m.frustumCulled = false; m.userData.opaqueOnly = true; o.add(m); } // dark contrast rim behind the front
+    if (nrm === 'up') { o.rotation.x = -Math.PI / 2; o.position.y = p.y ?? 0.01; } else if (Array.isArray(nrm)) o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(...nrm).normalize());
     this.billboard = nrm === 'cam'; this.place(o); if (p.pos) o.position.set(...p.pos); if (nrm === 'up' && !p.pos) o.position.y = p.y ?? 0.01;
   }
   update(tAbs, t) {
     const w = this.w(t); this.obj.visible = w > 0.001; if (!this.obj.visible) return; const p = this.p, pr = this.prog(t); const [r0, r1] = A(p.r); const [w0, w1] = A(p.width ?? [0.2, 0.08]);
-    this.u.uR.value = lerp(r0, r1, easeOut(pr)) / this.size; this.u.uW.value = lerp(w0, w1, pr) / this.size; this.u.uA.value = w * (1 - (p.decay ?? 0.7) * pr) * (p.alpha ?? 1); this.u.uTime.value = tAbs;
+    this.u.uR.value = lerp(r0, r1, easeOut(pr)) / this.size; this.u.uW.value = lerp(w0, w1, pr) / this.size; this.u.uA.value = w * (1 - (p.decay ?? 0.7) * pr) * (p.alpha ?? 1); this.u.uTime.value = tAbs; this.u.uPr.value = pr;
     if (this.billboard) this.obj.quaternion.copy(this.fx.camQuat);
   }
 }
 
 /* ------------------------------------------------------------------ SHELL (dome / shield / bubble) */
 const SHELL_F = `${NOISE}
-uniform float uTime, uInt, uPow, uCells, uA, uImpT, uHemi, uNoise; uniform vec3 uImpDir; uniform sampler2D uRamp; varying vec3 vN, vWP, vP;
+uniform float uTime, uInt, uPow, uCells, uA, uImpT, uHemi, uNoise, uSoft; uniform vec3 uImpDir; uniform sampler2D uRamp; varying vec3 vN, vWP, vP;
 ${PER}
+${DEPTH}
 void main(){ if(uHemi>.5 && vP.y<-.02) discard;
   vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP); float f=pow(max(1.-abs(dot(N,V)),0.),uPow);
   float edge=0.; if(uCells>0.){ vec2 vo=voronoi(vP*uCells+vec3(0.,uTime*.05,0.)); edge=smoothstep(.09,.0,vo.y)*.9+(1.-smoothstep(0.,.4,vo.x))*.12*vnoise(vP*uCells*2.+uTime*2.); }
   float n=fbmT(vP*3.,vec3(0.,.4,0.))*uNoise;
   float imp=0.; if(uImpT>=0.){ float ang=acos(clamp(dot(normalize(vP),uImpDir),-1.,1.)); float x=ang-uImpT*2.2; imp=exp(-x*x*40.)*exp(-uImpT*2.2)*1.6+exp(-ang*ang*30.)*exp(-uImpT*8.)*2.; }
   float s=clamp(f*.9+edge*(.35+f)+n*.25+imp*(.6+edge*2.),0.,2.); vec3 c=texture2D(uRamp,vec2(clamp(s*.5,0.,1.),.5)).rgb;
-  float a=(f*.8+edge*.5+n*.1+imp*.6)*uA; gl_FragColor=vec4(c*uInt*a,a); }`;
+  float a=(f*.8+edge*.5+n*.1+imp*.6)*uA; gl_FragColor=vec4(c*uInt*a,a)*softF(uSoft); }`;
+const SHELL_DIST_F = `uniform float uA, uPow, uRefract, uHemi; varying vec3 vN, vWP, vP;
+void main(){ if(uHemi>.5&&vP.y<-.02) discard; vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP); float f=pow(max(1.-abs(dot(N,V)),0.),max(uPow*.6,.1));
+  vec3 nv=(viewMatrix*vec4(N,0.)).xyz; float l=length(nv.xy); vec2 d=l>1e-4?nv.xy/l:vec2(0.); gl_FragColor=vec4(-d*f*uRefract*uA,0.,0.); }`;
 export class Shell extends Prim {
   constructor(fx, p) {
-    super(fx, p); this.u = { ...per(fx), uTime: { value: 0 }, uInt: { value: p.intensity ?? 1.5 }, uPow: { value: p.power ?? 2.5 }, uCells: { value: p.cells ?? 0 }, uA: { value: 1 }, uImpT: { value: -1 }, uHemi: { value: p.hemi ? 1 : 0 }, uNoise: { value: p.noise ?? 0.5 },
+    super(fx, p); this.u = { ...per(fx), uTime: { value: 0 }, uInt: { value: p.intensity ?? 1.5 }, uPow: { value: p.power ?? 2.5 }, uCells: { value: p.cells ?? 0 }, uA: { value: 1 }, uImpT: { value: -1 }, uHemi: { value: p.hemi ? 1 : 0 }, uNoise: { value: p.noise ?? 0.5 }, uSoft: { value: p.soft ?? 0.3 }, uRefract: { value: p.refract ?? 0 }, ...SU,
       uImpDir: { value: new THREE.Vector3(1, 0.3, 0).normalize() }, uRamp: { value: makeRamp(p.ramp || [[0, '#012'], [.4, '#4af'], [1, '#fff']]) } };
     const v = `varying vec3 vN, vWP, vP; void main(){ vP=position; vec4 wp=modelMatrix*vec4(position,1.); vWP=wp.xyz; vN=normalize(mat3(modelMatrix)*normal); gl_Position=projectionMatrix*viewMatrix*wp; }`;
-    const o = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), new THREE.ShaderMaterial({ vertexShader: v, fragmentShader: SHELL_F, uniforms: this.u, ...bl(true), side: THREE.DoubleSide })); o.renderOrder = 24; this.place(o);
+    const o = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), new THREE.ShaderMaterial({ vertexShader: v, fragmentShader: SHELL_F, uniforms: this.u, ...bl(true), side: THREE.DoubleSide })); o.renderOrder = 24; if (p.refract) { const m = new THREE.Mesh(o.geometry, new THREE.ShaderMaterial({ vertexShader: v, fragmentShader: SHELL_DIST_F, uniforms: this.u, ...bl(true) })); m.layers.set(2); m.frustumCulled = false; o.add(m); } this.place(o);
   }
   update(tAbs, t) {
     const w = this.w(t); this.obj.visible = w > 0.001; if (!this.obj.visible) return; const p = this.p; const [r0, r1] = A(p.r ?? 1); this.obj.scale.setScalar(lerp(r0, r1, p.ease === 'out' ? easeOut(this.prog(t)) : this.prog(t)) * (1 + (p.pulse ? p.pulse[0] * Math.sin(tAbs * p.pulse[1]) : 0)));
@@ -129,16 +153,17 @@ export class Shell extends Prim {
 /* ------------------------------------------------------------------ BEAM (cylinder shafts: lasers, pillars, cones) */
 const BEAM_V = `varying vec3 vN, vWP; varying vec2 vUv; void main(){ vUv=uv; vec4 wp=modelMatrix*vec4(position,1.); vWP=wp.xyz; vN=normalize(mat3(modelMatrix)*normal); gl_Position=projectionMatrix*viewMatrix*wp; }`;
 const BEAM_F = `${NOISE}
-uniform float uTime, uInt, uA, uFreq, uSpeed, uPulse, uEdge, uNoiseA, uEndFade; uniform sampler2D uRamp; varying vec3 vN, vWP; varying vec2 vUv;
+uniform float uTime, uInt, uA, uFreq, uSpeed, uPulse, uEdge, uNoiseA, uEndFade, uSoft; uniform sampler2D uRamp; varying vec3 vN, vWP; varying vec2 vUv;
 ${PER}
+${DEPTH}
 void main(){ vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vWP); float c=pow(abs(dot(N,V)),uEdge);
   float y=vUv.y; float an=vUv.x*6.2831853; float n=fbmT(vec3(cos(an)*1.5,sin(an)*1.5,y*uFreq),vec3(.3,0.,-uSpeed)); float bands=mix(1.,.45+1.1*n,uNoiseA);
   float pulse=1.+uPulse*sin(y*uFreq*2.-ph(uSpeed*3.)); float ends=smoothstep(0.,uEndFade,y)*smoothstep(1.,1.-uEndFade,y);
-  float a=c*bands*pulse*ends*uA; vec3 col=texture2D(uRamp,vec2(clamp(1.-c*bands,0.,1.),.5)).rgb; gl_FragColor=vec4(col*uInt*a,a); }`;
+  float a=c*bands*pulse*ends*uA; vec3 col=texture2D(uRamp,vec2(clamp(1.-c*bands,0.,1.),.5)).rgb; gl_FragColor=vec4(col*uInt*a,a)*softF(uSoft); }`;
 export class Beam extends Prim {
   constructor(fx, p) {
     super(fx, p); const [rb, rt] = A(p.r ?? 0.1);
-    this.u = { ...per(fx), uTime: { value: 0 }, uInt: { value: p.intensity ?? 2 }, uA: { value: 1 }, uFreq: { value: p.freq ?? 3 }, uSpeed: { value: p.speed ?? 2 }, uPulse: { value: p.pulse ?? 0.2 }, uEdge: { value: p.edge ?? 1.6 }, uNoiseA: { value: p.noise ?? 0.6 }, uEndFade: { value: p.endFade ?? 0.12 },
+    this.u = { ...per(fx), uTime: { value: 0 }, uInt: { value: p.intensity ?? 2 }, uA: { value: 1 }, uFreq: { value: p.freq ?? 3 }, uSpeed: { value: p.speed ?? 2 }, uPulse: { value: p.pulse ?? 0.2 }, uEdge: { value: p.edge ?? 1.6 }, uNoiseA: { value: p.noise ?? 0.6 }, uEndFade: { value: p.endFade ?? 0.12 }, uSoft: { value: p.soft ?? 0.3 }, ...SU,
       uRamp: { value: makeRamp(p.ramp || [[0, '#fff'], [.5, '#8cf'], [1, '#13a']]) } };
     const g = new THREE.CylinderGeometry(rt, rb, 1, 32, 1, true); g.translate(0, 0.5, 0);
     const o = new THREE.Mesh(g, new THREE.ShaderMaterial({ vertexShader: BEAM_V, fragmentShader: BEAM_F, uniforms: this.u, ...bl(true), side: THREE.DoubleSide })); o.renderOrder = 23; this.fromTo = p.from && p.to; this.place(o);
@@ -296,17 +321,38 @@ export class Water extends Prim {
 }
 
 /* ------------------------------------------------------------------ LIGHT (physical point light + feeds smoke/ground lighting) */
+const GLOW_F = `uniform vec3 uCol; uniform float uSoft; varying vec2 vUv;
+${DEPTH}
+void main(){ vec2 p=vUv*2.-1.; float d2=dot(p,p); float a=max(0.,1./(1.+d2*24.)-.04)*smoothstep(1.,.6,sqrt(d2))*uReal*softF(uSoft); if(a<.002) discard; gl_FragColor=vec4(uCol*a,a); }`;
 export class Light extends Prim {
   constructor(fx, p) {
     super(fx, p); this.color = new THREE.Color(p.color || '#ff9a3c'); this.l = new THREE.PointLight(this.color, 0, p.range ?? 12, 2); this.l.position.set(...(p.pos || [0, 1, 0])); fx.add(this.l); this.obj = this.l; this.i0 = (p.intensity ?? 30) * 0.09;
     this.rate = p.rate ?? 9; this.seed2 = this.seed;
+    if (p.glow) { const s = p.glowSize ?? 0.12 * (p.range ?? 12); this.gu = { uCol: { value: new THREE.Color() }, uSoft: { value: 0.5 }, ...SU };
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(s, s), new THREE.ShaderMaterial({ vertexShader: PLANE_V, fragmentShader: GLOW_F, uniforms: this.gu, ...bl(true) })); m.renderOrder = 27; m.frustumCulled = false; this.l.add(m); this.glow = m; } // inverse-square halo, alpha ~ live intensity
   }
   update(tAbs, t) {
     const w = this.w(t); const p = this.p; const P = this.fx.loop ? this.fx.duration : 0, r = P ? (2 * Math.PI / P) * Math.max(1, Math.round(this.rate * P / (2 * Math.PI))) : this.rate, k2 = P ? 2 : 2.3, k5 = P ? 5 : 5.1; // loops: integer harmonics of the period
     const fl = p.flicker ? 1 + p.flicker * (Math.sin(tAbs * r + this.seed2) * 0.5 + Math.sin(tAbs * r * k2 + this.seed2 * 2) * 0.35 + Math.sin(tAbs * r * k5) * 0.15) : 1;
-    const env = p.env ? p.env(t, this.prog(t)) : 1; const I = this.i0 * w * fl * env; this.l.intensity = I; this.l.color.copy(this.color); if (p.colorFn) p.colorFn(this.l.color, t);
+    const env = p.env ? p.env(t, this.prog(t)) : 1; const I = this.i0 * w * fl * env; this.l.intensity = I; this.l.color.copy(this.color); if (p.colorFn) p.colorFn(this.l.color, t); if (this.glow) { this.glow.visible = w > 0.001; this.glow.quaternion.copy(this.fx.camQuat); this.gu.uCol.value.copy(this.l.color).multiplyScalar(p.glow * 0.35 * Math.min(1.5, w * fl * env)); }
     if (p.main !== false && w > 0.001) { const lu = this.fx.lu; lu.uLightPos.value.copy(this.l.position).applyMatrix4(this.fx.matrixWorld); lu.uLightCol.value.copy(this.l.color).multiplyScalar(Math.min(2.5, I / ((p.norm ?? 18) * 0.09))); lu.uLightRange.value = (p.range ?? 12) * 0.35; }
   }
+}
+
+/* ------------------------------------------------------------------ HEAT (screen-space haze; drawn only in Stage.prepass) */
+const HEAT_F = `${NOISE}
+uniform float uTime, uA, uStr, uRise; varying vec2 vUv;
+${PER}
+void main(){ vec2 p=vUv; float m=smoothstep(0.,.2,p.y)*smoothstep(1.,.45,p.y)*smoothstep(.5,.15,abs(p.x-.5))*uA;
+  vec3 q=vec3(p.x*3.,p.y*4.,0.); vec2 o=vec2(fbm3T(q,vec3(0.,-uRise,.3)),fbm3T(q+vec3(5.2,1.3,0.),vec3(0.,-uRise,.3)))-.5;
+  gl_FragColor=vec4(o*2.*uStr*m,0.,0.); }`;
+export class Heat extends Prim {
+  constructor(fx, p) {
+    super(fx, p); const [w, h] = A(p.size ?? [1, 2]); this.u = { ...per(fx), uTime: { value: 0 }, uA: { value: 1 }, uStr: { value: p.strength ?? 0.006 }, uRise: { value: p.rise ?? 1.5 } };
+    const g = new THREE.PlaneGeometry(w, h); g.translate(0, h / 2, 0);
+    const o = new THREE.Mesh(g, new THREE.ShaderMaterial({ vertexShader: PLANE_V, fragmentShader: HEAT_F, uniforms: this.u, ...bl(true), side: THREE.DoubleSide })); o.layers.set(2); this.place(o);
+  }
+  update(tAbs, t) { const w = this.w(t); this.obj.visible = w > 0.001; if (!this.obj.visible) return; this.u.uTime.value = tAbs; this.u.uA.value = w * (this.p.alpha ?? 1); this.obj.quaternion.copy(this.fx.camQuat); }
 }
 
 /* ------------------------------------------------------------------ TEXT (canvas sprite) */

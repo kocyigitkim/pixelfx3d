@@ -43,6 +43,7 @@ export class Fx extends THREE.Group {
   decal(p) { return this._add(new P.Decal(this, p)); }
   water(p) { return this._add(new P.Water(this, p)); }
   light(p) { return this._add(new P.Light(this, p)); }
+  heat(p) { return this._add(new P.Heat(this, p)); }
   text(p) { return this._add(new P.Text(this, p)); }
   /** custom three object. fn(t, pr, fx, w, obj, tAbs) runs every frame while in [t0, t0+dur]. */
   mesh(obj, fn, p = {}) { return this._add(new P.MeshPrim(this, obj, fn, p)); }
