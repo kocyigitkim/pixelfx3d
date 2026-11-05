@@ -39,7 +39,7 @@ export function kit(fx, o, ramp) {
   const k = { G, g: G.g, s, b, col, ramp: pr,
     em: (p) => fx.emitter({ ramp: pr, ...p, size: S(p.size ?? 0.3, s), radius: S(p.radius, s), radiusIn: S(p.radiusIn, s), shapeSize: S(p.shapeSize, s), intensity: I(p, 1, b) }),
     smoke: (p) => k.em({ kind: 'smoke', blend: 'normal', lit: 1, order: -1, ramp: SMOKE, ...p }),
-    ring: (p) => fx.ring({ ramp: pr, ...p, r: S(p.r, s), width: S(p.width ?? [0.2, 0.05], s), intensity: I(p, 1.2, b) }),
+    ring: (p) => fx.ring({ ramp: pr, ...((p.normal ?? 'up') === 'up' ? { refract: 0.015, dark: 0.25 } : p.normal === 'cam' ? { refract: 0.008 } : {}), ...p, r: S(p.r, s), width: S(p.width ?? [0.2, 0.05], s), intensity: I(p, 1.2, b) }),
     orb: (p) => fx.orb({ ramp: up(pr), ...p, r: S(p.r, s), intensity: I(p, 1.2, b) }),
     shell: (p) => fx.shell({ ramp: up(pr), ...p, r: S(p.r, s), intensity: I(p, 1, b) }),
     beam: (p) => fx.beam({ ramp: pr, ...p, r: S(p.r ?? 0.1, s), intensity: I(p, 1, b) }),

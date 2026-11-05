@@ -8,7 +8,7 @@ const q = new URLSearchParams(location.search), v = document.getElementById('v')
 if (q.get('bg')) document.body.style.background = '#' + q.get('bg');
 v.style.width = (q.get('w') || 960) + 'px'; v.style.height = (q.get('h') || 540) + 'px';
 const o = { preserve: true, maxPixelRatio: 1, transparent: q.has('transparent'), quality: q.get('quality') || undefined };
-if (q.has('legacy')) Object.assign(o, { bloomScale: 1, flashMax: 1 });
+if (q.has('legacy')) Object.assign(o, { bloomScale: 1, flashMax: 1, realism: false });
 const stage = new Stage(v, o);
 window.__stage = stage; window.__ids = [...registry.keys()];
 window.__play = (id, opts = q.has('grade') ? { grade: +q.get('grade') } : {}) => { stage.autoReplay = false; stage.play(id, opts); return stage.fx.duration; };

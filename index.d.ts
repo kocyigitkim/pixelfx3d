@@ -15,6 +15,7 @@ export interface Rng {
 
 /* ---------- builder params (names as in docs/AUTHORING.md) ---------- */
 export interface EmitterParams extends Timed {
+  soft?: number;
   count?: number; kind?: string; blend?: 'add' | 'normal'; ramp?: Ramp; intensity?: number;
   size?: Range; sizeVar?: number; sizePow?: number; aspect?: number; life?: Range; speed?: Range;
   dir?: Vec3; spread?: number; radial?: number;
@@ -27,6 +28,7 @@ export interface EmitterParams extends Timed {
 }
 
 export interface OrbParams extends Timed {
+  soft?: number;
   kind?: 'fire' | 'plasma' | 'void' | 'glass' | 'water' | 'ice' | 'energy';
   r?: Range; ease?: string; pos?: Vec3; noise?: number; scroll?: number; disp?: number;
   intensity?: number; power?: number; alpha?: number; pulse?: [number, number]; ramp?: Ramp;
@@ -34,16 +36,19 @@ export interface OrbParams extends Timed {
 }
 
 export interface RingParams extends Timed {
+  refract?: number; dark?: number; soft?: number;
   r?: Range; width?: Range; normal?: 'up' | 'cam' | Vec3; pos?: Vec3; y?: number; fill?: number;
   breakup?: number; intensity?: number; ramp?: Ramp; decay?: number;
 }
 
 export interface ShellParams extends Timed {
+  refract?: number; soft?: number;
   r?: Range; hemi?: boolean; cells?: number; power?: number; noise?: number; intensity?: number;
   ramp?: Ramp; pulse?: number; impacts?: Array<{ t: number; dir: Vec3 }>;
 }
 
 export interface BeamParams extends Timed {
+  soft?: number;
   from?: Vec3; to?: Vec3; pos?: Vec3; height?: number;
   path?: (t: number, pr: number) => [Vec3, Vec3];
   r?: Range; noise?: number; freq?: number; speed?: number; pulse?: number; edge?: number;
@@ -83,9 +88,12 @@ export interface WaterParams extends Timed {
 }
 
 export interface LightParams extends Timed {
+  glow?: number; glowSize?: number;
   color?: string; intensity?: number; pos?: Vec3; range?: number; flicker?: number; rate?: number;
   env?: (t: number, pr: number) => number; colorFn?: (t: number, pr: number) => string;
 }
+
+export interface HeatParams extends Timed { pos?: Vec3; size?: Range; strength?: number; rise?: number; alpha?: number; }
 
 export interface TextParams extends Timed {
   text: string; size?: number; motion?: (pr: number, t?: number) => { pos?: Vec3; scale?: number; alpha?: number; rot?: number };
@@ -142,6 +150,7 @@ export class Fx extends THREE.Group {
   decal(p: DecalParams): Part;
   water(p: WaterParams): Part;
   light(p: LightParams): Part & { l: THREE.PointLight };
+  heat(p: HeatParams): Part;
   text(p: TextParams): Part;
   mesh(obj: THREE.Object3D, fn: ((t: number, pr: number, fx: Fx, w: number, obj: THREE.Object3D, tAbs: number) => void) | null, opts?: Timed): Part;
   on(fn: (t: number, tAbs: number, fx: Fx) => void): void;
@@ -160,6 +169,7 @@ export class Fx extends THREE.Group {
 
 /* ---------- Stage: renderer, camera, playback ---------- */
 export interface StageOptions {
+  realism?: boolean;
   transparent?: boolean; quality?: 'low' | 'medium' | 'high'; preserve?: boolean; maxPixelRatio?: number;
   bloom?: number; bloomScale?: number; threshold?: number; radius?: number; exposure?: number;
   flashMax?: number; toneMapping?: 'aces' | 'agx' | 'neutral' | 'none'; sky?: StageDef['sky'];

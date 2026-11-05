@@ -4,7 +4,7 @@ const stack = (fx) => { // crossed logs
   for (let i = 0; i < 5; i++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.075, 0.95, 10), m); const a = (i / 5) * Math.PI * 2; l.position.set(Math.cos(a) * 0.18, 0.1, Math.sin(a) * 0.18); l.rotation.set(Math.PI / 2 - 0.35, 0, -a + Math.PI / 2); l.rotation.order = 'YXZ'; l.rotation.y = a; l.rotation.x = 1.2; g.add(l); }
   return g;
 };
-const FIRE = [[0, '#ffe2a0', 1], [0.2, '#ffa030', 0.95], [0.55, '#e0480c', 0.7], [0.85, '#6a1606', 0.3], [1, '#1a0602', 0]];
+const FIRE = [[0, '#fff3dc', 1], [0.15, '#ffc27a', 1], [0.35, '#ff9a32', 0.9], [0.6, '#e2500f', 0.6], [0.85, '#5a1a08', 0.25], [1, '#140604', 0]]; // blackbody: ~3500K core -> 2500K -> 1500K -> soot
 const SMOKE = [[0, '#2a2622', 0], [0.15, '#403a34', 0.35], [1, '#15130f', 0]];
 const mat = (c, r = 0.9, m = 0) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m });
 const smoke = (fx, o) => fx.emitter({ kind: 'smoke', blend: 'normal', lit: 1, order: -1, ramp: SMOKE, ...o });
@@ -15,7 +15,8 @@ export default [
     build(fx) {
       fx.mesh(stack(fx), null, { dur: 99 });
       fx.decal({ kind: 'glow', r: [1.2, 1.2], ramp: [[0, '#000'], [0.35, '#8a1a00'], [1, '#ff8a20']], intensity: 1.2, alpha: 0.8, y: 0.006 });
-      fx.light({ color: '#ff8a2a', intensity: 22, pos: [0, 0.8, 0], flicker: 0.35, range: 10 });
+      fx.light({ glow: 0.4, color: '#ff8a2a', intensity: 22, pos: [0, 0.8, 0], flicker: 0.35, range: 10 });
+      fx.heat({ pos: [0, 0.35, 0], size: [0.9, 1.8] });
       fx.emitter({ count: 34, kind: 'flame', shape: 'disc', radius: 0.26, dir: [0, 1, 0], spread: 0.1, speed: [0.25, 0.6], life: [0.7, 1.25], size: [0.7, 0.2], aspect: 1.9, ramp: fx.pal(FIRE), intensity: 0.5, turb: [0.2, 1.4], pos: [0, 0.18, 0] });
       fx.emitter({ count: 6, kind: 'soft', shape: 'disc', radius: 0.15, dir: [0, 1, 0], speed: [0, 0.05], life: [1.5, 1.5], size: [0.9, 0.9], ramp: [[0, '#ff7a20', 0], [0.5, '#ff6a10', 0.35], [1, '#ff7a20', 0]], intensity: 0.5, pos: [0, 0.35, 0] });
       fx.emitter({ count: 50, kind: 'spark', shape: 'disc', radius: 0.2, dir: [0, 1, 0], spread: 0.6, speed: [0.8, 2.4], life: [1.2, 2.8], gravity: [0, 0.4, 0], drag: 0.25, size: [0.06, 0.02], stretch: 0.6, ramp: [[0, '#fff6c0'], [0.4, '#ff8a20'], [1, '#400', 0]], intensity: 3, turb: [0.4, 1], pos: [0, 0.3, 0] });
@@ -31,7 +32,8 @@ export default [
       const coals = new THREE.Mesh(new THREE.CircleGeometry(0.38, 24), new THREE.MeshBasicMaterial({ color: '#ff5a10' })); coals.rotation.x = -Math.PI / 2; coals.position.y = 0.72; g.add(coals);
       fx.mesh(g, null, { dur: 99 });
       fx.decal({ kind: 'glow', r: [1.6, 1.6], ramp: [[0, '#000'], [0.4, '#6a1400'], [1, '#ff7a20']], intensity: 1, alpha: 0.7, y: 0.006 });
-      fx.light({ color: '#ff8228', intensity: 30, pos: [0, 1.2, 0], flicker: 0.3, range: 11 });
+      fx.light({ glow: 0.4, color: '#ff8228', intensity: 30, pos: [0, 1.2, 0], flicker: 0.3, range: 11 });
+      fx.heat({ pos: [0, 0.8, 0], size: [1.0, 2.0] });
       fx.emitter({ count: 22, kind: 'soft', shape: 'disc', radius: 0.33, dir: [0, 1, 0], spread: 0.05, speed: [0.05, 0.2], life: [0.5, 1.2], size: [0.18, 0.1], ramp: [[0, '#ffb040', 0], [0.3, '#ff6a10', 0.8], [1, '#400', 0]], intensity: 1.2, pos: [0, 0.74, 0], turb: [0.1, 2] });
       fx.emitter({ count: 40, kind: 'flame', shape: 'disc', radius: 0.32, dir: [0, 1, 0], spread: 0.12, speed: [0.5, 1.0], life: [0.7, 1.3], size: [0.75, 0.25], aspect: 2.0, ramp: fx.pal(FIRE), intensity: 0.55, turb: [0.25, 1.5], pos: [0, 0.76, 0] });
       fx.emitter({ count: 60, kind: 'spark', shape: 'disc', radius: 0.3, dir: [0, 1, 0], spread: 0.7, speed: [1, 3], life: [1.2, 2.8], gravity: [0, 0.5, 0], drag: 0.25, size: [0.06, 0.02], stretch: 0.6, ramp: [[0, '#fff6c0'], [0.4, '#ff8a20'], [1, '#400', 0]], intensity: 3, turb: [0.5, 1], pos: [0, 0.8, 0] });
@@ -45,7 +47,7 @@ export default [
       const wick = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.002, 0.03, 6), mat('#111')); wick.position.y = 0.235; g.add(wick);
       const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.012, 32), mat('#8a6a2a', 0.35, 0.9)); dish.position.y = 0.006; g.add(dish);
       fx.mesh(g, null, { dur: 99 });
-      fx.light({ color: '#ffa850', intensity: 4.5, pos: [0, 0.3, 0.04], flicker: 0.12, range: 3, rate: 5, norm: 4 });
+      fx.light({ glow: 0.4, color: '#ffa850', intensity: 4.5, pos: [0, 0.3, 0.04], flicker: 0.12, range: 3, rate: 5, norm: 4 });
       fx.emitter({ count: 7, kind: 'flame', shape: 'point', dir: [0, 1, 0], spread: 0.02, speed: [0.02, 0.05], life: [0.9, 1.3], size: [0.075, 0.03], aspect: 2.3, ramp: [[0, '#fffbe0', 1], [0.3, '#ffd070', 0.9], [0.7, '#ff7a20', 0.55], [1, '#401000', 0]], intensity: 0.9, turb: [0.006, 1.4], pos: [0, 0.245, 0] });
       fx.emitter({ count: 3, kind: 'flame', shape: 'point', dir: [0, 1, 0], spread: 0.0, speed: [0, 0.01], life: [1.3, 1.6], size: [0.045, 0.03], aspect: 1.4, ramp: [[0, '#8fb0ff', 0.9], [0.5, '#3a60ff', 0.5], [1, '#102', 0]], intensity: 0.8, pos: [0, 0.238, 0] });
       fx.emitter({ count: 4, kind: 'soft', shape: 'point', dir: [0, 1, 0], speed: 0, life: [4, 4], size: [0.22, 0.22], ramp: [[0, '#ffa040', 0.12], [1, '#ffa040', 0.12]], intensity: 0.7, pos: [0, 0.28, 0] });
@@ -77,7 +79,8 @@ export default [
 
   { id: 'fire/fire-tornado', name: 'Fire tornado', category: 'fire', loop: true, duration: 2, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [3.6, 2.2, 4.8], target: [0, 1.5, 0] } },
     build(fx) {
-      fx.light({ color: '#ff7a20', intensity: 70, pos: [0, 1.5, 0.3], range: 14, flicker: 0.3 });
+      fx.light({ glow: 0.4, color: '#ff7a20', intensity: 70, pos: [0, 1.5, 0.3], range: 14, flicker: 0.3 });
+      fx.heat({ pos: [0, 0.1, 0], size: [2, 4.2], strength: 0.007 });
       fx.decal({ kind: 'glow', r: [2.0, 2.0], ramp: [[0, '#000'], [0.4, '#6a1800'], [1, '#ff6a10']], intensity: 0.9, alpha: 0.7, y: 0.006 });
       [[0.15, 0.22], [0.6, 0.32], [1.1, 0.46], [1.6, 0.62], [2.15, 0.82], [2.7, 1.05]].forEach(([y, r], i) => fx.emitter({ count: 70, kind: 'flame', shape: 'ring', radius: r, radiusIn: r * 0.8, pos: [0, y, 0], dir: [0, 1, 0], spread: 0.15, speed: [0.5, 1.0], life: [0.5, 0.9], size: [0.3 - i * 0.02, 0.12], aspect: 1.7, ramp: fx.pal(FIRE), intensity: 0.32 - i * 0.025, swirl: 7 - i * 0.6, turb: [0.3, 2] }));
       fx.emitter({ count: 150, kind: 'smoke', shape: 'ring', radius: 0.25, radiusIn: 0.15, pos: [0, 0.1, 0], dir: [0, 1, 0], spread: 0.1, speed: [1.4, 2.0], life: [1.3, 1.8], size: [0.35, 1.1], ramp: fx.pal(FIRE), intensity: 0.2, swirl: 7, radial: 0.35, turb: [0.2, 1.2] }); // funnel body: rises, widens, spins
@@ -90,7 +93,7 @@ export default [
   { id: 'fire/fireball', name: 'Fireball', category: 'fire', loop: true, duration: 1.2, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [-1.2, 1.4, 4.6], target: [-0.4, 1.2, 0], fov: 38 } },
     build(fx) {
       const c = [0.6, 1.25, 0];
-      fx.light({ color: '#ff8030', intensity: 70, pos: [0.4, 1.3, 0.4], range: 12, flicker: 0.25 });
+      fx.light({ glow: 0.4, color: '#ff8030', intensity: 70, pos: [0.4, 1.3, 0.4], range: 12, flicker: 0.25 });
       fx.orb({ kind: 'fire', r: [0.34, 0.34], intensity: 0.55, ramp: [[0, '#300'], [0.3, '#d02a08'], [0.6, '#ff8a20'], [0.85, '#ffd060'], [1, '#fff4c0']], pos: c, noise: 2.2, scroll: 3.5, disp: 0.5, power: 2 });
       fx.emitter({ count: 70, kind: 'smoke', shape: 'sphere', radius: 0.25, dir: [-1, 0.1, 0], spread: 0.4, speed: [2.5, 5.5], life: [0.4, 0.75], size: [0.7, 0.2], aspect: 1.7, ramp: fx.pal(FIRE), intensity: 0.55, turb: [0.35, 2], pos: c });
       fx.emitter({ count: 60, kind: 'spark', shape: 'sphere', radius: 0.25, dir: [-1, 0.1, 0], spread: 0.5, speed: [3, 7], life: [0.4, 1.0], gravity: [0, -1.5, 0], size: [0.06, 0.02], stretch: 1.0, ramp: [[0, '#fff'], [0.4, '#ffa030'], [1, '#600', 0]], intensity: 3, turb: [0.4, 2], pos: c });
@@ -100,7 +103,8 @@ export default [
   { id: 'fire/flame-pillar', name: 'Flame pillar', category: 'fire', loop: false, duration: 5, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [4.5, 2.4, 6.4], target: [0, 2.0, 0] } },
     build(fx) {
       fx.shake(0.6, 0.6, 0.05); fx.flash(0.65, 0.25, '#ffc080', 0.4);
-      fx.light({ color: '#ff7a20', intensity: 160, pos: [0, 1.6, 0.4], range: 18, flicker: 0.3, env: (t) => t < 0.6 ? t / 0.6 * 0.3 : t < 3.2 ? 1 : Math.max(0.05, 1 - (t - 3.2) / 1.6) });
+      fx.light({ glow: 0.4, color: '#ff7a20', intensity: 160, pos: [0, 1.6, 0.4], range: 18, flicker: 0.3, env: (t) => t < 0.6 ? t / 0.6 * 0.3 : t < 3.2 ? 1 : Math.max(0.05, 1 - (t - 3.2) / 1.6) });
+      fx.heat({ pos: [0, 0.2, 0], size: [1.8, 5], strength: 0.008, t0: 0.6, dur: 3.6, fade: [0.3, 1] });
       fx.decal({ kind: 'cracks', t0: 0.05, dur: 4.9, r: [2.3, 2.6], fade: [0.1, 1.8], heat: [1, 0.15], reveal: 0.5, cells: 4 });
       fx.decal({ kind: 'glow', t0: 0.1, dur: 4.5, r: [1.8, 2.4], fade: [0.5, 1.5], ramp: [[0, '#000'], [0.4, '#7a1c00'], [1, '#ff7a20']], intensity: 1.2 });
       fx.ring({ t0: 0.6, dur: 0.7, r: [0.3, 3.5], width: [0.35, 0.1], normal: 'up', intensity: 1.2, fill: 0.1, ramp: [[0, '#fff0b0'], [1, '#c50']] });
@@ -130,7 +134,7 @@ export default [
       const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5, 2), new THREE.MeshStandardMaterial({ color: '#2a1d16', roughness: 0.9, emissive: '#ff4a10', emissiveIntensity: 0.9 }));
       const gp = rock.geometry.attributes.position; for (let i = 0; i < gp.count; i++) { const k = 1 + 0.16 * Math.sin(gp.getX(i) * 7 + gp.getY(i) * 5) * Math.cos(gp.getZ(i) * 6); gp.setXYZ(i, gp.getX(i) * k, gp.getY(i) * k, gp.getZ(i) * k); } rock.geometry.computeVertexNormals();
       fx.mesh(rock, (t, pr, f, w, o) => { const p = pos(t); o.position.set(...p); o.rotation.set(t * 3, t * 2, 0); }, { t0: 0, dur: TI });
-      fx.light({ color: '#ff7a28', intensity: 120, pos: [0, 1, 0], range: 20, env: (t) => t < TI ? 0.12 : t < TI + 0.05 ? 2.2 : Math.max(0.1, 2.2 * Math.exp(-(t - TI) * 0.9)), flicker: 0.25 });
+      fx.light({ glow: 0.4, color: '#ff7a28', intensity: 120, pos: [0, 1, 0], range: 20, env: (t) => t < TI ? 0.12 : t < TI + 0.05 ? 2.2 : Math.max(0.1, 2.2 * Math.exp(-(t - TI) * 0.9)), flicker: 0.25 });
       fx.on((t, a, f) => { const l = f.parts.find((q) => q.l); if (l && t < TI) l.l.position.set(...pos(t)); else if (l) l.l.position.set(0, 1.2, 0); });
       fx.trail({ t0: 0, dur: TI, path: pos, len: 0.5, width: 0.5, n: 40, intensity: 1.6, ramp: [[0, '#fff4c0'], [0.3, '#ffa030'], [1, '#701000']] });
       fx.emitter({ count: 80, kind: 'flame', shape: 'sphere', radius: 0.4, dir: [-0.6, 0.8, 0], spread: 0.5, speed: [1.5, 4], life: [0.25, 0.5], size: [0.9, 0.3], aspect: 1.4, ramp: fx.pal(FIRE), intensity: 0.5, t0: 0, t1: TI, loop: false, emit: TI, follow: (m, a, t) => m.position.set(...pos(Math.min(t, TI))) });
@@ -149,7 +153,7 @@ export default [
 
   { id: 'fire/spirit-flame', name: 'Spirit flame', category: 'fire', loop: true, duration: 3, stage: { sky: 'dark', bloom: 0.6, view: { pos: [1.8, 1.4, 2.6], target: [0, 1.05, 0], fov: 36 } },
     build(fx) {
-      fx.light({ color: '#5fb8ff', intensity: 20, pos: [0, 1.1, 0.2], flicker: 0.3, range: 8, rate: 4 });
+      fx.light({ glow: 0.4, color: '#5fb8ff', intensity: 20, pos: [0, 1.1, 0.2], flicker: 0.3, range: 8, rate: 4 });
       fx.decal({ kind: 'glow', r: [1.5, 1.5], ramp: [[0, '#000'], [0.4, '#06204a'], [1, '#4aa8ff']], intensity: 0.8, alpha: 0.5, y: 0.006 });
       fx.emitter({ count: 3, kind: 'soft', shape: 'point', dir: [0, 1, 0], speed: 0, life: [3, 3], size: [1.1, 1.1], ramp: [[0, '#4a9aff', 0.14], [1, '#4a9aff', 0.14]], intensity: 0.8, pos: [0, 1.1, 0] });
       fx.emitter({ count: 34, kind: 'flame', shape: 'sphere', radius: 0.1, dir: [0, 1, 0], spread: 0.15, speed: [0.2, 0.5], life: [0.9, 1.5], size: [0.5, 0.18], aspect: 2.0, ramp: COLD, intensity: 0.6, turb: [0.15, 1.2], pos: [0, 0.95, 0] });
@@ -169,6 +173,7 @@ export default [
       const brk = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.012, 6, 14), mat('#222', 0.5, 0.8)); brk.position.set(0, 1.45, -0.1); brk.rotation.x = Math.PI / 2 + 0.28; g.add(brk);
       fx.mesh(g, null, { dur: 99 });
       fx.light({ color: '#ff8a2a', intensity: 22, pos: [0, 2.05, 0.5], flicker: 0.4, range: 9, rate: 10 });
+      fx.heat({ pos: [0, 2.0, 0], size: [0.35, 0.9], strength: 0.005 });
       fx.emitter({ count: 28, kind: 'flame', shape: 'disc', radius: 0.05, dir: [0.05, 1, 0.1], spread: 0.12, speed: [0.3, 0.7], life: [0.6, 1.0], size: [0.5, 0.16], aspect: 2.0, ramp: fx.pal(FIRE), intensity: 0.65, turb: [0.15, 1.8], pos: [0, 1.95, -0.0] });
       fx.emitter({ count: 28, kind: 'spark', shape: 'disc', radius: 0.05, dir: [0, 1, 0], spread: 0.7, speed: [0.5, 1.8], life: [0.8, 1.9], gravity: [0, 0.4, 0], drag: 0.3, size: [0.04, 0.015], stretch: 0.6, ramp: [[0, '#fff6c0'], [0.4, '#ff8a20'], [1, '#400', 0]], intensity: 3, turb: [0.3, 1], pos: [0, 2.0, 0] });
       smoke(fx, { count: 16, shape: 'disc', radius: 0.05, dir: [0, 1, 0], spread: 0.2, speed: [0.4, 0.7], life: [1.6, 2], size: [0.25, 0.9], turb: [0.25, 0.7], gravity: [0, 0.15, 0], pos: [0, 2.4, 0] });
