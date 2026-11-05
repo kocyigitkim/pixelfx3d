@@ -11,9 +11,9 @@ export function bladeTable(fx, t0, t1, len, rotY, step = 1 / 90) {
   return (t) => { const f = Math.min(n, Math.max(0, (t - t0) / step)), i = Math.min(n - 1, Math.floor(f)), k = f - i, a = arr[i], c = arr[i + 1]; return [a[0] + (c[0] - a[0]) * k, a[1] + (c[1] - a[1]) * k, a[2] + (c[2] - a[2]) * k]; };
 }
 const SW_V = `attribute float aAge, aV; varying float vAge, vV; void main(){ vAge=aAge; vV=aV; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
-const SW_F = `uniform vec3 uC0, uC1, uC2; uniform float uInt, uA, uEdge, uNorm; varying float vAge, vV;
+const SW_F = `float sq(float x){return x*x;} float cube(float x){return x*x*x;} uniform vec3 uC0, uC1, uC2; uniform float uInt, uA, uEdge, uNorm; varying float vAge, vV;
 void main(){ float a=clamp(vAge,0.,1.); float fall=pow(max(1.-a,0.),1.7); float e=pow(max(vV,0.),uEdge)*.9+.12*vV; float fin=smoothstep(0.,.05,a)*.6+.4; float b=fall*e*uA*uInt;
-  vec3 c=a<.35?mix(uC0,uC1,a/.35):mix(uC1,uC2,(a-.35)/.65); c=mix(c,uC0,pow(max(vV,0.),6.)*.6); if(uNorm>.5){ float na=clamp(fall*smoothstep(0.,.35,vV)*uA*uInt,0.,1.); gl_FragColor=vec4(c*na,na); } else gl_FragColor=vec4(c*b,1.); }`;
+  vec3 c=a<.35?mix(uC0,uC1,a/.35):mix(uC1,uC2,(a-.35)/.65); c=mix(c,uC0,cube(sq(max(vV,0.)))*.6); if(uNorm>.5){ float na=clamp(fall*smoothstep(0.,.35,vV)*uA*uInt,0.,1.); gl_FragColor=vec4(c*na,na); } else gl_FragColor=vec4(c*b,1.); }`;
 /** swept blade surface between two points on the weapon (inner/outer len). Fades by itself after t1. */
 export function sweepSurface(fx, A, B, o) {
   const N = o.n ?? 30, len = o.len ?? 0.14, t0 = o.t0, t1 = o.t1, pos = new Float32Array((N + 1) * 2 * 3), age = new Float32Array((N + 1) * 2), vv = new Float32Array((N + 1) * 2), idx = [];

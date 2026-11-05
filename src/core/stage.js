@@ -30,9 +30,9 @@ const TONE = { aces: THREE.ACESFilmicToneMapping, agx: THREE.AgXToneMapping, neu
 
 // refraction: rg offset written by layer-2 meshes into depthRT colour (half res). uDist=0 -> exact old path.
 const DIST = 'vec2 uv=vUv; if(uDist>.5){ vec2 o=texture2D(tDist,vUv).rg; if(!any(isnan(o))&&!any(isinf(o))) uv=clamp(vUv+clamp(o,-.05,.05),.001,.999); }';
-const MAIN_OPAQUE = DIST + 'vec3 c=texture2D(tDiffuse,uv).rgb; if(any(isnan(c))||any(isinf(c))) c=vec3(0.); if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=mix(c,uFlashCol,clamp(uFlash,0.,1.)); vec2 q=vUv-.5; c*=1.-uVig*dot(q,q)*1.6; gl_FragColor=vec4(c,1.);';
+const MAIN_OPAQUE = DIST + 'vec3 c=texture2D(tDiffuse,uv).rgb; if(any(isnan(c))||any(isinf(c))) c=vec3(0.); if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); if(any(isnan(c))||any(isinf(c))) c=vec3(0.); c=mix(c,uFlashCol,clamp(uFlash,0.,1.)); vec2 q=vUv-.5; c*=1.-uVig*dot(q,q)*1.6; gl_FragColor=vec4(c,1.);';
 // transparent: keep scene alpha; glow adds coverage = its brightness, so rgb <= a (valid premultiplied). No vignette (would darken edges).
-const MAIN_ALPHA = DIST + 'vec4 s=texture2D(tDiffuse,uv); if(any(isnan(s))||any(isinf(s))) s=vec4(0.); vec3 c=s.rgb; if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); c=clamp(c,0.,1.); float g=max(c.r,max(c.g,c.b)); float k=mix(smoothstep(.03,.1,g),1.,s.a); c*=k; float a=clamp(max(s.a,g*k),0.,1.); c=mix(c,uFlashCol*a,clamp(uFlash,0.,1.)); gl_FragColor=vec4(c,a);';
+const MAIN_ALPHA = DIST + 'vec4 s=texture2D(tDiffuse,uv); if(any(isnan(s))||any(isinf(s))) s=vec4(0.); vec3 c=s.rgb; if(uOn>.5) c=trans(vUv,c,uP,uTime,uAspect); if(any(isnan(c))||any(isinf(c))) c=vec3(0.); c=clamp(c,0.,1.); float g=max(c.r,max(c.g,c.b)); float k=mix(smoothstep(.03,.1,g),1.,s.a); c*=k; float a=clamp(max(s.a,g*k),0.,1.); c=mix(c,uFlashCol*a,clamp(uFlash,0.,1.)); gl_FragColor=vec4(c,a);';
 function finalShader(fn, tr) {
   return { uniforms: { tDiffuse: { value: null }, tDist: { value: null }, uDist: { value: 0 }, uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 1, 1) }, uP: { value: 0 }, uTime: { value: 0 }, uAspect: { value: 1 }, uVig: { value: 0.35 }, uOn: { value: 0 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',

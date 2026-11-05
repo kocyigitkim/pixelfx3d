@@ -42,7 +42,7 @@ function dustTrail(fx, pathFn, { n = 40, life = 1.6, color = '#ffe9a0', size = 1
 function backdrop(fx, top, bot) {
   const m = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, uniforms: { uT: { value: new THREE.Color(top) }, uB: { value: new THREE.Color(bot) } },
     vertexShader: 'varying vec3 vD; void main(){ vD=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
-    fragmentShader: 'uniform vec3 uT,uB; varying vec3 vD; void main(){ float y=vD.y*.5+.5; vec3 c=mix(uB,uT,pow(y,1.3)); c+=vec3(.05,.18,.2)*exp(-pow((vD.y-.05)*4.,2.))*.6; gl_FragColor=vec4(c,1.); }' });
+    fragmentShader: 'float sq(float x){return x*x;} float cube(float x){return x*x*x;} uniform vec3 uT,uB; varying vec3 vD; void main(){ float y=vD.y*.5+.5; vec3 c=mix(uB,uT,pow(y,1.3)); c+=vec3(.05,.18,.2)*exp(-sq((vD.y-.05)*4.))*.6; gl_FragColor=vec4(c,1.); }' });
   const o = new THREE.Mesh(new THREE.SphereGeometry(60, 24, 16), m); o.renderOrder = -5; o.frustumCulled = false; fx.mesh(o, null, { dur: 999 });
 }
 const CAUSTIC = `
@@ -199,8 +199,8 @@ function ghostMat() {
 function bellMat() {
   return new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, uniforms: { uP: { value: 0 }, uT: { value: 0 } },
     vertexShader: `uniform float uP; varying vec3 vN, vW, vL; void main(){ vec3 p=position; float h=clamp(p.y/.5,0.,1.); p.xz*=1.-.28*uP*(1.-h*.5); p.y*=1.+.12*uP; p.xz*=1.+.08*(1.-uP)*(1.-h)*0.; vL=p; vec4 w=modelMatrix*vec4(p,1.); vW=w.xyz; vN=normalize(mat3(modelMatrix)*normal); gl_Position=projectionMatrix*viewMatrix*w; }`,
-    fragmentShader: `uniform float uT; varying vec3 vN, vW, vL; void main(){ vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vW); float f=pow(1.-abs(dot(N,V)),2.2); float ang=atan(vL.z,vL.x); float r=length(vL.xz);
-      float canal=pow(abs(sin(ang*8.)),24.)*smoothstep(.05,.45,r); float ring=exp(-pow((vL.y-.04)*14.,2.))*.7; float pulse=.7+.3*sin(r*18.-uT*${TAU.toFixed(4)}*2.);
+    fragmentShader: `float sq(float x){return x*x;} float cube(float x){return x*x*x;} uniform float uT; varying vec3 vN, vW, vL; void main(){ vec3 N=normalize(vN); vec3 V=normalize(cameraPosition-vW); float f=pow(1.-abs(dot(N,V)),2.2); float ang=atan(vL.z,vL.x); float r=length(vL.xz);
+      float canal=pow(abs(sin(ang*8.)),24.)*smoothstep(.05,.45,r); float ring=exp(-sq((vL.y-.04)*14.))*.7; float pulse=.7+.3*sin(r*18.-uT*${TAU.toFixed(4)}*2.);
       vec3 base=mix(vec3(.9,.25,.8),vec3(.35,.5,1.),clamp(r*2.2,0.,1.)); vec3 c=base*(.12+f*.9)+vec3(1.,.6,.95)*canal*.9*pulse+vec3(.5,.9,1.)*ring; float a=.25+f*.6+canal*.4; gl_FragColor=vec4(c*a,a); }` });
 }
 

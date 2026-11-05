@@ -258,13 +258,13 @@ const DEC_F = `${NOISE}
 uniform int uKind; uniform float uTime, uInt, uA, uProg, uHeat, uCell, uSeed, uSpin, uGlyphs, uPoly; uniform sampler2D uRamp; varying vec2 vUv;
 ${PER}
 float rune(vec2 p){ float r=length(p); float ang=atan(p.y,p.x)+uSpin; float seg=fract(ang/6.2831853+.5); float rv=smoothstep(uProg*1.02,uProg*.98,seg+.0)*1.;
-  float ring1=exp(-pow((r-.96)*70.,2.)); float ring2=exp(-pow((r-.88)*110.,2.)); float ring3=exp(-pow((r-.5)*80.,2.))*.8; float ring4=exp(-pow((r-.58)*160.,2.))*.5;
+  float ring1=exp(-sq((r-.96)*70.)); float ring2=exp(-sq((r-.88)*110.)); float ring3=exp(-sq((r-.5)*80.))*.8; float ring4=exp(-sq((r-.58)*160.))*.5;
   float cell=floor(seg*uGlyphs); float f=fract(seg*uGlyphs); float h=hash11(cell+uSeed); float gx=(f-.5)*uGlyphs*.0+((f-.5)*6.2831853*.76/uGlyphs)/.07; float gy=(r-.74)/.07;
   float g=0.; if(abs(gy)<1.&&abs(gx)<1.){ float lw=.13; g=max(g,step(abs(gx),lw)*step(abs(gy),.9)*step(.15,h)); g=max(g,step(abs(gy-(h-.5)*1.4),lw)*step(abs(gx),.8)*step(.35,h));
     g=max(g,step(abs(gx-gy*.6),lw)*step(abs(gy),.9)*step(.6,h)); g=max(g,step(length(vec2(gx,gy*.8)-vec2(.0,(h-.5)*.4)),.5)*step(length(vec2(gx,gy*.8)-vec2(.0,(h-.5)*.4)),.5)*(1.-step(length(vec2(gx,gy*.8)),.3))*step(.82,h)); }
   float lit=smoothstep(uProg,uProg-.06,cell/uGlyphs); g*=lit;
-  float a2=mod(atan(p.y,p.x)+uSpin*-1.5,6.2831853/uPoly)-3.14159265/uPoly; float poly=exp(-pow((r*cos(a2)-.5)*110.,2.))*step(r,.62)*.9;
-  float tick=step(.5,fract(ang*36./6.2831853))*exp(-pow((r-.92)*45.,2.))*.4;
+  float a2=mod(atan(p.y,p.x)+uSpin*-1.5,6.2831853/uPoly)-3.14159265/uPoly; float poly=exp(-sq((r*cos(a2)-.5)*110.))*step(r,.62)*.9;
+  float tick=step(.5,fract(ang*36./6.2831853))*exp(-sq((r-.92)*45.))*.4;
   return (ring1+ring2*.7+ring3+ring4+g*1.3+poly+tick)*rv*step(r,1.02); }
 void main(){ vec2 p=vUv*2.-1.; float r=length(p); vec3 col=vec3(0.); float a=0.; bool add=true;
   if(uKind==0){ float n=fbm(vec3(p*3.+uSeed,0.)); float m=smoothstep(1.,.25,r+(n-.5)*.7); float em=smoothstep(.5,.75,fbmT(vec3(p*8.+uSeed,0.),vec3(0.,0.,.3)))*uHeat*smoothstep(.9,.15,r);
@@ -275,7 +275,7 @@ void main(){ vec2 p=vUv*2.-1.; float r=length(p); vec3 col=vec3(0.); float a=0.;
   else if(uKind==3){ float s=rune(p); col=texture2D(uRamp,vec2(clamp(s*.6,0.,1.),.5)).rgb*uInt; a=s; }
   else if(uKind==4){ vec2 vo=voronoi(vec3(p*uCell,uSeed)); float cr=smoothstep(.14,.0,vo.y); float f=fbm(vec3(p*5.,uSeed)); float m=smoothstep(uProg*1.05,uProg*.7,r+(f-.5)*.5)*smoothstep(1.,.85,r);
     vec3 c=mix(vec3(.45,.75,1.),vec3(1.),cr)*(.45+.55*f)*uInt; float aa=m*(.45+.5*cr)*uA; gl_FragColor=vec4(c*aa,aa); return; }
-  else if(uKind==5){ float x=fract(r*uCell-uTime*.5); float s=exp(-pow((x-.5)*5.,2.))*smoothstep(1.,.5,r)*(1.-smoothstep(.0,.2,1.-r)); col=texture2D(uRamp,vec2(clamp(s,0.,1.),.5)).rgb*uInt; a=s; }
+  else if(uKind==5){ float x=fract(r*uCell-uTime*.5); float s=exp(-sq((x-.5)*5.))*smoothstep(1.,.5,r)*(1.-smoothstep(.0,.2,1.-r)); col=texture2D(uRamp,vec2(clamp(s,0.,1.),.5)).rgb*uInt; a=s; }
   float o=a*uA; gl_FragColor=vec4(col*o,o); }`;
 export class Decal extends Prim {
   constructor(fx, p) {

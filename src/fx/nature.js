@@ -286,7 +286,7 @@ export default [
         fragmentShader: `${NOISE} uniform float uPh; varying vec3 vP,vWP;
         void main(){ vec2 p=vP.xz; float r=length(p)/${R.toFixed(2)}; float ang=atan(p.y,p.x); vec2 wp=p+vec2(sin(uPh+p.y*3.),cos(uPh+p.x*3.))*.04;
           vec2 vo=voronoi(vec3(wp*2.8,2.)); float vein=smoothstep(.07,.0,vo.y)*smoothstep(.42,.62,fbm(vec3(wp*1.6,3.))); vec2 vo2=voronoi(vec3(wp*6.,7.)); float v2=smoothstep(.05,.0,vo2.y)*.35*smoothstep(.5,.7,fbm(vec3(wp*2.,9.))); float pulse=.55+.45*sin(uPh+vo.x*6.);
-          float n=fbm(vec3(wp*3.,1.)); vec3 V=normalize(cameraPosition-vWP); vec3 N=normalize(vec3((n-.5)*.15,1.,(fbm(vec3(wp*3.+7.,1.))-.5)*.15)); float F=.04+.96*pow(1.-clamp(dot(N,V),0.,1.),4.);
+          float n=fbm(vec3(wp*3.,1.)); vec3 V=normalize(cameraPosition-vWP); vec3 N=normalize(vec3((n-.5)*.15,1.,(fbm(vec3(wp*3.+7.,1.))-.5)*.15)); float F=.04+.96*sq(sq(1.-clamp(dot(N,V),0.,1.)));
           vec3 R3=reflect(-V,N); vec3 sky=mix(vec3(.04,.05,.03),vec3(.35,.4,.22),clamp(R3.y*1.5,0.,1.)); float spec=pow(max(dot(R3,normalize(vec3(.4,.8,.5))),0.),90.)*1.5;
           vec3 col=vec3(.012,.015,.01)+sky*F*.8+spec; vec3 glow=vec3(.65,1.,.1)*(vein*(.8+pulse*1.2)+v2*pulse*.7)*smoothstep(1.,.5,r); col+=glow;
           float edge=1.-smoothstep(.82,1.,r+(n-.5)*.18); gl_FragColor=vec4(col*edge,edge*.98); }` });

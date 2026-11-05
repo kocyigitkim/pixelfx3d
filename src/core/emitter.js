@@ -135,10 +135,10 @@ void main(){
   else if(uKind==7){ vec2 q=vec2(p.x*1.6,p.y*.8+.0); float dd=length(q*vec2(1.,.55)); a=exp(-dd*dd*3.)*smoothstep(1.,.7,abs(p.y)); col*=1.+.6*smoothstep(.3,-.6,p.y)*0.; }
   else if(uKind==8){ a=max(exp(-abs(p.x)*16.)*exp(-abs(p.y)*2.2),exp(-abs(p.y)*16.)*exp(-abs(p.x)*2.2)); a+=exp(-d*d*20.)*.9; a=clamp(a,0.,1.); }
   else if(uKind==9){ float fl=cos(vU*9.+seed); vec2 q=vec2(p.x,p.y/(.25+.75*abs(fl))); float dd=length(q*vec2(1.,1.4)); a=smoothstep(1.,.82,dd); col*=.65+.5*(fl>0.?1.:.6)*(.6+.4*vnoise(vec3(vUv*4.,seed))); }
-  else if(uKind==10){ float rr=abs(d-.82); a=exp(-rr*rr*90.)*.9+smoothstep(.85,.3,d)*.12; a+=exp(-pow(length(p-vec2(-.35,.4))*5.,2.))*.9; col*=1.; }
+  else if(uKind==10){ float rr=abs(d-.82); a=exp(-rr*rr*90.)*.9+smoothstep(.85,.3,d)*.12; a+=exp(-sq(length(p-vec2(-.35,.4))*5.))*.9; col*=1.; }
   else if(uKind==11){ float n=vnoise(vec3(p*2.2,seed)); a=step(d+(n-.5)*.7,.78); vec3 nr=normalize(vec3(p*.8,.7)); float lam=clamp(dot(nr,normalize(vec3(.4,.8,.5))),0.,1.); col*=.35+.9*lam; col*=.6+.7*vnoise(vec3(p*7.,seed)); }
   else if(uKind==13){ float n=fbm(vec3(vUv*4.+seed,vU)); a=smoothstep(1.,.3,d)*smoothstep(.2,.7,n+.25)*.8; }
-  if(uReal>.5&&uLit>0.){ vec3 N=normalize(vec3(p,sqrt(max(0.,1.-dot(p,p)))+.2)); float wr=max(0.,dot(N,vLd)*.5+.5); float bk=pow(max(0.,-vLd.z),2.)*(1.-N.z)*.6;
+  if(uReal>.5&&uLit>0.){ vec3 N=normalize(vec3(p,sqrt(max(0.,1.-dot(p,p)))+.2)); float wr=max(0.,dot(N,vLd)*.5+.5); float bk=sq(max(0.,-vLd.z))*(1.-N.z)*.6;
     col=pow(max(col,vec3(0.)),vec3(.7)); vec3 L=min(uAmbient*3.5,vec3(.6))*mix(.7,1.3,dot(N,vUp)*.5+.5)+vLc*(wr+bk); col*=mix(vec3(1.),min(L,vec3(2.5)),uLit); } // soot ramps are authored for a 0.1 ambient: lift darks, brighter sky ambient // sphere-normal sprite: wrap diffuse + back-light rim + hemi ambient
   a*=vCol.a*softF(uSoft); if(a<.003) discard;
   gl_FragColor=vec4(col*a,a);

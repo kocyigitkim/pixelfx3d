@@ -6,7 +6,7 @@ const TAU = Math.PI * 2;
 const H = /* glsl */ `
 float trs(float p){ return 1.-abs(1.-2.*p); }                 // 0 -> 1 (covered at p=.5) -> 0
 float ez(float x){ x=clamp(x,0.,1.); return x*x*(3.-2.*x); }
-float ezo(float x){ x=clamp(x,0.,1.); return 1.-pow(1.-x,3.); }
+float ezo(float x){ x=clamp(x,0.,1.); return 1.-cube(1.-x); }
 float ezi(float x){ x=clamp(x,0.,1.); return x*x*x; }
 vec2 hash22(vec2 p){ vec3 p3=fract(vec3(p.xyx)*vec3(.1031,.1030,.0973)); p3+=dot(p3,p3.yzx+33.33); return fract((p3.xx+p3.yz)*p3.zy); }
 `;
@@ -45,7 +45,7 @@ vec3 trans(vec2 uv, vec3 c, float p, float t, float a){
     vec3 m=base*(.22+1.15*df)*(.9+.2*br)+sp2*vec3(1.,.93,.82)*.55*(.7+.3*br);
     float rim=smoothstep(.82,1.,u)*vec3(1.).x; m+=vec3(1.,.95,.88)*rim*.55*sp;  // lit top lip
     m*=mix(1.,.25,smoothstep(.85,1.,-u));                                      // dark lower lip
-    m+=vec3(.5,.7,1.)*pow(1.-abs(u),6.)*.0;
+    m+=vec3(.5,.7,1.)*cube(sq(1.-abs(u)))*.0;
     col=m*(1.-.7*(1.-sp)*(1.-sp));
   }
   return col; }`),
@@ -64,20 +64,20 @@ vec3 trans(vec2 uv, vec3 c, float p, float t, float a){
     // scorched paper ahead of front, white-hot rim, glowing breakup behind it
     float char=smoothstep(.2,.0,d); col=mix(c,c*vec3(.35,.17,.08)*.5,char*char);
     col*=1.-.7*smoothstep(.11,.0,d)*step(0.,d);
-    float rim=exp(-pow(max(d,0.)*55.,2.));
+    float rim=exp(-sq(max(d,0.)*55.));
     vec3 hot=mix(vec3(1.,.3,.04),vec3(1.,.9,.5),rim)*(1.2+3.*rim);
     float inside=step(d,0.);
     float cr=smoothstep(.68,.95,fbm(vec3(q*22.,t*.3)))*smoothstep(-.2,.0,d);
     col=mix(col,ash,inside);
     col+=hot*rim*step(-.006,d)*.8+vec3(1.,.3,.04)*cr*inside*(.8+1.6*smoothstep(-.2,0.,d));
-    col+=vec3(1.,.45,.1)*exp(-pow(max(d,0.)*9.,2.))*.25*(1.-inside);
+    col+=vec3(1.,.45,.1)*exp(-sq(max(d,0.)*9.))*.25*(1.-inside);
     ember=step(d,0.);
   } else {
     // cooling ash curtain peels away: ember glow on the lifting edge
     float cov=step(0.,d); col=mix(c,ash,cov);
-    float rim=exp(-pow(abs(d)*20.,2.)); float cr=smoothstep(.68,.95,fbm(vec3(q*20.,t*.4)))*smoothstep(.3,0.,d)*cov;
+    float rim=exp(-sq(abs(d)*20.)); float cr=smoothstep(.68,.95,fbm(vec3(q*20.,t*.4)))*smoothstep(.3,0.,d)*cov;
     col+=vec3(1.,.4,.08)*(rim*1.4+cr*1.4)*.8;
-    col+=vec3(1.,.3,.05)*exp(-pow(max(-d,0.)*14.,2.))*.25*(1.-cov);
+    col+=vec3(1.,.3,.05)*exp(-sq(max(-d,0.)*14.))*.25*(1.-cov);
   }
   // rising embers
   for(int i=0;i<3;i++){ vec2 cell=floor(q*vec2(26.,14.)*(1.+float(i)*.7)+vec2(float(i)*13.,-t*(1.5+float(i)))); vec2 h=hash22(cell+float(i)*7.1); vec2 f=fract(q*vec2(26.,14.)*(1.+float(i)*.7)+vec2(float(i)*13.,-t*(1.5+float(i))))-h; float e=smoothstep(.12,.0,length(f))*step(.94,hash12(cell+3.3)); col+=vec3(1.,.5,.12)*e*2.*smoothstep(-.1,.2,-abs(d)+.35); }
@@ -102,7 +102,7 @@ vec3 trans(vec2 uv, vec3 c, float p, float t, float a){
   img+=vec3(.35,.5,.45)*off*.12; // blue-green tube tint
   vec3 col=img*inside;
   // bright horizontal line + phosphor bloom
-  float ay=abs(q.y); float lineW=.0022+.012*hs; float core=exp(-pow(ay/lineW,2.));
+  float ay=abs(q.y); float lineW=.0022+.012*hs; float core=exp(-sq(ay/lineW));
   float span=smoothstep(ws*.5+.02,ws*.5-.02,abs(q.x));
   vec3 ph1=vec3(.75,.95,1.);
   col+=ph1*core*span*(0.9+1.4*ez((off-.55)/.45))*step(.45,off);
@@ -133,7 +133,7 @@ vec3 trans(vec2 uv, vec3 c, float p, float t, float a){
     vec3 base=mix(vec3(.05,.07,.16),vec3(.16,.1,.3),hash12(id)); 
     vec3 m=base*(.4+1.3*df)+vec3(.7,.8,1.)*spc*.7*(1.-bev*.5);
     m+=vec3(.9,.95,1.)*(smoothstep(.04,.0,edge)*.9+smoothstep(.035,.0,abs(ap.x-ap.y))*.5*step(.02,r));                                 // lit edge line
-    m+=vec3(.3,.5,1.)*pow(1.-bev,2.)*.0;
+    m+=vec3(.3,.5,1.)*sq(1.-bev)*.0;
     float fac=hash12(id+floor(lp*2.+1.)); m*=.85+.3*fac;
     col=mix(m,c*.0+m,1.);
     // caustic sparkle
@@ -187,8 +187,8 @@ vec3 trans(vec2 uv, vec3 c, float p, float t, float a){
     float rad=clamp(d/(1.6),0.,1.);
     vec3 base=vec3(.06,.065,.075)*(.8+.5*bid);
     float seam=smoothstep(.02,.0,min(u,1.-u))*smoothstep(0.,.12,d);
-    float sheen=pow(max(0.,sin(u*3.14159+bid*2.)),3.)*.55;
-    float spec=pow(max(0.,1.-abs(u-.35-.2*bid)*4.),6.)*.5;
+    float sheen=cube(max(0.,sin(u*3.14159+bid*2.)))*.55;
+    float spec=cube(sq(max(0.,1.-abs(u-.35-.2*bid)*4.)))*.5;
     vec3 m=base*(.6+sheen*2.)+vec3(.9,.92,1.)*spec*.18*(1.-rad*.5);
     m*=1.-seam*.8; m+=vec3(.5,.55,.65)*smoothstep(.08,.0,d)*.9*(0.6+.4*sheen*2.); // lit edge of the blade
     m+=vec3(.7,.75,.9)*.05*fbm(vec3(q*30.,bid));
@@ -256,7 +256,7 @@ vec3 trans(vec2 uv, vec3 c, float p, float t, float a){
   // crack lines before they fall (under the intact glass)
   float cl=smoothstep(.05,.0,edge)*crack*(1.-step(.001,fall));
   col=mix(col,col*.75+vec3(.7,.85,1.)*.55,cl);
-  float ring=exp(-pow((length(P-imp)-s*3.)*4.,2.))*.0;
+  float ring=exp(-sq((length(P-imp)-s*3.)*4.))*.0;
   col+=vec3(.7,.85,1.)*exp(-length(P-imp)*18.)*(1.-ez(s*4.))*s*3.;          // impact flash
   col=mix(col,vec3(0.),smoothstep(.97,1.,fall)*0.);
   return col; }`),
@@ -279,17 +279,17 @@ vec3 trans(vec2 uv, vec3 c, float p, float t, float a){
   vec3 col=mix(bg,img,mix(1.,ok,cutDone));
   float d=abs(sd);
   // cut edges glow (white-hot core, orange falloff), brightest at the blade tip
-  float w=mix(.004,.02,ez(s*4.)); float edgeA=exp(-pow(d/w,2.))*cutDone*(1.-ez((s-.3)*2.2))*0.;
+  float w=mix(.004,.02,ez(s*4.)); float edgeA=exp(-sq(d/w))*cutDone*(1.-ez((s-.3)*2.2))*0.;
   float nearEdge=abs(sdm);
   float hot=exp(-nearEdge*nearEdge/(w*w+.0004))*step(0.,sdm*side)*ok*cutDone*(1.-ez((s-.12)*1.6));
   col+=vec3(1.,.55,.2)*hot*2.2+vec3(1.)*exp(-nearEdge*nearEdge*40000.)*ok*cutDone*(1.-ez((s-.1)*3.))*3.;
   col*=1.-.4*smoothstep(.08,.0,nearEdge)*cutDone*ok*0.;
   // the blade streak itself
-  float tip=exp(-pow((al-head)*9.,2.))*exp(-pow(d*26.,2.))*step(s,.2);
-  float tail=smoothstep(.9,.0,(head-al)/ (L*.9))*step(al,head)*exp(-pow(d*60.,2.))*step(s,.22);
+  float tip=exp(-sq((al-head)*9.))*exp(-sq(d*26.))*step(s,.2);
+  float tail=smoothstep(.9,.0,(head-al)/ (L*.9))*step(al,head)*exp(-sq(d*60.))*step(s,.22);
   col+=vec3(.8,.95,1.)*(tip*5.+tail*3.);
   // slash flash
-  col+=vec3(.7,.8,1.)*.25*exp(-pow((s-.04)*30.,2.));
+  col+=vec3(.7,.8,1.)*.25*exp(-sq((s-.04)*30.));
   // sparks along the cut
   vec2 cell=floor(vec2(al*40.,sd*40.)+vec2(0.,-floor(t*30.))); float sp=step(.985,hash12(cell))*exp(-d*6.)*cutDone*(1.-ez((s-.1)*3.));
   col+=vec3(1.,.8,.4)*sp*3.;

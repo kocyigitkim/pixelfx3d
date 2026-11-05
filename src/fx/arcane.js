@@ -219,7 +219,7 @@ export default [
   { id: 'arcane/time-stop', name: 'Time stop', category: 'arcane', loop: false, duration: 3.6, body: true, stage: { sky: 'dusk', view: { pos: [2.2, 1.5, 5.0], target: [0, 1.25, 0], fov: 44 }, bloom: 0.45 },
     screen: { glsl: `vec3 trans(vec2 uv, vec3 c, float p, float t, float a){
       float g=smoothstep(.27,.34,p)*(1.-smoothstep(.62,.72,p)); float l=dot(c,vec3(.3,.55,.15)); vec3 gray=vec3(l)*vec3(.9,.95,1.15);
-      vec3 o=mix(c,gray,g*.92); float fl=exp(-pow((p-.28)*30.,2.)); o=mix(o,vec3(1.)-o,fl*.25); float sh=exp(-pow((p-.66)*22.,2.)); o+=vec3(.7,.8,1.)*sh*.35;
+      vec3 o=mix(c,gray,g*.92); float fl=exp(-sq((p-.28)*30.)); o=mix(o,vec3(1.)-o,fl*.25); float sh=exp(-sq((p-.66)*22.)); o+=vec3(.7,.8,1.)*sh*.35;
       float v=smoothstep(.9,.2,length((uv-.5)*vec2(a,1.))); o*=mix(1.,v,g*.5); return o; }` },
     build(fx) {
       const TF = 1.0, TC = 1.7, TS = 2.3; const crack = { value: 0 }, tex = clockTexture();

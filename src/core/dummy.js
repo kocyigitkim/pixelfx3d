@@ -29,7 +29,7 @@ export function makeBodyMaterial(u, color = '#8d939c', params = {}) {
       { vec3 Nn=normalize(vNormal); vec3 Vv=normalize(vViewPosition); float fr=pow(1.-abs(dot(Nn,Vv)),2.6); gl_FragColor.rgb+=uRim*fr*uRimAmt+uEmit; }
       if(uScan>-5.){ float d=abs(vBW.y-uScan); gl_FragColor.rgb+=uScanCol*exp(-d*d*900.)*5.+uScanCol*step(vBW.y,uScan)*.18*(.5+.5*sin(vBW.y*160.)); }
       if(uHolo>0.){ float sl=.55+.45*sin(vBW.y*220.-uTime*8.); vec3 Nn=normalize(vNormal); vec3 Vv=normalize(vViewPosition); float fr=pow(1.-abs(dot(Nn,Vv)),1.6); gl_FragColor.rgb=mix(gl_FragColor.rgb,uScanCol*(.35+fr*2.5)*sl,uHolo); gl_FragColor.a*=mix(1.,.35+fr*.65,uHolo); }
-      gl_FragColor.rgb+=uTint*uGlow*(.2+.8*pow(1.-abs(dot(normalize(vNormal),normalize(vViewPosition))),2.));
+      gl_FragColor.rgb+=uTint*uGlow*(.2+.8*sq(1.-abs(dot(normalize(vNormal),normalize(vViewPosition)))));
       gl_FragColor.a*=uAlpha;
       #include <dithering_fragment>`);
   };

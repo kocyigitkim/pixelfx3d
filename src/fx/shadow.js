@@ -138,9 +138,9 @@ export default [
           float disk=smoothstep(R+.003,R-.004,d); vec3 sun=vec3(2.2,1.9,1.4)*disk;
           float cor=exp(-(d-R)*(d>R?9.:0.)); float st=fbm(vec3(cos(ang)*2.2+cos(w)*.4,sin(ang)*2.2+sin(w)*.4,(d-R)*5.));
           float streak=pow(st,1.6)*2.6*(.7+.3*sin(w+ang*3.)); vec3 corona=vec3(.85,.78,1.)*(cor*cor*cor*.8+streak*.55*exp(-(d-R)*7.))*step(R*.9,d);
-          float rim=exp(-pow((d-R)*60.,2.))*.9;
-          float ba=.9+sin(w)*.25; float bd=length(p-(R*1.0)*vec2(cos(ba),sin(ba))); float bead=exp(-bd*bd*5000.)*(0.8+1.6*pow(.5+.5*sin(w),2.)); vec3 beadc=vec3(1.8,1.6,1.5)*bead;
-          vec3 col=sky+sun+corona+vec3(1.,.8,.7)*rim*.8+beadc; col=mix(col,vec3(0.,0.,.004)+vec3(.1,.06,.18)*exp(-pow((dm-R*1.04)*50.,2.))*.7,moon);
+          float rim=exp(-sq((d-R)*60.))*.9;
+          float ba=.9+sin(w)*.25; float bd=length(p-(R*1.0)*vec2(cos(ba),sin(ba))); float bead=exp(-bd*bd*5000.)*(0.8+1.6*sq(.5+.5*sin(w))); vec3 beadc=vec3(1.8,1.6,1.5)*bead;
+          vec3 col=sky+sun+corona+vec3(1.,.8,.7)*rim*.8+beadc; col=mix(col,vec3(0.,0.,.004)+vec3(.1,.06,.18)*exp(-sq((dm-R*1.04)*50.))*.7,moon);
           float a=edge*clamp(max(moon,max(col.r,max(col.g,col.b))),0.,1.); gl_FragColor=vec4(col*edge,a); }` });
       m.blending = THREE.CustomBlending; m.blendSrc = THREE.OneFactor; m.blendDst = THREE.OneMinusSrcAlphaFactor;
       const pl = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), m); pl.position.set(0, 3, -4); pl.renderOrder = 5;

@@ -91,9 +91,9 @@ export default [
       const u = { uSpin: { value: 0 }, uInt: { value: 1.1 } };
       const m = new THREE.Mesh(new THREE.CircleGeometry(1, 64), new THREE.ShaderMaterial({ uniforms: u, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
         vertexShader: 'varying vec2 vP; void main(){ vP=position.xy; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
-        fragmentShader: `uniform float uSpin, uInt; varying vec2 vP; void main(){ float r=length(vP), a=atan(vP.y,vP.x); float N=12.; float x=fract(a*N/6.2831853+uSpin); float R=.7+.28*x*x; if(r>R) discard;
+        fragmentShader: `float sq(float x){return x*x;} float cube(float x){return x*x*x;} uniform float uSpin, uInt; varying vec2 vP; void main(){ float r=length(vP), a=atan(vP.y,vP.x); float N=12.; float x=fract(a*N/6.2831853+uSpin); float R=.7+.28*x*x; if(r>R) discard;
           float rim=smoothstep(R-.16,R,r); float edge=smoothstep(R-.03,R,r); float hole=smoothstep(.2,.26,r); float spokes=.5+.5*cos((a+uSpin*6.2831853/N)*6.); vec3 body=vec3(.05,.35,.5)*(.4+.6*spokes)*hole;
-          vec3 c=body+vec3(.4,1.,1.2)*rim*rim*2.+vec3(1.)*edge*2.5+vec3(.2,.8,1.)*exp(-pow((r-.26)*14.,2.))*1.5; gl_FragColor=vec4(c*uInt*hole,1.); }` }));
+          vec3 c=body+vec3(.4,1.,1.2)*rim*rim*2.+vec3(1.)*edge*2.5+vec3(.2,.8,1.)*exp(-sq((r-.26)*14.))*1.5; gl_FragColor=vec4(c*uInt*hole,1.); }` }));
       m.position.set(0, 1.2, 0); m.scale.setScalar(0.5); m.rotation.set(0.5, -0.55, 0); fx.mesh(m, (t, pr, f, w, o) => { u.uSpin.value = pr * 3; }, {});
       fx.ribbon({ points: [[-2.4, 1.2, 0], [-0.3, 1.2, 0]], n: 14, width: (u2) => 0.2 * Math.pow(u2, 1.2), head: () => 1.001, tail: 1, intensity: 0.7, flicker: 0.4, ramp: [[0, '#bff'], [0.4, '#28b8ff'], [1, '#04306a']] });
       glow(fx, { pos: [0, 1.2, 0], size: 1.3, c0: '#8cf', c1: '#1070e0', intensity: 0.28, pulse: [0.05, 50] });

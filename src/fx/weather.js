@@ -75,7 +75,7 @@ export default [
               float v=vUv.y;
               float body=smoothstep(0.,.07,v)*exp(-v*2.3);
               float fold=.45+.9*fbm(vec3(x*.08+uSeed,v*1.5,tc*.9));
-              float edge=exp(-pow(v*9.,2.))*1.2; // bright lower hem
+              float edge=exp(-sq(v*9.))*1.2; // bright lower hem
               float I=(body*rays*fine*fold+edge*rays*.8);
               vec3 green=vec3(.1,1.,.45), teal=vec3(.1,.8,.8), vio=vec3(.65,.2,1.), pink=vec3(1.,.25,.6);
               vec3 c=mix(green,teal,smoothstep(.1,.4,v)); c=mix(c,vio,smoothstep(.35,.75,v)); c=mix(c,pink,smoothstep(.8,1.,v)*.6);
