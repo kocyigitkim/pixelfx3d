@@ -78,16 +78,16 @@ export default [
   /* ------------------------------------------------ frost nova */
   { id: 'ice/frost-nova', name: 'Frost nova', category: 'ice', loop: false, duration: 3.4, body: true, stage: { sky: 'night', bloom: 0.45, view: { pos: [4.2, 3.0, 5.2], target: [0, 0.7, 0], fov: 44 } },
     build(fx) {
-      const IMP = 0.35, SPK = 8, spikeMat = () => new THREE.MeshStandardMaterial({ color: '#cfe6ff', roughness: 0.15, metalness: 0, emissive: '#3a6a9a', emissiveIntensity: 0.4 });
+      const IMP = 0.35, SPK = 8, spikeMat = () => new THREE.MeshStandardMaterial({ color: '#cfe6ff', roughness: 0.1, metalness: 0.05, emissive: '#5a8ac0', emissiveIntensity: 0.7 });
       // anticipation: cold mist gathers, frost decal starts
       fx.emitter({ count: 30, kind: 'smoke', blend: 'normal', lit: 1, shape: 'ring', radius: 1.4, radiusIn: 0.4, pos: [0, 0.15, 0], dir: [0, 0.3, 0], spread: 0.4, radial: -0.5, speed: [0.8, 2], life: [1.6, 2.2], size: [0.6, 1.4], drag: 0.9, ramp: [[0, '#b8d0e0', 0], [0.2, '#b8d0e0', 0.34], [1, '#4a6a8c', 0]], emit: 0.3, order: -1, turb: [0.3, 0.7] });
-      fx.decal({ kind: 'frost', t0: 0, dur: 3.0, r: [3.2, 3.2], cells: 7, reveal: 0.3, fade: [0.15, 1.1], intensity: 1.0, ramp: [[0, '#0a1a2a'], [0.5, '#8fcfff'], [1, '#eaf6ff']] });
+      fx.decal({ kind: 'frost', t0: 0, dur: 3.0, r: [3.2, 3.2], cells: 7, reveal: 0.3, fade: [0.15, 1.1], intensity: 0.5, alpha: 0.8, ramp: [[0, '#0a1a2a'], [0.5, '#8fcfff'], [1, '#eaf6ff']] });
       // impact at IMP: directional push, shock ring, spikes, cold flash
       fx.impact({ t: IMP, strength: 0.7, dir: [0, -1, 0], pos: [0, 0, 0] });
-      const sh = fx.erode({ geo: ringSheet({ r0: 0.6, r1: 1 }), erode: [0, 1], scroll: [1, 0], blend: 'add', intensity: 1, ramp: [[0, '#cfe6ff'], [1, '#ffffff']], t0: IMP, dur: 0.6 });
+      const sh = fx.erode({ geo: ringSheet({ r0: 0.6, r1: 1 }), erode: [.25, 1], tile: [6, 1], scroll: [1.5, 0], blend: 'add', intensity: .4, ramp: [[0, '#cfe6ff'], [1, '#ffffff']], t0: IMP, dur: 0.6 });
       fx.on((t) => { const k = Math.max(0, (t - IMP) / 0.6), s = 0.3 + 4 * (1 - Math.exp(-k * 6)); sh.obj.scale.set(s, 1, s); }); // fast -> slow expansion
       for (let i = 0; i < SPK; i++) {
-        const a = (i / SPK) * Math.PI * 2, th = 0.35, sp = new THREE.Mesh(cone({ r0: 0.18, r1: 0, h: 0.9 }), spikeMat());
+        const a = (i / SPK) * Math.PI * 2, th = 0.5, sp = new THREE.Mesh(cone({ r0: 0.18, r1: 0, h: 0.9 }), spikeMat());
         sp.position.set(Math.cos(a) * 1.1, 0, Math.sin(a) * 1.1); sp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(Math.cos(a) * Math.sin(th), Math.cos(th), Math.sin(a) * Math.sin(th)));
         fx.mesh(sp, (t, pr, f, w, obj) => { obj.scale.set(1, Math.max(1e-3, sm(IMP, IMP + 0.2, t)), 1); }, { t0: IMP, dur: 1.4 }); // erupt 0.2 s; hidden at 1.75 (shatter)
       }

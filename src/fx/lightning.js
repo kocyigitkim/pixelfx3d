@@ -108,10 +108,10 @@ export default [
       [TS - 0.2, TS - 0.1].forEach((t0, i) => fx.bolt({ t0, dur: 0.08, fade: [0, 0.02], from: [0.4 - 0.5 * i, 7.5, -0.2], to: G, jag: 0.2, branches: 2, branchLen: 0.2, width: 0.02, rate: 30, flicker: 0.4, ramp: BOLT, intensity: 0.6 })); // pre-leaders
       fx.bolt({ t0: TS, dur: 0.035, fade: [0, 0], from: [0.3, 7.5, -0.3], to: G, jag: 0.16, branches: 6, branchLen: 0.22, width: 0.06, rate: 40, flicker: 0.3, ramp: BOLT, intensity: 8 });
       [[0.06, 4], [0.12, 3], [0.18, 2]].forEach(([dt, I], i) => fx.bolt({ t0: TS + dt, dur: 0.03, fade: [0, 0], from: [-0.2 + 0.1 * i, 7.5, 0.2], to: G, jag: 0.18, branches: 4, branchLen: 0.22, width: 0.05, rate: 35, flicker: 0.4, ramp: BOLT, intensity: I })); // restrikes
-      fx.light({ color: '#dfe8ff', intensity: 400, pos: [0, 2.2, 0.8], range: 12, t0: TS - 0.02, dur: 1.2, env: (t) => ENV.impact(t - TS, 10) });
+      fx.light({ color: '#dfe8ff', intensity: 80, pos: [0, 2.2, 0.8], range: 12, t0: TS - 0.02, dur: 1.2, env: (t) => ENV.impact(t - TS, 12) });
       fx.flash(TS, 0.2, '#e6ecff', 0.15); fx.shake(TS, 0.6, 0.09);
       fx.impact({ t: TS, strength: 1, dir: [0, -1, 0], pos: G });
-      fx.ring({ t0: TS, dur: 0.9, r: [0.2, 5.5], width: [0.5, 0.12], normal: 'up', intensity: 1.5, fill: 0.2, ramp: [[0, '#fff'], [0.4, '#aab8ff'], [1, '#3a2cc0']] });
+      fx.ring({ t0: TS, dur: 0.9, r: [0.2, 5.5], width: [0.25, 0.06], normal: 'up', intensity: 0.3, fill: 0, ramp: [[0, '#dfe8ff'], [1, '#3a4a8a']] });
       fx.decal({ kind: 'scorch', t0: TS, dur: 2.0, r: [1.8, 2.2], fade: [0.05, 1.0], heat: [0, 0], alpha: 0.9, ramp: [[0, '#000'], [1, '#000']] });
       fx.decal({ kind: 'cracks', t0: TS, dur: 2.0, r: [2.6, 3.0], fade: [0.05, 1.0], heat: [1, 0], reveal: 0.3, cells: 4, ramp: [[0, '#001'], [0.5, '#8ab4ff'], [1, '#f0f6ff']] });
       fx.emitter({ count: 40, kind: 'spark', shape: 'sphere', radius: 0.15, pos: [0, 0.2, 0], dir: [0, 1, 0], spread: 1.5, speed: [4, 11], life: [0.4, 1.2], gravity: [0, -9, 0], size: [0.09, 0.03], stretch: 1.4, ramp: sparkRamp, intensity: 3, delay: TS, bounce: 0.35 });

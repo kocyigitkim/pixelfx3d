@@ -123,7 +123,7 @@ Use `sq()` instead of `pow(x,int)` and guard every `normalize` (Metal NaN).
 
 **Output (straight alpha)**
 - Atlas A: `rgb = C_{+x,+y,+z} / max(alpha, 1e-3)`, `a = alpha`
-- Atlas B: `rgb = C_{−x,−y,−z} / max(alpha, 1e-3)`, `a = E / emax`
+- Atlas B: `rgb = C_{−x,−y,−z} / max(alpha, 1e-3)`, `a = pow(E / emax, .7)` with emax = the true max of E over all 64 frames (measured per bake, written to the manifest); the runtime only multiplies back by emax, the .7 curve stays baked in
 - Where alpha < 2/255, set the rgb weights to 0.5. Neutral weights prevent dark halos.
 - Frame i goes to column i%8, row ⌊i/8⌋, row 0 at the top of the PNG.
 - Each frame renders into an RGBA8 target tile (viewport/scissor). Then one `readPixels` → base64 → node. Node flips the rows and encodes the PNG with `png.mjs`. Never encode through a browser canvas: it premultiplies and destroys rgb where a≈0.

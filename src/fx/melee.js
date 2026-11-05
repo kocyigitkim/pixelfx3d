@@ -15,7 +15,7 @@ export function bladeTable(fx, t0, t1, len, rotY, step = 1 / 90) {
 }
 const SW_V = `attribute float aAge, aV; varying float vAge, vV; void main(){ vAge=aAge; vV=aV; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
 const SW_F = `float sq(float x){return x*x;} float cube(float x){return x*x*x;} uniform vec3 uC0, uC1, uC2; uniform float uInt, uA, uEdge, uNorm; varying float vAge, vV; uniform sampler2D tNoise;
-void main(){ float a=clamp(vAge,0.,1.); float fall=pow(max(1.-a,0.),1.7); float e=pow(max(vV,0.),uEdge)*.9+.12*vV; float fin=smoothstep(0.,.05,a)*.6+.4; float b=fall*e*uA*uInt; float en=texture2D(tNoise, vec2(vAge*2., vV)).a; float ea=vAge*.9; float ero=smoothstep(ea,ea+.2,en)*(1.+2.*exp(-vAge*12.)); b*=ero;
+void main(){ float a=clamp(vAge,0.,1.); float fall=pow(max(1.-a,0.),1.7); float e=pow(max(vV,0.),uEdge)*.9+.12*vV; float fin=smoothstep(0.,.05,a)*.6+.4; float b=fall*e*uA*uInt; float en=texture2D(tNoise, vec2(vAge*2., vV)).a; float ea=vAge*.6-.15; float ero=smoothstep(ea,ea+.35,en)*(1.+2.*exp(-vAge*12.)); b*=ero;
   vec3 c=a<.35?mix(uC0,uC1,a/.35):mix(uC1,uC2,(a-.35)/.65); c=mix(c,uC0,cube(sq(max(vV,0.)))*.6); if(uNorm>.5){ float na=clamp(fall*smoothstep(0.,.35,vV)*uA*uInt*ero,0.,1.); gl_FragColor=vec4(c*na,na); } else gl_FragColor=vec4(c*b,1.); }`;
 /** swept blade surface between two points on the weapon (inner/outer len). Fades by itself after t1. */
 export function sweepSurface(fx, A, B, o) {
@@ -64,7 +64,7 @@ export default [
       // anticipation: faint glint at the blade tip, 0.1 s before the hit
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: B(T - 0.1), size: [0.5, 0.3], life: [0.12, 0.12], ramp: [[0, '#fff'], [1, '#9cf', 0]], intensity: 1.5, delay: T - 0.1, t0: T - 0.12, emit: 0.001 });
       // secondary volume: crescent in the swing plane (rotated x 90 deg, so arc angle a = -theta), dark steel rim
-      fx.erode({ geo: slash({ R: 1.05, a0: -0.9, a1: 0.2, w: 0.4, curl: 0.3 }), rotate: [Math.PI / 2, 0, 0], pos: H, blend: 'normal', ramp: [[0, '#3a4450', 0.6], [1, '#1a1e24', 0]], intensity: 0.5, erode: [0.1, 1], tile: [2, 1], channel: 'a', soft: 0.3, t0: T, dur: 0.3, fade: [0, 0.1] });
+      fx.erode({ geo: slash({ R: 1.05, a0: -0.9, a1: 0.2, w: 0.4, curl: 0.3 }), rotate: [Math.PI / 2, 0, 0], pos: H, blend: 'normal', ramp: ['#1a1c22', '#3a3f4a', '#000000'], intensity: 0.8, erode: [0.05, 0.9], tile: [2, 1], channel: 'a', soft: 0.3, t0: T, dur: 0.3, fade: [0, 0.1] });
       // contact: sparks, 2-frame glint, light spike (ENV.impact, peak 4x of 30 = 120 = TIER 2 light)
       fx.emitter({ count: 30, kind: 'spark', shape: 'point', pos: C, dir: [0.5, 0.35, 0.8], spread: 1.2, speed: [2, 9], life: [0.25, 0.6], gravity: [0, -9, 0], size: [0.07, 0.02], stretch: 1.6, ramp: [[0, '#fff'], [0.4, '#ffd070'], [1, '#a40', 0]], intensity: 4, bounce: C[1] < 0.5 ? 0.3 : -1, delay: T, t0: T - 0.02, emit: 0.001 });
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: C, size: [0.3, 0.3], life: [0.05, 0.05], ramp: [[0, '#fff'], [1, '#9cf', 0]], intensity: 6, delay: T, t0: T - 0.02, emit: 0.001 });

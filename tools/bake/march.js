@@ -7,7 +7,7 @@ import { toB64 } from './noise.js';
 // Shadow volumes and orthographic raymarch for one preset (docs/PLAN4.md §3, S4).
 const VERT = 'void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }';
 const LUM = 'vec3(.2126, .7152, .0722)';
-// fireRamp: the six FIRE stops of src/fx/fire.js (hex to 0..1), piecewise linear over T.
+// fireRamp: the six FIRE stops of src/fx/fire.js (hex to 0..1), piecewise linear; t=0 is white-hot, so the march passes 1-T.
 const RAMP = /* glsl */ `
 vec3 fireRamp(float t){
   t = clamp(t, 0., 1.);
@@ -49,12 +49,12 @@ void main(){
     float rho = s.r * smoothstep(0., 4. / uN, edge);
     float a = 1. - exp(-uSig * rho * dz);
     C += Tv * a * .9 * sample3(tL, p).xyz;
-    ${isB ? `E += Tv * dot(fireRamp(s.g), ${LUM}) * uSig * rho * dz;` : ''}
+    ${isB ? `E += Tv * dot(fireRamp(1. - s.g), ${LUM}) * uSig * rho * dz;` : ''}
     Tv *= 1. - a;
   }
   float alpha = 1. - Tv;
   vec3 rgb = alpha < 2. / 255. ? vec3(.5) : C / max(alpha, 1e-3);
-  gl_FragColor = vec4(rgb, ${isB ? 'clamp(E / uEmax, 0., 1.)' : 'alpha'});
+  gl_FragColor = vec4(rgb, ${isB ? 'uEmax < 0. ? E : clamp(E / uEmax, 0., 1.)' : 'alpha'}); // uEmax < 0: raw E (half-float B, normalized on the CPU)
 }`;
 
 function makeShadow(preset, sim) {
@@ -68,7 +68,7 @@ function makeShadow(preset, sim) {
   const M = { ...U, tS, uSig, uF: { value: F }, uOrig: { value: new THREE.Vector2() } };
   sh.M = M;
   sh.mA = mk(march(preset.N, false), { ...M, tL: { value: null }, uEmax: { value: 1 } });
-  sh.mB = mk(march(preset.N, true), { ...M, tL: { value: null }, uEmax: { value: preset.emissive ? 4 : 1 } });
+  sh.mB = mk(march(preset.N, true), { ...M, tL: { value: null }, uEmax: { value: preset.emissive ? -1 : 1 } });
   return sh;
 }
 
@@ -101,10 +101,10 @@ export function renderFrame(renderer, sim, preset, tileIdx, targetA, targetB, sh
 }
 
 export function bakePreset(renderer, name, preset, seed) {
-  const t0 = performance.now(), atlas = preset.atlas, emax = preset.emissive ? 4 : 1;
+  const t0 = performance.now(), atlas = preset.atlas;
   const sim = new Sim(renderer, preset, seed);
   const opt = { type: THREE.UnsignedByteType, format: THREE.RGBAFormat, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false };
-  const A = new THREE.WebGLRenderTarget(atlas, atlas, opt), B = new THREE.WebGLRenderTarget(atlas, atlas, opt);
+  const A = new THREE.WebGLRenderTarget(atlas, atlas, opt), B = new THREE.WebGLRenderTarget(atlas, atlas, preset.emissive ? { ...opt, type: THREE.HalfFloatType } : opt);
   const steps = Math.round(preset.sec * 60);
   let f = 0;
   for (let i = 1; i <= steps; i++) {
@@ -114,7 +114,22 @@ export function bakePreset(renderer, name, preset, seed) {
   }
   const bufA = new Uint8Array(atlas * atlas * 4), bufB = new Uint8Array(atlas * atlas * 4);
   renderer.readRenderTargetPixels(A, 0, 0, atlas, atlas, bufA);
-  renderer.readRenderTargetPixels(B, 0, 0, atlas, atlas, bufB);
+  let emax = 1;
+  if (!preset.emissive) renderer.readRenderTargetPixels(B, 0, 0, atlas, atlas, bufB);
+  else {
+    // B holds raw E: emax = true max over all 64 frames (deterministic for a fixed sim), a = pow(E/emax, .7).
+    // The runtime only multiplies back by emax (e = B.a*emax); the .7 curve is baked in so mid-range flames show.
+    const hf = new Uint16Array(atlas * atlas * 4), f = THREE.DataUtils.fromHalfFloat;
+    renderer.readRenderTargetPixels(B, 0, 0, atlas, atlas, hf);
+    let m = 0;
+    for (let i = 3; i < hf.length; i += 4) m = Math.max(m, f(hf[i]));
+    emax = Number(Math.max(m, 1e-3).toPrecision(4));
+    const q = (x) => Math.round(Math.min(Math.max(x, 0), 1) * 255);
+    for (let i = 0; i < hf.length; i += 4) {
+      bufB[i] = q(f(hf[i])); bufB[i + 1] = q(f(hf[i + 1])); bufB[i + 2] = q(f(hf[i + 2]));
+      bufB[i + 3] = q(Math.pow(Math.min(f(hf[i + 3]) / emax, 1), .7));
+    }
+  }
   const ms = Math.round(performance.now() - t0);
   const sh = sim.shadow;
   if (sh) { sh.plus.dispose(); sh.minus.dispose(); sh.quad.dispose(); for (const m of [sh.mP, sh.mM, sh.mA, sh.mB]) m.dispose(); }

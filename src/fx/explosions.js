@@ -130,16 +130,16 @@ export default [
       fx.light({ color: '#ffb060', intensity: 40, pos: [0, 0.4, 0], range: 8, t0: TB - 0.1, dur: 0.1, main: false, env: (t) => ENV.anticip(t, TB - 0.1, TB) });
       // impact at TB: 2-frame flash, shock, cluster, streaks, debris, dust crown, decals, smoke
       fx.impact({ t: TB, strength: 0.8, dir, pos: G });
-      fx.light({ color: '#fff0d8', intensity: 120, pos: [0, 0.4, 0], range: 16, env: (t) => 4 * ENV.impact(t - TB, 2) });
+      fx.light({ color: '#fff0d8', intensity: 18, pos: [0, 0.4, 0], range: 16, env: (t) => 4 * ENV.impact(t - TB, 6) });
       fx.emitter({ count: 1, kind: 'soft', blend: 'add', shape: 'point', pos: G, speed: 0, life: [0.05, 0.05], size: [0.5, 0.5], ramp: [[0, '#fff6e0', 1], [1, '#ffd0a0', 0.6]], intensity: 8, delay: TB, emit: 0.001 });
       fx.flash(TB, 0.1, '#ffd090', 0.08);
       fx.emitter({ count: 6, tex: 'explosion-fireball', shape: 'sphere', radius: 0.6, dir: [0, 1, 0], spread: 1, speed: [0.3, 1.2], life: [0.5, 0.55], size: [1.5, 1.0], sizePow: 0.5, ramp: fx.pal(HOT), intensity: 0.8, delay: TB, emit: 0.05, pos: G });
-      const sh = fx.erode({ geo: ringSheet({ r0: 0.6, r1: 1 }), erode: [0, 1], scroll: [1, 0], blend: 'add', intensity: 0.8, ramp: HOT, pos: G, t0: TB, dur: 0.45 });
+      const sh = fx.erode({ geo: ringSheet({ r0: 0.6, r1: 1 }), erode: [.25, 1], tile: [6, 1], scroll: [1.5, 0], blend: 'add', intensity: .4, ramp: HOT, pos: G, t0: TB, dur: 0.45 });
       fx.on((t) => { const s = 0.3 + 3.7 * Math.min(1, Math.max(0, (t - TB) / 0.45)); sh.obj.scale.set(s, 1, s); }); // shock 0.3 -> 4 over 0.45 s
-      fx.ring({ refract: 0.02, dark: 0.3, t0: TB, dur: 0.8, r: [0.2, 4.5], width: [0.45, 0.12], normal: 'up', pos: [0, 0.02, 0], intensity: 0.8, fill: 0.15, ramp: [[0, '#fff'], [0.4, '#fc9'], [1, '#a50']] });
+      fx.ring({ refract: 0.02, dark: 0.3, t0: TB, dur: 0.8, r: [0.2, 4.5], width: [0.22, 0.06], normal: 'up', pos: [0, 0.02, 0], intensity: 0.3, fill: 0, ramp: [[0, '#ffd9a0'], [0.5, '#ff9a40'], [1, '#7a2a08']] });
       for (let i = 0; i < 3; i++) fx.emitter({ count: 20, kind: 'spark', shape: 'sphere', radius: 0.1, dir: [0, 0.3, 0], spread: 1.9, speed: [14, 28], life: [0.2, 0.45], size: [0.45, 0.03], stretch: 2, ramp: [[0, '#fff'], [0.4, '#ffd070'], [1, '#a40', 0]], intensity: 0.8, delay: TB, pos: [0, 0.4, 0] });
       fx.debris({ count: 24, pos: G, speed: [3, 7], spread: 0.8, size: [0.04, 0.1], life: 2.2, color: '#5a4a3a', t0: TB });
-      fx.emitter({ count: 36, kind: 'dust', blend: 'normal', shape: 'ring', radius: 1.0, radiusIn: 0.6, dir: [0, 0.3, 0], spread: 0.3, radial: 1, speed: [1.5, 3], life: [1.2, 1.8], size: [0.8, 1.4], ramp: [[0, '#6b5d4a', 0], [0.3, '#8a7a62', 0.35], [1, '#40382c', 0]], order: -1, delay: TB, emit: 0.1, pos: G });
+      fx.emitter({ count: 25, kind: 'dust', blend: 'normal', shape: 'ring', radius: 1.0, radiusIn: 0.6, dir: [0, 0.3, 0], spread: 0.3, radial: 1, speed: [1.5, 3], life: [1.2, 1.8], size: [1.12, 1.96], ramp: [[0, '#5a4a3a', 0], [0.3, '#3a3028', 0.35], [1, '#2a2420', 0]], intensity: 0.6, order: -1, delay: TB, emit: 0.1, pos: G });
       fx.decal({ kind: 'scorch', t0: TB + 0.05, dur: fx.duration - TB - 0.06, r: [2.2, 2.8], fade: [0.15, 1.6], heat: [1, 0], ramp: [[0, '#300'], [0.5, '#f40'], [1, '#fc8']], pos: [0, 0.01, 0] });
       fx.decal({ kind: 'cracks', t0: TB, dur: 3.5, r: [2.6, 3.2], fade: [0.1, 2.4], heat: [1, 0.1], reveal: 0.4, cells: 4, pos: [0, 0.01, 0] });
       fx.emitter({ count: 60, kind: 'smoke', blend: 'normal', lit: 1, order: -1, shape: 'sphere', radius: 0.6, dir: [0, 1, 0], spread: 0.8, speed: [0.8, 3], life: [1.5, 2.2], size: [1.4, 4.5], delay: TB + 0.05, emit: 0.6, drag: 0.9, gravity: [0, 0.8, 0], turb: [0.5, 0.5], pos: [0, 0.6, 0], ramp: DSMOKE }); // mushroom, gone by TB+3

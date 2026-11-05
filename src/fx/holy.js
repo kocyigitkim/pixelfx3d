@@ -93,9 +93,9 @@ export default [
       fx.decal({ kind: 'rune', r: [1.2, 1.2], glyphs: 12, poly: 6, spin: 0.4, reveal: 0.4, t0: 0, dur: 1.9, fade: [0.3, 0.8], ramp: [[0, '#8a5000'], [0.5, '#ffc040'], [1, '#fff4c8']], intensity: 1.2 });
       fx.emitter({ count: 30, kind: 'glint', shape: 'sphere', radius: 1.2, pos: [0, 1.0, 0], radial: -1, speed: [1, 2], life: [0.4, 0.6], size: [0.08, 0.03], ramp: [[0, '#fff', 0], [0.3, '#fff6e0', 1], [1, '#e8c890', 0]], intensity: 2, emit: 0.4 }); // motes gather to the body
       for (const s of [1, -1]) { // two counter-rotating spirals: scroll flips direction
-        fx.erode({ geo: spiral({ turns: 1.5, r0: 0.55, r1: 0.45, h: 1.9, w: 0.12 }), blend: 'add', ramp: GOLD_R, intensity: 1.2, scroll: [s, 0], tile: [3, 1], erode: [0.15, 0.9], head: [0, 1], soft: 0.25, rot3: [0, s < 0 ? Math.PI : 0, 0], t0: 0.2, dur: 1.6 });
+        fx.erode({ geo: spiral({ turns: 1.5, r0: 0.55, r1: 0.45, h: 1.9, w: 0.28 }), blend: 'add', ramp: GOLD_R, intensity: 1.6, scroll: [s, 0], tile: [3, 1], erode: [0.1, 0.8], head: [0, 1], soft: 0.25, rot3: [0, s < 0 ? Math.PI : 0, 0], t0: 0.2, dur: 1.6 });
       }
-      fx.light({ color: '#ffd890', intensity: 40, pos: [0.4, 1.2, 0.6], range: 5, t0: 0, dur: 1.9, fade: [0.05, 0.6], env: (t) => sm(0, 0.6, t) * (1 - sm(0.6, 1.6, t)) });
+      fx.light({ color: '#ffd890', intensity: 25, pos: [0.4, 1.2, 0.6], range: 5, t0: 0, dur: 1.9, fade: [0.05, 0.6], env: (t) => sm(0, 0.6, t) * (1 - sm(0.6, 1.6, t)) });
       fx.emitter({ count: 40, kind: 'soft', tex: 'ember-burst', shape: 'disc', radius: 0.5, pos: [0, 0.1, 0], dir: [0, 1, 0], spread: 0.2, speed: [0.4, 1.2], life: [1.2, 1.8], size: [0.2, 0.1], ramp: [[0, '#fff6e0', 0], [0.2, '#ffd890', 1], [1, '#8a6a30', 0]], intensity: 2, delay: 0.6, emit: 0.8 }); // gold motes drift up
     } },
 

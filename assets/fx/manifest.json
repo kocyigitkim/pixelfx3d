@@ -1,7 +1,108 @@
 {
   "version": 1,
   "seed": 1337,
-  "presets": {},
+  "presets": {
+    "smoke-puff": {
+      "size": 1024,
+      "grid": [
+        8,
+        8
+      ],
+      "frames": 64,
+      "seconds": 2,
+      "a": "smoke-puff_a.png",
+      "b": "smoke-puff_b.png",
+      "emissive": false,
+      "emax": 1,
+      "framePow": 1,
+      "loop": false,
+      "ms": 582,
+      "sha256": {
+        "a": "850fcca29a77cb97ef331ded8cab32c74aafd2a0d7902ee6273c08616bf42fff",
+        "b": "1eb388830151bd899887248ba7edc6518a4ff6e3ca672c5cc3d1c339bf1dec96"
+      }
+    },
+    "fire-column": {
+      "size": 1024,
+      "grid": [
+        8,
+        8
+      ],
+      "frames": 64,
+      "seconds": 1.6,
+      "a": "fire-column_a.png",
+      "b": "fire-column_b.png",
+      "emissive": true,
+      "emax": 0.7402,
+      "framePow": 1,
+      "loop": false,
+      "ms": 526,
+      "sha256": {
+        "a": "960a40864777cd2de4d84bd3fa3e4514402db5cc6ad25cba35b0cba5dc6ecb18",
+        "b": "abe56cced7236412b746f46481ec5cc6882f6988de0fb35cbe969970a6a01d14"
+      }
+    },
+    "explosion-fireball": {
+      "size": 2048,
+      "grid": [
+        8,
+        8
+      ],
+      "frames": 64,
+      "seconds": 1.6,
+      "a": "explosion-fireball_a.png",
+      "b": "explosion-fireball_b.png",
+      "emissive": true,
+      "emax": 1.17,
+      "framePow": 0.6,
+      "loop": false,
+      "ms": 1294,
+      "sha256": {
+        "a": "f5b134bfc36aa8e1aa7c04a7f5eab169d9cb9403e0e388d8826c6c08189f47eb",
+        "b": "927c126756611bde8b281dd5a8e106b4de6f18fa8198faf47d66bc0800a94883"
+      }
+    },
+    "ember-burst": {
+      "size": 1024,
+      "grid": [
+        8,
+        8
+      ],
+      "frames": 64,
+      "seconds": 1.2,
+      "a": "ember-burst_a.png",
+      "b": "ember-burst_b.png",
+      "emissive": true,
+      "emax": 1.598,
+      "framePow": 0.6,
+      "loop": false,
+      "ms": 428,
+      "sha256": {
+        "a": "92bc7efdce3dda9b86ebfcbf090487e3fca9a8e84eba4ed4660b30f6eb40f924",
+        "b": "fc0b89f1343dacd6eb085c5262d3383c5584f8a5a29d39adcff69799345307da"
+      }
+    },
+    "dust-ring": {
+      "size": 1024,
+      "grid": [
+        8,
+        8
+      ],
+      "frames": 64,
+      "seconds": 2.4,
+      "a": "dust-ring_a.png",
+      "b": "dust-ring_b.png",
+      "emissive": false,
+      "emax": 1,
+      "framePow": 1,
+      "loop": false,
+      "ms": 648,
+      "sha256": {
+        "a": "b8740f70ae8afb0ae2c740e3aa5bc792ccfdb4ec794208cad9c601919edd0c8c",
+        "b": "45c88e364c4e4aef9558f78bb0b47e96bfc5adc6a21c8318044e77af86e5d706"
+      }
+    }
+  },
   "noise": {
     "file": "noise.png",
     "size": 512,
@@ -9,15 +110,60 @@
     "sha256": "b3e844a261a580b0c34287919ed90a79d091d07bfddac8d21eb7b384255e5219"
   },
   "files": {
-    "test_a.png": {
-      "w": 1024,
-      "h": 1024,
-      "sha256": "cda2fe465ac8a91fbecff93fdaa7a3996a486d760cdf7e662b2515f8175bf99d"
-    },
     "noise.png": {
       "w": 512,
       "h": 512,
       "sha256": "b3e844a261a580b0c34287919ed90a79d091d07bfddac8d21eb7b384255e5219"
+    },
+    "smoke-puff_a.png": {
+      "w": 1024,
+      "h": 1024,
+      "sha256": "850fcca29a77cb97ef331ded8cab32c74aafd2a0d7902ee6273c08616bf42fff"
+    },
+    "smoke-puff_b.png": {
+      "w": 1024,
+      "h": 1024,
+      "sha256": "1eb388830151bd899887248ba7edc6518a4ff6e3ca672c5cc3d1c339bf1dec96"
+    },
+    "fire-column_a.png": {
+      "w": 1024,
+      "h": 1024,
+      "sha256": "960a40864777cd2de4d84bd3fa3e4514402db5cc6ad25cba35b0cba5dc6ecb18"
+    },
+    "fire-column_b.png": {
+      "w": 1024,
+      "h": 1024,
+      "sha256": "abe56cced7236412b746f46481ec5cc6882f6988de0fb35cbe969970a6a01d14"
+    },
+    "explosion-fireball_a.png": {
+      "w": 2048,
+      "h": 2048,
+      "sha256": "f5b134bfc36aa8e1aa7c04a7f5eab169d9cb9403e0e388d8826c6c08189f47eb"
+    },
+    "explosion-fireball_b.png": {
+      "w": 2048,
+      "h": 2048,
+      "sha256": "927c126756611bde8b281dd5a8e106b4de6f18fa8198faf47d66bc0800a94883"
+    },
+    "ember-burst_a.png": {
+      "w": 1024,
+      "h": 1024,
+      "sha256": "92bc7efdce3dda9b86ebfcbf090487e3fca9a8e84eba4ed4660b30f6eb40f924"
+    },
+    "ember-burst_b.png": {
+      "w": 1024,
+      "h": 1024,
+      "sha256": "fc0b89f1343dacd6eb085c5262d3383c5584f8a5a29d39adcff69799345307da"
+    },
+    "dust-ring_a.png": {
+      "w": 1024,
+      "h": 1024,
+      "sha256": "b8740f70ae8afb0ae2c740e3aa5bc792ccfdb4ec794208cad9c601919edd0c8c"
+    },
+    "dust-ring_b.png": {
+      "w": 1024,
+      "h": 1024,
+      "sha256": "45c88e364c4e4aef9558f78bb0b47e96bfc5adc6a21c8318044e77af86e5d706"
     }
   }
 }

@@ -110,9 +110,6 @@ ${DEPTH}
 ${SIXWAY}
 uniform float uTexOn, uFramePow, uTexLoop, uTile, uEmis, uEmax, uInt; uniform sampler2D uTexA, uTexB; uniform vec3 uSunCol, uSky, uGnd;
 varying vec2 vUv; varying float vU; varying vec4 vRnd; varying vec4 vCol; varying float vSp; varying float vL; varying float vEm; varying vec3 vLd, vLc, vUp, vSd;
-// FIRE stops (fx/fire.js, linear). t: 1 = white-hot, 0 = soot.
-vec3 fireRamp(float t){ float u=1.-clamp(t,0.,1.);
-  return u<.15?mix(vec3(1.,.8963,.7157),vec3(1.,.5395,.1946),u/.15):u<.35?mix(vec3(1.,.5395,.1946),vec3(1.,.3231,.0319),(u-.15)/.2):u<.6?mix(vec3(1.,.3231,.0319),vec3(.7605,.0802,.0048),(u-.35)/.25):u<.85?mix(vec3(.7605,.0802,.0048),vec3(.1022,.0103,.0024),(u-.6)/.25):mix(vec3(.1022,.0103,.0024),vec3(.007,.0018,.0012),(u-.85)/.15); }
 void main(){
   if(vU>1.5) discard;
   vec2 p=vUv*2.-1.; float d=length(p); float a=0.; vec3 emis=vec3(0.); vec3 col=vCol.rgb; float seed=vRnd.x*17.+vRnd.z*5.;
@@ -123,8 +120,9 @@ void main(){
     vec2 t0=(vec2(mod(f0,8.),7.-floor(f0/8.))+uv)/8., t1=(vec2(mod(f1,8.),7.-floor(f1/8.))+uv)/8.;
     vec4 A=mix(texture2D(uTexA,t0),texture2D(uTexA,t1),k), B=mix(texture2D(uTexB,t0),texture2D(uTexB,t1),k);
     vec3 L=uSunCol*W6(vSd,A.rgb,B.rgb)+vLc*W6(vLd,A.rgb,B.rgb)+uSky*W6(vUp,A.rgb,B.rgb)+uGnd*W6(-vUp,A.rgb,B.rgb);
+    L=1.2*L/(1.+L*.6); // soft knee: lit dust/smoke stays near albedo under effect light (no white smear)
     col=vCol.rgb*L; a=A.a;
-    if(uEmis>.5){ float e=B.a*uEmax; emis=fireRamp(clamp(e*vEm,0.,1.))*uInt*e; } // softF and vCol.a applied in the shared tail
+    if(uEmis>.5){ float e=B.a*uEmax; emis=fireRamp(clamp(e*vEm,0.,1.))*uInt*e*3.; } // softF and vCol.a applied in the shared tail
   } else {
   if(uKind==0){ a=exp(-d*d*3.2)*(1.-smoothstep(.85,1.,d)); }
   else if(uKind==1){ float ux=vUv.y*2.-1.; a=exp(-p.x*p.x*22.)*smoothstep(1.,.55,abs(ux))*mix(.25,1.,vUv.y); col*=mix(.6,1.6,vUv.y); }

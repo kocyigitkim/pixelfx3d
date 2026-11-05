@@ -42,8 +42,8 @@ void main(){ float ph=uTime; vec2 tuv=vUv*uTile+uScroll*ph+uSeed*.37;
   float n = uChan>.5 ? texture2D(tNoise,tuv).a : texture2D(tNoise,tuv).r;
   float e=mix(uE0,uE1,uPr); float mask=sin(vUv.y*3.14159);
   float head = uHead<0. ? 0. : smoothstep(uHead-.15,uHead,vUv.x)*step(vUv.x,uHead);
-  float a=smoothstep(e,e+uSoft,n*mask)*uA*softF(uSoft*.5);
-  vec3 col=texture2D(uRamp,vec2(clamp(a+head,0.,1.),.5)).rgb*uInt*(1.+3.*head);
+  float a=smoothstep(e,e+uSoft,n*mask)*uA*softF(uSoft*.5)*(1.-uPr*uPr);
+  vec3 col=texture2D(uRamp,vec2(clamp(n*mask,0.,1.),.5)).rgb*uInt*(1.+3.*head);
   gl_FragColor=vec4(col*a,a); }`;
 export class Erode extends Prim {
   constructor(fx, p) {
