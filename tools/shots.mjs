@@ -10,7 +10,7 @@ let ids = await pg.evaluate('window.__ids'); if (idArg.startsWith('cat:')) ids =
 const ts = tArg.split(',').map(Number); const report = [];
 for (const id of ids) {
   const e0 = errs.length; let dur = 0;
-  try { dur = await pg.evaluate((id) => window.__play(id), id); const np = await pg.evaluate(() => window.__stage.fx.parts.reduce((n, p) => n + (p.mesh?.geometry?.instanceCount || 0), 0)); if (np > 900) errs.push(`PARTICLES ${id} ${np}`); for (const tt of ts) { const t = tt < 0 ? -tt * dur : tt; await pg.evaluate((t) => window.__seek(t), t); await pg.screenshot({ path: path.join(out, `${id.replace('/', '_')}@${t.toFixed(2)}.png`) }); } } catch (e) { errs.push('EXC ' + id + ' ' + String(e).slice(0, 400)); }
+  try { dur = await pg.evaluate((id) => window.__play(id), id); const np = await pg.evaluate(() => window.__stage.fx.parts.reduce((n, p) => n + (p.mesh?.geometry?.instanceCount || 0), 0)); if (np > 900) errs.push(`PARTICLES ${id} ${np}`); const nl = await pg.evaluate(() => window.__stage.fx.parts.filter((p) => p.l).length); if (nl > 4) errs.push(`LIGHTS ${id} ${nl}`); for (const tt of ts) { const t = tt < 0 ? -tt * dur : tt; await pg.evaluate((t) => window.__seek(t), t); await pg.screenshot({ path: path.join(out, `${id.replace('/', '_')}@${t.toFixed(2)}.png`) }); } } catch (e) { errs.push('EXC ' + id + ' ' + String(e).slice(0, 400)); }
   report.push({ id, dur, errors: errs.slice(e0) });
 }
 console.log(JSON.stringify(report.filter((r) => r.errors.length), null, 1)); console.log(`ok ${report.length - report.filter((r) => r.errors.length).length}/${report.length}`);

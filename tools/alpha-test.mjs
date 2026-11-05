@@ -1,7 +1,7 @@
 // Acceptance (exit 1 on failure): transparent output is clean premultiplied alpha; gallery has no 4xx.
 // needs current tree on PORT (8123).
 import { launch, open, render, pixels, pngPixel, PORT } from './harness.mjs';
-const ALPHA_IDS = ['fire/fireball', 'fire/meteor', 'fire/campfire', 'explosions/grenade', 'melee/sword-slash', 'impacts/ground-slam', 'holy/heal', 'ice/frost-nova', 'lightning/lightning-strike', 'shadow/void-orb'];
+const ALPHA_IDS = process.argv[2]?.split(',') ?? ['fire/fireball', 'fire/meteor', 'fire/campfire', 'explosions/grenade', 'melee/sword-slash', 'impacts/ground-slam', 'holy/heal', 'ice/frost-nova', 'lightning/lightning-strike', 'shadow/void-orb'];
 const fails = []; const fail = (m) => { fails.push(m); console.log('FAIL', m); };
 const b = await launch();
 // 1. transparent mode over a magenta page
