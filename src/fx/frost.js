@@ -1,20 +1,20 @@
 // Frost class: 5 derived skills (water + air + frost), PLAN2 B18. Built from the T-DSH, T-BUF, T-HEL and projectile layouts.
 import * as THREE from 'three';
-import { kit, SKILL, meta, act, sm, clamp, TAU, POSES, FROST, DUST, VAPOR, addMat } from './_skill.js';
+import { kit, SKILL, meta, act, sm, clamp, TAU, POSES, FROST, DUST, addMat } from './_skill.js';
 import { contact } from './melee.js';
 
 const m = meta('frost', 'derived');
 /** T-MEL contact burst with n sparks (n + 2 particles) */
-const ct = (fx, k, p, h, n) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n });
+const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n, ...o });
 const iceMat = () => new THREE.MeshPhysicalMaterial({ color: '#a9ddff', roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.04, transparent: true, opacity: 0.84, emissive: '#2a78cc', emissiveIntensity: 0.55, flatShading: true, side: THREE.DoubleSide });
 const hits = (ts, o = {}) => ts.map((t) => ({ t, stop: 0.03, shake: 0.2, amp: 0.03, push: 0.4, ...o }));
-const SNOW = [[0, '#f4f8fb', 0], [0.15, '#e8eef4', 0.55], [1, '#9aa7b0', 0]];
+const SNOW = [[0, '#b8bec4', 0], [0.15, '#b3b9bf', 0.55], [1, '#7a848b', 0]], VAPOR = [[0, '#b7bcbf', 0], [0.15, '#b0b6b9', 0.55], [1, '#7a848b', 0]]; // darkened to <= #b8c0c8 (V5 vapor exception)
 
 export default [
   SKILL('frost/rime-lance-ii', 'Rime lance II', m(['water', 'air', 'frost'], 'projectile-pierce', 0.4, 7, 9, 'line'), 1.8, {
     view: 'long', sky: 'night',
     act: act('throw', 0.35, 4),
-    // P3=261
+    // P3=262
     build(fx, o) {
       const k = kit(fx, o, FROST);
       const A = [0.6, 1.38, 0.2], IP = [4, 1.25, 0];
@@ -36,7 +36,6 @@ export default [
       [[0, 0, 0], [0.12, 0.1, 0.05], [-0.1, 0.12, -0.04]].forEach(([x, y, z]) => { const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.15), iceMat()); c.position.set(x, y, z); cl.add(c); });
       cl.position.set(...IP);
       k.pop(cl, 0.35, 0.6, 1.5, 1.8);
-      k.light({ pos: [4, 1.2, 0.8], t0: 0.35, dur: 0.8, fade: [0.01, 0.4], intensity: 60 });
       if (k.g >= 2) k.em({ count: 40, kind: 'streak', shape: 'sphere', radius: 0.5, pos: [2, 1.3, 0], dir: [1, 0, 0], spread: 0.3, speed: [3, 5], life: [0.2, 0.4], size: [0.2, 0.05], stretch: 2, swirl: 4, intensity: 1.2, emit: 0.35 });
       if (k.g === 3) {
         const sp = new THREE.Group();
@@ -44,7 +43,7 @@ export default [
         sp.position.set(4, 0, 0);
         k.pop(sp, 0.3, 0.5, 1.7, 1.9);
       }
-      k.extras(IP, 0.35);
+      k.extras(IP, 0.35, 'B');
     } }),
 
   SKILL('frost/snowfall-zone', 'Snowfall zone', m(['water', 'air', 'frost'], 'ground-slow', 0.6, 18, 6, 'circle'), 3.2, {
@@ -78,7 +77,6 @@ export default [
       k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: D, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / D), intensity: 40 });
-      fx.flash(0.3, 0.1, k.col(0), 0.12);
       const plateMat = addMat(k.col(1), 0.6, 0.55);
       for (let i = 0; i < 10; i++) {
         const a = (i * TAU) / 10, plate = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.02, 6), plateMat);
@@ -99,7 +97,7 @@ export default [
   SKILL('frost/shatter-step', 'Shatter step', m(['water', 'air', 'frost'], 'dash-shards', 0.2, 10, 5, 'line'), 1.6, {
     view: 'side', sky: 'night',
     act: { kind: 'none', target: [3.1, 0, 0], windup: 0.5, keys: [[-0.5, 'guard'], [-0.15, 'dashLow'], [0, 'lunge', 'snap'], [0.3, 'lunge'], [0.9, 'guard']], hits: hits([0.02], { stop: 0.05, shake: 0.25, amp: 0.03, push: 1.2 }) },
-    // P3=339
+    // P3=340
     build(fx, o) {
       const k = kit(fx, o, FROST), T0 = -0.15, X0 = 0, X1 = 2.8;
       const X = (t) => (t < T0 ? X0 : t < 0 ? X0 + (X1 - X0) * sm(T0, 0, t) : X1);
@@ -114,9 +112,7 @@ export default [
         k.smoke({ count: 6, shape: 'sphere', radius: 0.2, pos: [x, 0.4, 0.6], dir: [0, 1, 0], spread: 1, speed: [0.2, 0.6], life: [0.6, 1], size: [0.3, 0.6], ramp: VAPOR, delay: b, t0: b - 0.02, emit: 0.001 });
       }
       k.smoke({ count: 30, shape: 'line', shapeSize: [1.4, 0, 0], pos: [1.4, 0.1, 0], dir: [0, 1, 0], speed: [0.2, 0.6], life: [0.8, 1.4], size: [0.3, 0.6], ramp: VAPOR, delay: T0, emit: 0.6 });
-      ct(fx, k, [X1 + 0.4, 1.2, 0.1], 0.02, 40);
-      fx.flash(0.02, 0.1, k.col(0), 0.15);
-      fx.shake(0.02, 0.2, 0.03);
+      ct(fx, k, [X1 + 0.4, 1.2, 0.1], 0.02, 40, { lightI: 0 });
       if (k.g >= 2) k.decal({ kind: 'frost', r: [0.8, 0.8], cells: 6, pos: [0, 0, 0], t0: 0, dur: 1.2, reveal: 0.5, intensity: 1 });
       if (k.g === 3) {
         k.ring({ t0: 0.5, dur: 0.5, r: [0.2, 2], normal: 'cam', pos: [3.1, 1.2, 0] });
@@ -135,7 +131,6 @@ export default [
       k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: D, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / D), intensity: 40 });
-      fx.flash(0.3, 0.1, k.col(0), 0.12);
       const curtains = (R) => {
         for (let i = 0; i < 5; i++) {
           const ramp = i % 2 ? k.ramp.map(([u, c, a]) => [u, '#7fffd0', a]) : k.ramp;

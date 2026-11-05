@@ -1,18 +1,19 @@
 // Dune class: 5 earth+air+dune derived skills (PLAN2 B20). Built from the T-DSH, T-TEL and T-VOL templates.
 import * as THREE from 'three';
-import { kit, SKILL, meta, act, sm, clamp, TAU, POSES, DUNE, SAND } from './_skill.js';
+import { kit, SKILL, meta, act, sm, clamp, TAU, POSES, DUNE } from './_skill.js';
 import { Dummy } from '../core/dummy.js';
 import { contact } from './melee.js';
 
 const m = meta('dune', 'derived');
 /** T-MEL contact burst with n sparks (n + 2 particles) */
-const ct = (fx, k, p, h, n) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n });
+const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n, ...o });
+const SAND = [[0, '#5a4b34', 0], [0.15, '#4d402c', 0.55], [1, '#221a10', 0]]; // kit SAND x0.82 to <= #5a5048 (V5)
 
 export default [
   SKILL('dune/sandspout', 'Sandspout', m(['earth', 'air', 'dune'], 'tornado-moving', 0.6, 16, 6, 'circle'), 3.0, {
     view: 'wide',
     act: act('castup', 0.8, 3.2, { hits: [{ t: 0.8, stop: 0.06, shake: 0.3, amp: 0.04, push: 1.6 }, { t: 1.4, stop: 0.04, shake: 0.2, amp: 0.03, push: 0 }, { t: 2.0, stop: 0.04, shake: 0.2, amp: 0.03, push: 0 }] }),
-    // P3=761
+    // P3=762
     build(fx, o) {
       const k = kit(fx, o, DUNE);
       const X = (t) => 2 + 1.2 * sm(0, 2.4, t);
@@ -24,7 +25,6 @@ export default [
       k.em({ count: 20, kind: 'rock', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.4, pos: [2, 0.2, 0], dir: [0, 1, 0], spread: 1.2, speed: [2, 5], life: [1.2, 1.9], gravity: [0, -10, 0], size: [0.2, 0.12], bounce: 0.35, rot: 6, emit: 0.8 }); // 20
       k.ring({ t0: 0, dur: 0.8, r: [0.2, 3], normal: 'up', pos: [2, 0.02, 0] });
       k.light({ pos: [2, 1, 0.8], t0: 0, dur: 2.4, fade: [0.1, 0.6], intensity: 30 });
-      fx.flash(0.8, 0.1, k.col(0), 0.15);
       if (k.g >= 2) k.em({ count: 100, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'disc', radius: 0.2, pos: [3.2, 0, 0], dir: [0, 1, 0], radial: 0.5, swirl: 5, speed: [2, 3.5], life: [1.5, 2.5], size: [0.2, 0.4], emit: 2.4 }); // 100
       if (k.g === 3) {
         k.em({ count: 40, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'sphere', radius: 0.8, pos: [2, 0.5, 0], dir: [0, 1, 0], radial: 1, speed: [3, 6], life: [0.8, 1.4], size: [0.4, 0.8], delay: 2.4, emit: 0.001 }); // 40
@@ -70,19 +70,19 @@ export default [
       k.em({ count: 40, kind: 'streak', shape: 'sphere', radius: 1.6, pos: [3, 1, 0], dir: [1, 0, 0], spread: 0.5, speed: [1, 2], life: [0.8, 1.4], size: [0.05, 0.02], stretch: 1.5, intensity: 0.8, emit: 1.2 }); // 40
       k.light({ pos: [3, 1.2, 0.8], t0: 0, dur: 3.2, fade: [0.1, 0.8], intensity: 30 });
       if (k.g >= 2) k.em({ count: 60, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'sphere', radius: 1.4, pos: [3, 1, 0], dir: [0, 1, 0], swirl: 3, turb: [0.5, 0.5], speed: [0.3, 1], life: [1.5, 2.5], size: [0.2, 0.4], emit: 1.5 }); // 60
-      if (k.g === 3) k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 1.8, pos: [3, 1.2, 0], dir: [0, 1, 0], spread: 1, speed: [0.1, 0.6], life: [0.4, 0.8], size: [0.1, 0.05], intensity: 2.5, delay: 0.5, emit: 2 }); // 30
+      if (k.g === 3) k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 1.8, pos: [3, 1.2, 0], dir: [0, 1, 0], spread: 1, speed: [0.1, 0.6], life: [0.4, 0.8], size: [0.1, 0.05], intensity: 1.5, delay: 0.5, emit: 2 }); // 30
       k.extras([3, 1, 0], 0.4);
     } }),
 
   SKILL('dune/glass-storm', 'Glass storm', m(['earth', 'air', 'dune'], 'transform-volley', 0.6, 14, 7, 'cone'), 2.8, {
     view: 'long',
     act: act('cast', 0.8, 3.6, { hits: [{ t: 0.8, stop: 0.06, shake: 0.3, amp: 0.04, push: 1.6 }, { t: 1.2, stop: 0.04, shake: 0.2, amp: 0.03, push: 0 }, { t: 1.6, stop: 0.04, shake: 0.2, amp: 0.03, push: 0 }] }),
-    // P3=421
+    // P3=422
     build(fx, o) {
       const k = kit(fx, o, DUNE);
       const TG = [3.6, 1.2, 0];
       k.em({ count: 120, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'point', pos: [1, 1, 0], dir: [1, 0, 0], spread: 0.2, speed: [3, 5], life: [0.6, 1.2], size: [0.2, 0.4], emit: 1.2 }); // 120
-      k.em({ count: 120, kind: 'shard', shape: 'point', pos: [1.5, 1.2, 0], dir: [1, 0, 0], spread: 0.2, speed: [3, 5], life: [0.5, 1], size: [0.08, 0.04], intensity: 2.5, delay: 0.4, emit: 0.8 }); // 120
+      k.em({ count: 120, kind: 'shard', shape: 'point', pos: [1.5, 1.2, 0], dir: [1, 0, 0], spread: 0.2, speed: [3, 5], life: [0.5, 1], size: [0.08, 0.04], intensity: 1.5, delay: 0.4, emit: 0.8 }); // 120
       k.em({ count: 40, kind: 'glint', shape: 'sphere', radius: 0.4, pos: [2, 1.2, 0], dir: [1, 0, 0], speed: [1, 3], life: [0.3, 0.6], size: [0.1, 0.05], intensity: 2.5, delay: 0.2, emit: 1.2 }); // 40
       k.sparks(TG, 0.8, 40, { emit: 1 }); // 40
       for (let i = 0; i < 4; i++) { const y = 0.6 + 0.3 * i, z = (i - 1.5) * 0.3; k.ribbon({ points: () => [[0.5, y, z], [2.5, y, z], [4.5, y, z]], n: 2, width: 0.025, head: () => 1.001, fade: [0.03, 0.12], t0: 0, dur: 1.2 }); }
@@ -93,13 +93,13 @@ export default [
         fx.mesh(g, (t) => { const u = sm(0.8, 1.6, t); g.position.set(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u); g.visible = t > 0.8; g.rotation.y = t * 2; }, { t0: 0, dur: 2.8 });
       }
       if (k.g === 3) k.em({ count: 60, kind: 'shard', shape: 'sphere', radius: 0.3, pos: TG, dir: [0, 1, 0], radial: 1, speed: [2, 5], life: [0.5, 1], size: [0.1, 0.05], gravity: [0, -9, 0], delay: 1.6, emit: 0.001 }); // 60
-      k.extras(TG, 1.6);
+      k.extras(TG, 1.6, 'B');
     } }),
 
   SKILL('dune/dune-wave', 'Dune wave', m(['earth', 'air', 'dune'], 'sand-wave', 0.6, 14, 7, 'line'), 3.0, {
     view: 'long',
     act: act('sideslash', 1.0, 4),
-    // P3=753
+    // P3=754
     build(fx, o) {
       const k = kit(fx, o, DUNE);
       const X = (t) => 0.8 + 3.7 * sm(0, 1.4, t), fol = (mm, ta, t) => mm.position.set(X(t), 0.6, 0);
@@ -111,9 +111,8 @@ export default [
       k.em({ count: 30, kind: 'rock', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.3, pos: [3, 0.2, 0], dir: [0, 1, 0], spread: 1, speed: [2, 4], life: [1, 1.6], gravity: [0, -10, 0], size: [0.15, 0.1], bounce: 0.3, rot: 4, delay: 0.3, emit: 0.8 }); // 30
       k.ribbon({ points: (t) => { const x = X(t); return [[x - 1, 0.2, 0], [x, 0.9, 0], [x + 0.4, 0.3, 0]]; }, n: 2, width: 0.12, head: () => 1.001, fade: [0.05, 0.3], t0: 0, dur: 1.4 });
       k.ring({ t0: 0.9, dur: 0.6, r: [0.2, 2.5], normal: 'up', pos: [4, 0.02, 0] });
-      ct(fx, k, [4, 1.2, 0], 1.0, 30); // 32
+      ct(fx, k, [4, 1.2, 0], 1.0, 30, { lightI: 0 }); // 32
       k.light({ pos: [2.5, 1, 0.8], t0: 0, dur: 3, fade: [0.1, 0.6], intensity: 30 });
-      fx.flash(1.0, 0.1, k.col(0), 0.15);
       if (k.g >= 2) k.em({ count: 100, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'line', shapeSize: [1.6, 0, 0], rot3: [0, Math.PI / 2, 0], pos: [0.5, 0.3, 0], dir: [0.5, 1, 0], speed: [1.5, 3], life: [1, 1.8], size: [0.3, 0.6], delay: 0.2, emit: 1.4, follow: (mm, ta, t) => mm.position.set(X(t) - 0.3, 0.3, 0) }); // 100
       if (k.g === 3) {
         k.em({ count: 60, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'sphere', radius: 0.6, pos: [4, 0.3, 0], dir: [1, 1, 0], speed: [2, 4], life: [1, 1.8], size: [0.4, 0.8], delay: 1.0, emit: 0.001 }); // 60

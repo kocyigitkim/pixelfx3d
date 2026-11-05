@@ -56,7 +56,7 @@ export default [
   SKILL('quantum/singularity-seed', 'Singularity seed', m(['quantum'], 'black-hole', 0.6, 18, 7, 'point'), 2.4, {
     view: 'wide', sky: 'void',
     act: act('cast', 1.6, 3),
-    // P3=361
+    // P3=322
     build(fx, o) {
       const k = kit(fx, o, QUANTUM), S = [1.8, 1.2, 0];
       k.trail({ path: (t) => lerp3(A, S, clamp(t / 0.6)), t0: 0, dur: 0.6, len: 0.4, width: 0.06 });
@@ -67,8 +67,8 @@ export default [
       k.em({ count: 80, kind: 'streak', shape: 'sphere', radius: 1.6, radiusIn: 1.2, pos: S, radial: 1, speed: [-3, -2], life: [0.4, 0.7], size: [0.05, 0.01], intensity: 1.5, delay: 0.3, emit: 1.3, t0: 0.3 });
       fx.on((t) => { fx.target.position.x = 3 - 0.8 * sm(0.3, 1.3, t); });
       k.light({ pos: S, t0: 0.3, dur: 2.2, fade: [0.2, 0.4], flicker: 0.3, intensity: 90 });
-      k.impact(S, 1.6, 100, 4);
-      fx.flash(1.6, 0.12, k.col(0), 0.3);
+      k.impact(S, 1.6, 60, 4);
+      fx.flash(1.6, 0.12, k.col(1), 0.15);
       if (k.g >= 2) k.ring({ t0: 0.3, dur: 1.3, r: [1.1, 1.1], width: [0.12, 0.12], normal: [1, 0.2, -0.3], pos: S });
       if (k.g === 3) k.em({ count: 60, kind: 'spark', shape: 'sphere', radius: 0.4, pos: S, radial: 1, speed: [2, 5], life: [0.2, 0.5], size: [0.05, 0.02], stretch: 1.5, intensity: 2, delay: 1.6, emit: 0.001, t0: 1.55 });
     } }),
@@ -96,7 +96,7 @@ export default [
       k.ring({ t0: 1.0, dur: 0.8, r: [2.2, 0.2], normal: 'up', pos: [Cc[0], 0.02, Cc[2]], width: [0.25, 0.05] });
       k.light({ pos: [Cc[0], 1.2, 0.8], t0: 0, dur: 2.8, fade: [0.1, 0.6], intensity: 70 });
       if (k.g >= 2) k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 1.4, pos: [Cc[0], 1, Cc[2]], dir: [0, 1, 0], speed: [0.2, 0.8], life: [0.3, 0.5], size: [0.12, 0.05], intensity: 2, delay: 1.0, emit: 0.6, t0: 1.0 });
-      if (k.g === 3) { k.ring({ t0: 1.8, dur: 0.5, r: [0.2, 2.4], normal: 'cam', pos: [Cc[0], 1, Cc[2]] }); fx.flash(1.8, 0.12, k.col(0), 0.2); }
+      if (k.g === 3) { k.ring({ t0: 1.8, dur: 0.5, r: [0.2, 2.4], normal: 'cam', pos: [Cc[0], 1, Cc[2]] }); fx.flash(1.8, 0.12, k.col(1), 0.15); }
     } }),
 
   SKILL('quantum/echo-clone', 'Echo clone', m(['quantum'], 'clone-attack', 0.4, 14, 3, 'point'), 2.0, {
@@ -115,7 +115,7 @@ export default [
       };
       ct(fx, k, C, 0, 20);
       clone(0.8);
-      fx.flash(0.5, 0.12, k.col(0), 0.2);
+      fx.flash(0.5, 0.12, k.col(1), 0.15);
       k.light({ pos: [1.4, 1.3, 0.4], t0: 0.4, dur: 1.4, fade: [0.02, 0.5], intensity: 70 });
       if (k.g >= 2) clone(-0.8);
       if (k.g === 3) k.ring({ t0: 0.45, dur: 0.45, r: [0.2, 2], normal: 'cam', pos: [1.6, 1.2, 0] });
@@ -136,7 +136,7 @@ export default [
       k.em({ count: 30, kind: 'soft', shape: 'point', size: [0.1, 0.03], life: [0.3, 0.5], speed: [0, 0.2], intensity: 1.5, delay: 0.2, emit: 2.0, t0: 0.1, follow: (mm, ta, t) => mm.position.set(...lerp3(P0, P1, (t * 0.8) % 1)) });
       for (const h of H) { k.sparks(P0, h, 20); k.sparks(P1, h, 20); }
       k.light({ pos: [1.8, 1.3, 0.8], t0: 0.2, dur: 2.2, fade: [0.1, 0.5], flicker: 0.3, intensity: 60 });
-      fx.flash(0.9, 0.12, k.col(0), 0.2);
+      fx.flash(0.9, 0.12, k.col(1), 0.15);
       if (k.g >= 2) k.em({ count: 60, kind: 'soft', shape: 'box', shapeSize: [1.8, 0.6, 0.8], pos: [1.8, 1.2, 0.8], dir: [0, 1, 0], speed: [0, 0.4], life: [0.6, 1.2], size: [0.06, 0.02], intensity: 0.8, emit: 2.2, t0: 0.1 });
       if (k.g === 3) for (const h of H) for (const p of [P0, P1]) k.ring({ t0: h, dur: 0.4, r: [0.1, 1.4], normal: 'cam', pos: p });
     } }),
@@ -161,7 +161,7 @@ export default [
       k.smoke({ ramp: DUST, count: 60, shape: 'ring', radius: 0.4, pos: P, radial: 1, speed: [1.5, 4], life: [1, 1.5], size: [0.3, 0.7], delay: 0.5, emit: 0.001 });
       k.em({ count: 24, kind: 'rock', shape: 'disc', radius: 0.3, pos: P, dir: [0, 1, 0], spread: 1, speed: [3, 7.5], gravity: [0, -10, 0], bounce: 0.35, blend: 'normal', lit: 1, ramp: [[0, '#6c5a48'], [1, '#6c5a48', 1]], size: [0.1, 0.05], life: [1.2, 1.8], delay: 0.5, emit: 0.001, t0: 0.48 });
       k.light({ pos: [P[0], 1, 0.8], t0: 0.5, dur: 1.2, fade: [0.02, 0.5], intensity: 120 });
-      fx.flash(0.5, 0.12, k.col(0), 0.25);
+      fx.flash(0.5, 0.12, k.col(1), 0.15);
       if (k.g >= 2) press(1.0);
       if (k.g === 3) { k.ring({ t0: 0.6, dur: 0.5, r: [0.2, 2.4], normal: 'cam', pos: [P[0], 1, P[2]] }); k.sparks(P, 0.55, 40); }
     } }),
@@ -180,7 +180,7 @@ export default [
       k.sparks([R[0], 0.2, 0], 0.3, 20);
       glitchBars(fx, k, 8, R, 0.3, 2.0);
       k.light({ pos: [R[0], R[1], 0.8], t0: 0.3, dur: 1.6, fade: [0.02, 0.4], intensity: 90 });
-      fx.flash(0.45, 0.12, k.col(0), 0.2);
+      fx.flash(0.45, 0.12, k.col(1), 0.15);
       if (k.g >= 2) k.em({ count: 40, kind: 'soft', shape: 'box', shapeSize: [0.1, 1, 0.05], pos: R, dir: [0, 1, 0], speed: [0.1, 0.6], life: [0.3, 0.6], size: [0.06, 0.02], intensity: 1.2, delay: 0.6, emit: 0.5, t0: 0.55 });
       if (k.g === 3) {
         k.ring({ t0: 0.5, dur: 0.5, r: [0.2, 2.2], normal: 'cam', pos: R });
@@ -192,7 +192,7 @@ export default [
   SKILL('quantum/probability-storm', 'Probability storm', m(['quantum'], 'random-volley', 0.6, 18, 8, 'cone'), 2.4, {
     view: 'long', sky: 'storm',
     act: act('cast', null, 4, { hits: [0.9, 1.2, 1.5].map((t) => ({ t, stop: 0.04, shake: 0.2, amp: 0.03, push: 0.8 })) }),
-    // P3=321 (worst case: 26 volleys, each hit or split at 10 sparks max, plus impact 61)
+    // P3=322 (worst case: 26 volleys, each hit or split at 10 sparks max, plus impact 61 + burst core 1)
     build(fx, o) {
       const k = kit(fx, o, QUANTUM), SRC = [0.6, 1.5, 0.2];
       const RAMPS = [[[0, k.col(0), 1], [1, k.col(2), 0]], [[0, k.col(1), 1], [1, k.col(2), 0]]];
@@ -210,6 +210,6 @@ export default [
       k.light({ pos: [2, 1.4, 1.0], t0: 0, dur: 2.4, fade: [0.1, 0.4], flicker: 0.3, intensity: 60 });
       fx.flash(0.9, 0.1, k.col(1), 0.12);
       if (k.g >= 2) for (let i = 0; i < 6; i++) volley(0.9 + 0.03 * i);
-      if (k.g === 3) { k.impact([4, 1.2, 0], 1.8, 60, 1.4); fx.hit(1.8, { stop: 0.05, shake: 0.25, amp: 0.03, push: 1 }); fx.flash(1.8, 0.12, k.col(0), 0.25); }
+      if (k.g === 3) { k.impact([4, 1.2, 0], 1.8, 60, 1.4); fx.hit(1.8, { stop: 0.05, push: 1 }); fx.flash(1.8, 0.12, k.col(1), 0.15); } // K1: burst impact owns the shake
     } }),
 ];
