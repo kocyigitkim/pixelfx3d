@@ -1,10 +1,11 @@
 import * as THREE from 'three';
+import { burst } from './_aaa.js';
 const mat = (c, r = 0.8, m = 0) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m });
 const rocks = (g, n, R, seed, h = 0.3, col = '#5a5850') => { let s = seed; const r = () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296); for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + r() * 0.3, k = h * (0.6 + r() * 0.8); const m = new THREE.Mesh(new THREE.DodecahedronGeometry(k, 0), mat(new THREE.Color(col).offsetHSL(0, 0, (r() - 0.5) * 0.08), 0.95)); m.position.set(Math.cos(a) * R, k * 0.45, Math.sin(a) * R); m.rotation.set(r() * 3, r() * 3, r() * 3); m.scale.set(1.2, 0.8, 1); g.add(m); } };
 const WATERC = [[0, '#e8f6ff', 0.0], [0.12, '#dff0fa', 0.75], [0.6, '#a9d2ea', 0.5], [1, '#7ab4d8', 0]];
 const DROP = [[0, '#f4fbff', 0.9], [0.5, '#cfe8f6', 0.8], [1, '#a8d0ea', 0]];
-const MIST = [[0, '#ffffff', 0], [0.2, '#eef8ff', 0.28], [1, '#cfe6f2', 0]];
-const mist = (fx, o) => fx.emitter({ kind: 'smoke', blend: 'normal', lit: 1, ramp: MIST, ...o });
+const MIST = [[0, '#bfbfbf', 0], [0.2, '#b8c0c6', 0.28], [1, '#afc2cc', 0]];
+const mist = (fx, o) => fx.emitter({ kind: 'smoke', blend: 'normal', lit: 1, order: -1, ramp: MIST, ...o });
 const rip = (n, per, x0 = 0, z0 = 0, R = 1, amp = 0.05, seed = 1) => { let s = seed; const r = () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296); return Array.from({ length: n }, (_, i) => { const a = r() * 6.283, d = Math.sqrt(r()) * R; return { t: (i / n) * per, x: x0 + Math.cos(a) * d, z: z0 + Math.sin(a) * d, amp }; }); };
 
 /* foam spiral used by the whirlpool */
@@ -57,7 +58,7 @@ export default [
       fx.water({ r: 0.9, y: 0.02, deep: '#0c2a38', shallow: '#2a6a80', waves: 0.1, ripples: [{ t: TL, x: 0, z: 0, amp: 0.06 }, { t: TL + 0.12, x: 0, z: 0, amp: 0.03 }], speed: 0.9, decay: 1.8, k: 24 });
       fx.emitter({ count: 14, kind: 'drop', shape: 'point', dir: [0, 1, 0], spread: 0.8, speed: [0.7, 1.5], life: [0.25, 0.4], size: [0.014, 0.006], gravity: [0, -9, 0], delay: TL, emit: 0.001, ramp: DROP, pos: [0, 0.03, 0] });
       fx.emitter({ count: 1, kind: 'drop', shape: 'point', dir: [0, 1, 0], spread: 0.05, speed: [1.8, 2.1], life: [0.45, 0.5], size: [0.03, 0.02], gravity: [0, -9, 0], delay: TL, emit: 0.001, ramp: DROP, pos: [0, 0.03, 0] });
-      fx.ring({ t0: TL, dur: 0.5, r: [0.04, 0.3], width: [0.03, 0.01], normal: 'up', pos: [0, 0.03, 0], intensity: 0.8, ramp: [[0, '#fff'], [1, '#bde']], fade: [0, 0.3] });
+      fx.ring({ t0: TL, dur: 0.5, r: [0.04, 0.3], width: [0.03, 0.01], normal: 'up', pos: [0, 0.03, 0], intensity: 0.8, ramp: [[0, '#e8f2ff'], [1, '#bde']], fade: [0, 0.3] });
       fx.light({ color: '#9ac8ff', intensity: 8, pos: [0.5, 1.2, 0.8], norm: 12 });
     } },
 
@@ -72,12 +73,12 @@ export default [
       fx.light({ color: '#cfe4ff', intensity: 10, pos: [1, 3, 2], norm: 14 });
       fx.emitter({ count: 120, kind: 'drop', shape: 'point', dir: [0, 1, 0], spread: 0.05, speed: [6.0, 6.8], life: [1.35, 1.55], size: [0.05, 0.03], gravity: [0, -9.8, 0], ramp: DROP, pos: [0, 0.74, 0] });
       fx.emitter({ count: 110, kind: 'drop', shape: 'point', dir: [0, 1, 0], spread: 0.28, speed: [4.2, 5.8], life: [1.0, 1.4], size: [0.04, 0.025], gravity: [0, -9.8, 0], ramp: DROP, pos: [0, 0.74, 0] });
-      fx.emitter({ count: 30, kind: 'soft', shape: 'disc', radius: 0.35, dir: [0, 1, 0], spread: 0.3, speed: [0.5, 1.5], life: [0.4, 0.7], size: [0.5, 0.2], ramp: [[0, '#fff', 0], [0.3, '#fff', 0.5], [1, '#ddeeff', 0]], intensity: 0.5, floorFade: 0, pos: [0, 0.46, 0] });
+      fx.emitter({ count: 30, kind: 'smoke', blend: 'normal', lit: 1, order: -1, shape: 'disc', radius: 0.35, dir: [0, 1, 0], spread: 0.3, speed: [0.5, 1.5], life: [0.4, 0.7], size: [0.5, 0.2], ramp: [[0, '#bfbfbf', 0], [0.3, '#bfbfbf', 0.5], [1, '#b3c1cf', 0]], intensity: 0.5, floorFade: 0, pos: [0, 0.46, 0] });
       mist(fx, { count: 28, shape: 'disc', radius: 0.7, dir: [0, 1, 0], spread: 0.3, speed: [0.3, 0.8], life: [1.0, 1.6], size: [0.4, 1.2], order: 0, pos: [0, 0.5, 0] });
       fx.emitter({ count: 50, kind: 'drop', shape: 'disc', radius: 0.5, dir: [0, 1, 0], spread: 0.5, speed: [0.8, 1.8], life: [0.25, 0.4], size: [0.02, 0.01], gravity: [0, -9, 0], ramp: DROP, pos: [0, 0.46, 0] });
     } },
 
-  { id: 'water/geyser', name: 'Geyser', category: 'water', loop: false, duration: 5, stage: { sky: 'day', view: { pos: [4.6, 2.4, 6.4], target: [0, 2.3, 0], fov: 46 } },
+  { id: 'water/geyser', name: 'Geyser', category: 'water', tier: 2, loop: false, duration: 5, stage: { sky: 'day', view: { pos: [4.6, 2.4, 6.4], target: [0, 2.3, 0], fov: 46 } },
     build(fx) {
       const g = new THREE.Group(); rocks(g, 12, 1.65, 21, 0.3, '#6a625a'); rocks(g, 8, 2.15, 5, 0.22, '#5a544c');
       fx.mesh(g, null, { dur: 99 });
@@ -88,13 +89,14 @@ export default [
       fx.emitter({ count: 20, kind: 'drop', shape: 'disc', radius: 0.5, dir: [0, 1, 0], spread: 0.4, speed: [1, 2.5], life: [0.4, 0.6], size: [0.03, 0.015], gravity: [0, -9, 0], emit: 1.5, delay: 0.5, ramp: DROP, pos: [0, 0.06, 0] });
       mist(fx, { count: 20, shape: 'disc', radius: 0.8, dir: [0, 1, 0], spread: 0.3, speed: [0.3, 0.8], life: [1.2, 2], size: [0.5, 1.4], emit: 1.4, delay: 0.4, pos: [0, 0.2, 0] });
       const T0 = 1.6, T1 = 3.6;
-      fx.beam({ pos: [0, 0, 0], height: 5.2, r: [0.4, 0.5], t0: T0, dur: T1 - T0, fade: [0.2, 0.9], noise: 1.5, speed: 3, intensity: 0.5, edge: 1.5, ramp: [[0, '#ffffff'], [0.5, '#cfe8f6'], [1, '#8ab8d8']] });
+      fx.beam({ pos: [0, 0, 0], height: 5.2, r: [0.4, 0.5], t0: T0, dur: T1 - T0, fade: [0.2, 0.9], noise: 1.5, speed: 3, intensity: 0.5, edge: 1.5, ramp: [[0, '#e8f2ff'], [0.5, '#cfe8f6'], [1, '#8ab8d8']] });
       fx.emitter({ count: 200, kind: 'drop', shape: 'disc', radius: 0.3, dir: [0, 1, 0], spread: 0.1, speed: [8, 12], life: [1.3, 1.8], size: [0.07, 0.04], gravity: [0, -9.8, 0], delay: T0, emit: T1 - T0, ramp: DROP, drag: 0.1 });
       fx.emitter({ count: 120, kind: 'drop', shape: 'disc', radius: 0.3, dir: [0, 1, 0], spread: 0.35, speed: [5, 9], life: [1.1, 1.7], size: [0.05, 0.03], gravity: [0, -9.8, 0], delay: T0, emit: T1 - T0, ramp: DROP });
       mist(fx, { count: 70, shape: 'disc', radius: 0.5, dir: [0, 1, 0], spread: 0.15, speed: [4, 7], life: [1.0, 1.7], size: [0.7, 2.0], delay: T0, emit: T1 - T0 + 0.2, drag: 0.4, turb: [0.3, 1] });
       mist(fx, { count: 60, shape: 'disc', radius: 1.2, dir: [0, 1, 0], spread: 1.2, speed: [0.5, 2], life: [1.2, 2.2], size: [0.8, 2.2], delay: T0 + 0.1, emit: T1 - T0 + 0.8, pos: [0, 0.3, 0], radial: 0.5 });
       fx.emitter({ count: 60, kind: 'drop', shape: 'ring', radius: 1.4, radiusIn: 0.8, dir: [0, 1, 0], spread: 0.3, speed: [0.5, 1.8], life: [0.3, 0.5], size: [0.03, 0.015], gravity: [0, -9, 0], delay: T0 + 0.5, emit: 2.4, ramp: DROP, pos: [0, 0.05, 0] });
-      fx.ring({ t0: T0, dur: 0.9, r: [0.2, 2.2], width: [0.3, 0.08], normal: 'up', pos: [0, 0.06, 0], intensity: 0.7, fill: 0.1, ramp: [[0, '#fff'], [1, '#bde']], fade: [0, 0.6] });
+      fx.ring({ t0: T0, dur: 0.9, r: [0.2, 2.2], width: [0.15, 0.04], normal: 'up', pos: [0, 0.06, 0], intensity: 0.3, fill: 0, ramp: [[0, '#e8f2ff'], [1, '#bde']], fade: [0, 0.6] });
+      burst(fx, [0, 0.06, 0], T0, { ramp: [[0, '#e8f2ff'], [0.5, '#cfe8f6'], [1, '#8ab8d8']], col: '#cfe4ff', dust: false, debris: false, marks: false, flash: false });
     } },
 
   { id: 'water/rain-splash', name: 'Rain splash', category: 'water', loop: true, duration: 2.4, stage: { sky: 'storm', view: { pos: [1.8, 1.2, 2.6], target: [0, 0.3, 0], fov: 40 } },
@@ -113,12 +115,12 @@ export default [
 
   { id: 'water/ripples', name: 'Ripples', category: 'water', loop: true, duration: 2, stage: { sky: 'night', view: { pos: [2.2, 1.4, 3.2], target: [0, 0, 0], fov: 38 } },
     build(fx) {
-      fx.water({ r: 3, y: 0.01, deep: '#04121c', shallow: '#0f3a52', waves: 0.2, ripples: [{ t: 0, x: 0, z: 0, amp: 0.07 }, { t: 0.5, x: 0.2, z: 0.1, amp: 0.05 }, { t: 1.0, x: -0.1, z: -0.1, amp: 0.06 }, { t: 1.5, x: 0.1, z: -0.2, amp: 0.045 }, { t: 0.25, x: -0.9, z: 0.5, amp: 0.05 }, { t: 1.25, x: 0.9, z: -0.4, amp: 0.05 }], speed: 0.9, decay: 0.55, k: 18, width: 14 });
+      fx.water({ r: 3, y: 0.015, deep: '#04121c', shallow: '#0f3a52', waves: 0.2, ripples: [{ t: 0, x: 0, z: 0, amp: 0.07 }, { t: 0.5, x: 0.2, z: 0.1, amp: 0.05 }, { t: 1.0, x: -0.1, z: -0.1, amp: 0.06 }, { t: 1.5, x: 0.1, z: -0.2, amp: 0.045 }, { t: 0.25, x: -0.9, z: 0.5, amp: 0.05 }, { t: 1.25, x: 0.9, z: -0.4, amp: 0.05 }], speed: 0.9, decay: 0.55, k: 18, width: 14 });
       fx.light({ color: '#cfe0ff', intensity: 22, pos: [-1.5, 3, 2.5], norm: 14, range: 12 });
       fx.emitter({ count: 8, kind: 'soft', shape: 'disc', radius: 2.2, dir: [0, 1, 0], speed: 0, life: [2, 2], size: [0.04, 0.04], ramp: [[0, '#cfe6ff', 0], [0.5, '#cfe6ff', 0.7], [1, '#cfe6ff', 0]], intensity: 1.2, pos: [0, 0.03, 0] });
     } },
 
-  { id: 'water/splash', name: 'Splash', category: 'water', loop: false, duration: 2.5, stage: { sky: 'day', view: { pos: [2.6, 1.4, 3.6], target: [0, 0.7, 0], fov: 42 } },
+  { id: 'water/splash', name: 'Splash', category: 'water', tier: 1, loop: false, duration: 2.5, stage: { sky: 'day', view: { pos: [2.6, 1.4, 3.6], target: [0, 0.7, 0], fov: 42 } },
     build(fx) {
       const TI = 0.7, g = new THREE.Group(); rocks(g, 12, 2.1, 7, 0.2);
       fx.mesh(g, null, { dur: 99 });
@@ -126,18 +128,19 @@ export default [
       const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(0.07, 1), mat('#5a5a58', 0.8));
       fx.mesh(stone, (t, pr, f, w, o) => { const u = Math.min(1, t / TI); o.position.set(0, 2.0 - 1.98 * u * u, 0); o.rotation.set(t * 5, t * 3, 0); o.visible = t < TI + 0.03; }, { dur: 99 });
       fx.light({ color: '#cfe4ff', intensity: 10, pos: [1, 3, 2], norm: 14 });
-      fx.ring({ t0: TI, dur: 0.7, r: [0.08, 1.3], width: [0.14, 0.03], normal: 'up', pos: [0, 0.03, 0], intensity: 0.9, ramp: [[0, '#fff'], [1, '#bde']], fade: [0, 0.5] });
+      fx.ring({ t0: TI, dur: 0.7, r: [0.08, 1.3], width: [0.07, 0.015], normal: 'up', pos: [0, 0.03, 0], intensity: 0.3, fill: 0, ramp: [[0, '#e8f2ff'], [1, '#bde']], fade: [0, 0.5] });
       fx.emitter({ count: 90, kind: 'drop', shape: 'ring', radius: 0.14, radiusIn: 0.1, dir: [0, 1, 0], spread: 0.35, radial: 0.8, speed: [2.5, 4.2], life: [0.6, 0.95], size: [0.035, 0.02], gravity: [0, -9.8, 0], delay: TI, ramp: DROP, pos: [0, 0.03, 0] });
       fx.emitter({ count: 24, kind: 'drop', shape: 'point', dir: [0, 1, 0], spread: 0.1, speed: [4.5, 6.2], life: [0.9, 1.2], size: [0.05, 0.03], gravity: [0, -9.8, 0], delay: TI + 0.04, ramp: DROP, pos: [0, 0.03, 0] });
-      fx.emitter({ count: 20, kind: 'soft', shape: 'ring', radius: 0.18, dir: [0, 1, 0], spread: 0.5, radial: 0.8, speed: [0.5, 1.5], life: [0.4, 0.7], size: [0.4, 0.16], ramp: [[0, '#fff', 0], [0.3, '#fff', 0.5], [1, '#cfe6f2', 0]], intensity: 0.5, delay: TI, pos: [0, 0.05, 0] });
+      fx.emitter({ count: 20, kind: 'smoke', blend: 'normal', lit: 1, order: -1, shape: 'ring', radius: 0.18, dir: [0, 1, 0], spread: 0.5, radial: 0.8, speed: [0.5, 1.5], life: [0.4, 0.7], size: [0.4, 0.16], ramp: [[0, '#bfbfbf', 0], [0.3, '#bfbfbf', 0.5], [1, '#afc2cc', 0]], intensity: 0.5, delay: TI, pos: [0, 0.05, 0] });
       mist(fx, { count: 14, shape: 'ring', radius: 0.2, dir: [0, 1, 0], spread: 0.6, speed: [0.5, 1.5], life: [0.8, 1.2], size: [0.3, 0.7], delay: TI, pos: [0, 0.1, 0] });
+      burst(fx, [0, 0.03, 0], TI, { ramp: [[0, '#e8f2ff'], [0.5, '#cfe8f6'], [1, '#8ab8d8']], col: '#cfe4ff', dust: false, debris: false, marks: false, flash: false });
     } },
 
   { id: 'water/water-jet', name: 'Water jet', category: 'water', loop: true, duration: 1, stage: { sky: 'day', view: { pos: [1.6, 1.2, 5.2], target: [1.0, 0.7, 0], fov: 42 } },
     build(fx) {
       const noz = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.35, 14), mat('#a8873a', 0.3, 0.9)); noz.rotation.z = Math.PI / 2 - 0.1; noz.position.set(-0.3, 1.0, 0); fx.mesh(noz, null, { dur: 99 });
       const o = [-0.1, 1.0, 0];
-      fx.water({ r: 1.6, y: 0.012, deep: '#27403e', shallow: '#4a8a8c', waves: 0.2, pos: [3.0, 0.012, 0], ripples: rip(8, 1, 0, 0, 0.5, 0.04, 4), speed: 1.4, decay: 1.6 });
+      fx.water({ r: 1.6, y: 0.015, deep: '#27403e', shallow: '#4a8a8c', waves: 0.2, pos: [3.0, 0.015, 0], ripples: rip(8, 1, 0, 0, 0.5, 0.04, 4), speed: 1.4, decay: 1.6 });
       fx.light({ color: '#cfe4ff', intensity: 10, pos: [1, 3, 2], norm: 14 });
       fx.emitter({ count: 220, kind: 'drop', shape: 'point', dir: [1, 0.1, 0], spread: 0.012, speed: [6, 6.2], life: [0.5, 0.52], size: [0.04, 0.03], gravity: [0, -9.8, 0], ramp: DROP, pos: o });
       fx.emitter({ count: 120, kind: 'drop', shape: 'point', dir: [1, 0.1, 0], spread: 0.09, speed: [5, 6.2], life: [0.5, 0.6], size: [0.03, 0.012], gravity: [0, -9.8, 0], ramp: DROP, pos: o });
@@ -170,7 +173,7 @@ export default [
       fx.light({ color: '#e0eeff', intensity: 12, pos: [1.5, 4, 3], norm: 14 });
       fx.emitter({ count: 120, kind: 'drop', shape: 'box', shapeSize: [0.8, 0, 0.05], dir: [0, -1, 0.1], spread: 0.1, speed: [4, 7], life: [0.55, 0.7], size: [0.04, 0.03], gravity: [0, -9.8, 0], ramp: DROP, pos: [0, 3.0, 0.0] });
       mist(fx, { count: 50, shape: 'box', shapeSize: [0.8, 0, 0.2], dir: [0, 1, 0.5], spread: 0.8, speed: [0.3, 1.2], life: [1, 1.7], size: [0.6, 1.8], pos: [0, 0.3, 0.3] });
-      fx.emitter({ count: 50, kind: 'soft', shape: 'box', shapeSize: [0.8, 0, 0.3], dir: [0, 1, 0.6], spread: 0.6, speed: [0.5, 1.5], life: [0.6, 1.0], size: [0.6, 0.25], ramp: [[0, '#fff', 0], [0.3, '#fff', 0.45], [1, '#dfeeff', 0]], intensity: 0.7, pos: [0, 0.1, 0.1] });
+      fx.emitter({ count: 50, kind: 'smoke', blend: 'normal', lit: 1, order: -1, shape: 'box', shapeSize: [0.8, 0, 0.3], dir: [0, 1, 0.6], spread: 0.6, speed: [0.5, 1.5], life: [0.6, 1.0], size: [0.6, 0.25], ramp: [[0, '#bfbfbf', 0], [0.3, '#bfbfbf', 0.45], [1, '#b4c0ce', 0]], intensity: 0.7, pos: [0, 0.1, 0.1] });
       fx.emitter({ count: 70, kind: 'drop', shape: 'box', shapeSize: [0.8, 0, 0.2], dir: [0, 1, 0.8], spread: 0.6, speed: [1.5, 3.5], life: [0.4, 0.7], size: [0.03, 0.015], gravity: [0, -9.8, 0], ramp: DROP, pos: [0, 0.05, 0.2] });
     } },
 
@@ -201,18 +204,18 @@ export default [
       fx.light({ color: '#ffeedd', intensity: 14, pos: [2, 4, 5], norm: 14 });
       fx.shake(TC, 0.5, 0.05);
       const fl = (o) => ({ shape: 'line', shapeSize: [0, 0, 3.4], ...o });
-      fx.emitter(fl({ count: 60, kind: 'smoke', blend: 'normal', lit: 1, dir: [0.7, 0.4, 0], spread: 0.5, speed: [0.4, 1.6], life: [0.8, 1.4], size: [0.5, 1.2], ramp: [[0, '#eef6f8', 0], [0.2, '#e2eef2', 0.75], [1, '#c0d8e2', 0]], t0: TC - 0.7, delay: TC - 0.7, emit: 0.7, pos: [-0.1, 2.0, 0] }));
-      fx.emitter(fl({ count: 110, kind: 'smoke', blend: 'normal', lit: 1, dir: [0.8, 0.3, 0], spread: 0.6, speed: [0.5, 2.8], life: [1.0, 1.8], size: [0.7, 1.9], ramp: [[0, '#e8f4f8', 0], [0.15, '#dcecf2', 0.7], [1, '#b8d4de', 0]], delay: TC, emit: 0.6, drag: 1, pos: [0.4, 0.3, 0], radial: 0 }));
+      fx.emitter(fl({ count: 60, kind: 'smoke', blend: 'normal', lit: 1, dir: [0.7, 0.4, 0], spread: 0.5, speed: [0.4, 1.6], life: [0.8, 1.4], size: [0.5, 1.2], ramp: [[0, '#bac0c2', 0], [0.2, '#b7c1c4', 0.75], [1, '#adc3cc', 0]], t0: TC - 0.7, delay: TC - 0.7, emit: 0.7, pos: [-0.1, 2.0, 0] }));
+      fx.emitter(fl({ count: 110, kind: 'smoke', blend: 'normal', lit: 1, dir: [0.8, 0.3, 0], spread: 0.6, speed: [0.5, 2.8], life: [1.0, 1.8], size: [0.7, 1.9], ramp: [[0, '#b7c1c4', 0], [0.15, '#b4c1c6', 0.7], [1, '#aac4cd', 0]], delay: TC, emit: 0.6, drag: 1, pos: [0.4, 0.3, 0], radial: 0 }));
       fx.emitter(fl({ count: 220, kind: 'drop', dir: [0.4, 1, 0], spread: 0.7, speed: [2, 7], life: [0.7, 1.4], size: [0.05, 0.025], gravity: [0, -9.8, 0], ramp: DROP, delay: TC, emit: 0.4, pos: [0.4, 0.2, 0] }));
-      fx.emitter(fl({ count: 90, kind: 'smoke', blend: 'normal', lit: 1, dir: [1, 0.05, 0], spread: 0.2, speed: [2.2, 3.6], life: [1.2, 1.6], size: [0.8, 1.6], ramp: [[0, '#eef6f8', 0], [0.2, '#dceaf0', 0.65], [1, '#bcd4de', 0]], delay: TC + 0.3, emit: 0.8, drag: 1.2, pos: [0.8, 0.08, 0] }));
-      fx.emitter(fl({ count: 70, kind: 'smoke', blend: 'normal', lit: 1, dir: [0, 1, 0], spread: 0.6, speed: [0.3, 1.2], life: [1.0, 1.8], size: [0.7, 1.6], ramp: [[0, '#fff', 0], [0.2, '#fff', 0.5], [1, '#dff', 0]], delay: TC + 0.9, emit: 1.4, drag: 0.5, pos: [1.6, 0.1, 0] }));
+      fx.emitter(fl({ count: 90, kind: 'smoke', blend: 'normal', lit: 1, dir: [1, 0.05, 0], spread: 0.2, speed: [2.2, 3.6], life: [1.2, 1.6], size: [0.8, 1.6], ramp: [[0, '#bac0c2', 0], [0.2, '#b5c1c6', 0.65], [1, '#adc3cc', 0]], delay: TC + 0.3, emit: 0.8, drag: 1.2, pos: [0.8, 0.08, 0] }));
+      fx.emitter(fl({ count: 70, kind: 'smoke', blend: 'normal', lit: 1, dir: [0, 1, 0], spread: 0.6, speed: [0.3, 1.2], life: [1.0, 1.8], size: [0.7, 1.6], ramp: [[0, '#bfbfbf', 0], [0.2, '#bfbfbf', 0.5], [1, '#aac4c4', 0]], delay: TC + 0.9, emit: 1.4, drag: 0.5, pos: [1.6, 0.1, 0] }));
     } },
 
   { id: 'water/whirlpool', name: 'Whirlpool', category: 'water', loop: true, duration: 3, stage: { sky: 'day', view: { pos: [0, 7.4, 3.2], target: [0, 0, 0], fov: 42 } },
     build(fx) {
-      fx.water({ r: 3.2, y: 0.01, deep: '#021420', shallow: '#1b6a8a', vortex: 1.5, waves: 0.8, speed: 1.2 });
+      fx.water({ r: 3.2, y: 0.015, deep: '#021420', shallow: '#1b6a8a', vortex: 1.5, waves: 0.8, speed: 1.2 });
       const sp = spiral(); fx.mesh(sp, (t) => { sp.material.uniforms.uP.value = -t / 3; }, { dur: 99 });
       fx.light({ color: '#e0eeff', intensity: 12, pos: [1.5, 4, 3], norm: 14 });
-      fx.emitter({ count: 120, kind: 'soft', shape: 'ring', radius: 2.9, radiusIn: 1.2, dir: [0, 0, 0], spread: 0, speed: 0, life: [2.6, 2.9], size: [0.18, 0.06], ramp: [[0, '#fff', 0], [0.2, '#eefaff', 0.55], [0.8, '#cfeaf6', 0.5], [1, '#fff', 0]], intensity: 0.7, swirl: 1.6, radial: -0.4, pos: [0, 0.06, 0], floorFade: 0 });
+      fx.emitter({ count: 120, kind: 'soft', shape: 'ring', radius: 2.9, radiusIn: 1.2, dir: [0, 0, 0], spread: 0, speed: 0, life: [2.6, 2.9], size: [0.18, 0.06], ramp: [[0, '#e8f2ff', 0], [0.2, '#eefaff', 0.55], [0.8, '#cfeaf6', 0.5], [1, '#fff', 0]], intensity: 0.7, swirl: 1.6, radial: -0.4, pos: [0, 0.06, 0], floorFade: 0 });
     } },
 ];

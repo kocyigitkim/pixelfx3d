@@ -75,7 +75,7 @@ function batModel() {
   const body = ellipsoid(0.12, 0.065, 0.065, fur); grp.add(body); const head = ellipsoid(0.06, 0.055, 0.055, fur); head.position.set(0.14, 0.015, 0); grp.add(head);
   const snout = ellipsoid(0.035, 0.028, 0.03, std('#3a2c3a')); snout.position.set(0.19, -0.005, 0); grp.add(snout); const nose = ellipsoid(0.012, 0.01, 0.014, std('#d58')); nose.position.set(0.222, 0.0, 0); grp.add(nose);
   for (const s of [-1, 1]) { const ear = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.1, 10), fur); ear.position.set(0.13, 0.095, s * 0.035); ear.rotation.set(s * 0.25, 0, -0.15); grp.add(ear);
-    const eye = ellipsoid(0.011, 0.011, 0.011, new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2020').multiplyScalar(3) })); eye.position.set(0.185, 0.03, s * 0.028); grp.add(eye);
+    const eye = ellipsoid(0.011, 0.011, 0.011, new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2020').multiplyScalar(1.5) })); eye.position.set(0.185, 0.03, s * 0.028); grp.add(eye);
     const fang = new THREE.Mesh(new THREE.ConeGeometry(0.004, 0.022, 6), std('#eee')); fang.rotation.z = PI; fang.position.set(0.215, -0.03, s * 0.01); grp.add(fang);
     const foot = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.045, 6), fur); foot.position.set(-0.17, -0.03, s * 0.03); foot.rotation.z = 1.2; grp.add(foot); }
   const wings = [-1, 1].map((s) => { const g = wingGeo(); const m = new THREE.Mesh(g, skin); m.frustumCulled = false; grp.add(m); return { g, s }; });
@@ -177,7 +177,7 @@ function skullModel() {
   const cran = ellipsoid(0.17, 0.155, 0.15, bone, 32); cran.position.set(0, 0.04, -0.01); grp.add(cran);
   const face = ellipsoid(0.12, 0.1, 0.12, bone); face.position.set(0.075, -0.07, 0); grp.add(face);
   for (const s of [-1, 1]) { const ch = ellipsoid(0.05, 0.03, 0.03, bone); ch.position.set(0.09, -0.07, s * 0.115); ch.rotation.y = s * 0.3; grp.add(ch);
-    const sock = ellipsoid(0.046, 0.054, 0.045, dark); sock.position.set(0.128, 0.0, s * 0.065); grp.add(sock); const eye = ellipsoid(0.01, 0.01, 0.01, new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff5a10').multiplyScalar(3.5) })); eye.position.set(0.158, 0.0, s * 0.065); eye.userData.eye = 1; grp.add(eye); }
+    const sock = ellipsoid(0.046, 0.054, 0.045, dark); sock.position.set(0.128, 0.0, s * 0.065); grp.add(sock); const eye = ellipsoid(0.01, 0.01, 0.01, new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff5a10').multiplyScalar(1.5) })); eye.position.set(0.158, 0.0, s * 0.065); eye.userData.eye = 1; grp.add(eye); }
   const nose = new THREE.Mesh(new THREE.ConeGeometry(0.026, 0.06, 3), dark); nose.rotation.set(0, 0, -PI / 2); nose.position.set(0.178, -0.05, 0); nose.scale.set(1, 1, 0.7); grp.add(nose);
   const upper = new THREE.Group(); grp.add(upper); for (let i = 0; i < 8; i++) { const a = ((i - 3.5) / 3.5) * 1.1, t = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.036, 0.021), std('#f4eedc')); t.position.set(0.1 + 0.025 * Math.cos(a) * 0.9, -0.125, Math.sin(a) * 0.075); t.rotation.y = a; upper.add(t); }
   const jaw = new THREE.Group(); jaw.position.set(-0.03, -0.1, 0); grp.add(jaw); const arc = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.011, 10, 24, PI), bone); arc.rotation.set(PI / 2, 0, -PI / 2); arc.rotation.x = PI / 2; arc.rotation.z = -PI / 2; arc.position.set(0.13, 0, 0); arc.scale.set(1, 1.05, 0.85); jaw.add(arc);
@@ -236,7 +236,7 @@ export default [
       });
       floorBlob(fx, 0.5, '#000', false, (t) => { const p = path(t); return { x: p[0], z: p[2], s: 1 + p[1] * 0.3, a: 0.3 }; });
       fx.light({ color: '#8fa8ff', intensity: 20, pos: [-1.5, 3.5, 2], range: 12 }); fx.light({ color: '#ff3040', intensity: 5, pos: [0, 1.3, 0.5], range: 4 });
-      fx.emitter({ count: 14, kind: 'dust', blend: 'normal', lit: 1, shape: 'box', shapeSize: [1.6, 0.6, 1], pos: [0, 1.3, 0], size: [0.12, 0.3], life: [2, 4], speed: [0.02, 0.1], ramp: [[0, '#556', 0], [0.4, '#778', 0.12], [1, '#445', 0]], order: -1 });
+      fx.emitter({ count: 14, kind: 'dust', blend: 'normal', lit: 1, shape: 'box', shapeSize: [1.6, 0.6, 1], pos: [0, 1.3, 0], size: [0.12, 0.3], life: [2, 4], speed: [0.02, 0.1], ramp: [[0, '#3a3a45', 0], [0.4, '#51515c', 0.12], [1, '#2e2e3a', 0]], order: -1 });
     } },
 
   /* ===================================================================== BIRD */
@@ -252,7 +252,7 @@ export default [
       // sky blobs of light + falling feathers
       fx.light({ color: '#fff4dc', intensity: 16, pos: [1.5, 3, 2], range: 12 });
       fx.emitter({ count: 4, kind: 'petal', blend: 'normal', lit: 1, shape: 'box', shapeSize: [0.2, 0.05, 0.1], pos: [-0.2, 1.1, 0], dir: [-0.3, -1, 0], spread: 0.4, speed: [0.1, 0.3], size: [0.05, 0.04], life: [1.8, 2.4], gravity: [0, -0.1, 0], turb: [0.4, 1.5], rot: 3, ramp: [[0, '#6aa8ee', 0], [0.2, '#6aa8ee', 1], [1, '#4a88d0', 0]], aspect: 2.2 });
-      fx.emitter({ count: 14, kind: 'dust', blend: 'normal', lit: 1, shape: 'box', shapeSize: [1.5, 0.8, 0.6], pos: [0, 1.2, 0], size: [0.06, 0.12], life: [2, 3.5], speed: [0.02, 0.08], ramp: [[0, '#fff', 0], [0.4, '#fff', 0.12], [1, '#fff', 0]], order: -1 });
+      fx.emitter({ count: 14, kind: 'dust', blend: 'normal', lit: 1, shape: 'box', shapeSize: [1.5, 0.8, 0.6], pos: [0, 1.2, 0], size: [0.06, 0.12], life: [2, 3.5], speed: [0.02, 0.08], ramp: [[0, '#bfbfbf', 0], [0.4, '#bfbfbf', 0.12], [1, '#bfbfbf', 0]], order: -1 });
     } },
 
   /* ===================================================================== BUTTERFLY */
@@ -272,7 +272,7 @@ export default [
       dustTrail(fx, (t) => path(t), { n: 46, life: 1.6, color: '#8fc8ff', size: 1.2, drift: 0.2, gravity: -0.08 });
       fx.light({ color: '#7fb0ff', intensity: 8, pos: [0, 1.1, 0.5], range: 4, flicker: 0.1, rate: 3 }); fx.light({ color: '#ffd8a0', intensity: 25, pos: [1.5, 2.5, 2], range: 10 });
       floorBlob(fx, 0.3, '#000', false, (t) => { const p = path(t); return { x: p[0], z: p[2], s: 1 + p[1] * 0.2, a: 0.25 }; });
-      fx.emitter({ count: 30, kind: 'soft', shape: 'box', shapeSize: [1.2, 0.5, 0.8], pos: [0, 1.1, 0], size: [0.03, 0.01], life: [2, 3.2], speed: [0.02, 0.1], gravity: [0, -0.02, 0], intensity: 2, ramp: [[0, '#9cf', 0], [0.4, '#cdf', 0.9], [1, '#69f', 0]] });
+      fx.emitter({ count: 30, kind: 'soft', shape: 'box', shapeSize: [1.2, 0.5, 0.8], pos: [0, 1.1, 0], size: [0.03, 0.01], life: [2, 3.2], speed: [0.02, 0.1], gravity: [0, -0.02, 0], intensity: 1.5, ramp: [[0, '#9cf', 0], [0.4, '#cdf', 0.9], [1, '#69f', 0]] });
     } },
 
   /* ===================================================================== EYEBALL */
@@ -289,7 +289,7 @@ export default [
         nerves.forEach((segs, i) => segs.forEach((h, j) => { h.rotation.x = 0.35 * Math.sin(u * TAU * 2 - j * 0.8 + i * 2) ; h.rotation.y = 0.35 * Math.sin(u * TAU * 2 - j * 0.8 + i * 1.3 + 1); })); }, {});
       fx.light({ color: '#ffe8d0', intensity: 40, pos: [1.2, 2.2, 2.2], range: 8 }); fx.light({ color: '#ff3a30', intensity: 15, pos: [-1, 0.8, 1], range: 5 });
       floorBlob(fx, 0.45, '#000', false, (t) => ({ s: 1 + 0.05 * Math.sin((t / 3.2) * TAU), a: 0.45 }));
-      fx.emitter({ count: 16, kind: 'dust', blend: 'normal', lit: 1, shape: 'sphere', radius: 1, pos: [0, 1.2, 0], size: [0.1, 0.25], life: [2.5, 4], speed: [0.02, 0.06], ramp: [[0, '#977', 0], [0.4, '#a88', 0.1], [1, '#655', 0]], order: -1 });
+      fx.emitter({ count: 16, kind: 'dust', blend: 'normal', lit: 1, shape: 'sphere', radius: 1, pos: [0, 1.2, 0], size: [0.1, 0.25], life: [2.5, 4], speed: [0.02, 0.06], ramp: [[0, '#574444', 0], [0.4, '#614d4d', 0.1], [1, '#3a3030', 0]], order: -1 });
     } },
 
   /* ===================================================================== FISH SCHOOL */
@@ -320,7 +320,7 @@ export default [
       const FP = [0, 1.62, 0];
       fx.orb({ kind: 'fire', r: [0.11, 0.11], pos: [0.0, 1.58, -0.04], intensity: 0.6, ramp: [[0, '#300'], [0.35, '#d82a06'], [0.7, '#ff9a2a'], [1, '#ffd890']], noise: 3, scroll: 2.4, disp: 0.5, alpha: 0.8, follow: (o, ta, t) => { const k = (t / 2.4) * TAU; o.position.set(0.05 * Math.sin(k) - 0.01, 1.52 + 0.1 * Math.sin(k * 2), 0.05 * Math.cos(k) - 0.03); } });
       fx.emitter({ count: 34, kind: 'flame', shape: 'disc', radius: 0.07, dir: [0, 1, 0], spread: 0.16, speed: [0.25, 0.8], life: [0.5, 0.9], size: [0.4, 0.1], aspect: 2, intensity: 0.45, turb: [0.15, 2], ramp: [[0, '#fff2c0', 1], [0.25, '#ffa020', 0.9], [0.7, '#d02000', 0.5], [1, '#300', 0]], pos: FP, follow: (m, ta, t) => { const k = (t / 2.4) * TAU; m.position.set(0.05 * Math.sin(k), 1.52 + 0.1 * Math.sin(k * 2), 0.05 * Math.cos(k) - 0.03); } });
-      fx.emitter({ count: 26, kind: 'spark', shape: 'disc', radius: 0.08, dir: [0, 1, 0], spread: 0.7, speed: [0.5, 1.5], life: [0.8, 1.6], gravity: [0, 0.2, 0], size: [0.035, 0.01], stretch: 0.5, intensity: 2.5, ramp: [[0, '#fff6c0'], [0.4, '#ff8a20'], [1, '#400', 0]], pos: FP, follow: (m, ta, t) => { const k = (t / 2.4) * TAU; m.position.set(0.05 * Math.sin(k), 1.55 + 0.1 * Math.sin(k * 2), 0.05 * Math.cos(k)); } });
+      fx.emitter({ count: 26, kind: 'spark', shape: 'disc', radius: 0.08, dir: [0, 1, 0], spread: 0.7, speed: [0.5, 1.5], life: [0.8, 1.6], gravity: [0, 0.2, 0], size: [0.035, 0.01], stretch: 0.5, intensity: 1.5, ramp: [[0, '#fff6c0'], [0.4, '#ff8a20'], [1, '#400', 0]], pos: FP, follow: (m, ta, t) => { const k = (t / 2.4) * TAU; m.position.set(0.05 * Math.sin(k), 1.55 + 0.1 * Math.sin(k * 2), 0.05 * Math.cos(k)); } });
       const lp = fx.light({ color: '#ff8a30', intensity: 3.5, pos: [0, 1.7, 0.2], range: 7, flicker: 0.3, rate: 11 }); fx.on((t) => { lp.l.position.set(0, 1.55 + 0.1 * Math.sin((t / 2.4) * TAU * 2), 0.25); });
       fx.light({ color: '#dfe8ff', intensity: 10, pos: [1.2, 1.5, 2.0], range: 8 }); fx.light({ color: '#ff4a10', intensity: 2, pos: [0, 1.25, 0.5], range: 3, flicker: 0.4, rate: 7 });
       floorBlob(fx, 0.5, '#ff8030', true, (t) => ({ s: 1.4, a: 0.3 + 0.08 * Math.sin((t / 2.4) * TAU * 3) }));
@@ -383,8 +383,8 @@ export default [
       }, {});
       fx.light({ color: '#ffd8b0', intensity: 28, pos: [1.5, 2.5, 2], range: 9 }); fx.light({ color: '#7fa0ff', intensity: 8, pos: [-1.5, 1, 1], range: 6 });
       floorBlob(fx, 0.22, '#000', false, (t) => { const bx = 0.5 * sstep(0.8, 1.18, t) - 0.5 * sstep(1.95, 2.45, t); return { x: bx - 0.02, s: 1 - 0.3 * Math.sin(clamp((t - 0.8) / 0.38) * PI) * (t < 1.2 ? 1 : 0), a: 0.5 }; });
-      fx.emitter({ count: 18, kind: 'dust', blend: 'normal', lit: 1, shape: 'disc', radius: 0.08, pos: [0.5, 0.02, 0], dir: [0, 1, 0], spread: 1.2, speed: [0.1, 0.4], life: [0.6, 1.1], size: [0.05, 0.14], ramp: [[0, '#8a7a5a', 0], [0.2, '#9a8a68', 0.4], [1, '#6a5a40', 0]], delay: 1.18, order: -1 });
-      fx.emitter({ count: 18, kind: 'dust', blend: 'normal', lit: 1, shape: 'disc', radius: 0.08, pos: [0, 0.02, 0], dir: [0, 1, 0], spread: 1.2, speed: [0.1, 0.4], life: [0.6, 1.1], size: [0.05, 0.14], ramp: [[0, '#8a7a5a', 0], [0.2, '#9a8a68', 0.4], [1, '#6a5a40', 0]], delay: 0.82, order: -1 });
+      fx.emitter({ count: 18, kind: 'dust', blend: 'normal', lit: 1, shape: 'disc', radius: 0.08, pos: [0.5, 0.02, 0], dir: [0, 1, 0], spread: 1.2, speed: [0.1, 0.4], life: [0.6, 1.1], size: [0.05, 0.14], ramp: [[0, '#514835', 0], [0.2, '#5a513d', 0.4], [1, '#3e3526', 0]], delay: 1.18, order: -1 });
+      fx.emitter({ count: 18, kind: 'dust', blend: 'normal', lit: 1, shape: 'disc', radius: 0.08, pos: [0, 0.02, 0], dir: [0, 1, 0], spread: 1.2, speed: [0.1, 0.4], life: [0.6, 1.1], size: [0.05, 0.14], ramp: [[0, '#514835', 0], [0.2, '#5a513d', 0.4], [1, '#3e3526', 0]], delay: 0.82, order: -1 });
     } },
 
   /* ===================================================================== GHOST */
@@ -393,7 +393,7 @@ export default [
     build(fx) {
       const grp = new THREE.Group(), mat = ghostMat(); const prof = []; for (let i = 0; i <= 32; i++) { const v = i / 32; let r; if (v < 0.72) r = 0.34 * (1.12 - 0.12 * Math.pow(v / 0.72, 1.5)) * (1 + 0.1 * Math.pow(1 - v / 0.72, 3)); else r = 0.34 * 1.0 * Math.sqrt(Math.max(0, 1 - Math.pow((v - 0.72) / 0.28, 2.2))) * 1.0; prof.push(new THREE.Vector2(Math.max(0.0005, r * (v < 0.72 ? 0.95 + 0.1 * Math.sin(v * 3) : 1)), v * 1.0)); }
       const body = new THREE.Mesh(new THREE.LatheGeometry(prof, 56), mat); body.renderOrder = 10; grp.add(body);
-      const dark = new THREE.MeshBasicMaterial({ color: '#02060e' }), eyeG = new THREE.MeshBasicMaterial({ color: new THREE.Color('#9fe8ff').multiplyScalar(3), transparent: true, opacity: 0.95, depthTest: false }); const eyes = [];
+      const dark = new THREE.MeshBasicMaterial({ color: '#02060e' }), eyeG = new THREE.MeshBasicMaterial({ color: new THREE.Color('#9fe8ff').multiplyScalar(1.5), transparent: true, opacity: 0.95, depthTest: false }); const eyes = [];
       for (const s of [-1, 1]) { const e = ellipsoid(0.045, 0.07, 0.03, dark, 16); e.position.set(0.3, 0.72, s * 0.11); e.rotation.y = s * 0.0; grp.add(e); const gl = ellipsoid(0.02, 0.035, 0.01, eyeG, 10); gl.position.set(0.325, 0.74, s * 0.11); gl.renderOrder = 40; grp.add(gl); eyes.push(gl); }
       const mouth = ellipsoid(0.04, 0.06, 0.05, dark, 16); mouth.position.set(0.31, 0.55, 0); grp.add(mouth);
       const arms = [-1, 1].map((s) => { const a = ellipsoid(0.17, 0.05, 0.05, mat, 16); a.position.set(0.05, 0.5, s * 0.3); a.renderOrder = 11; grp.add(a); return { a, s }; });
@@ -404,7 +404,7 @@ export default [
       floorBlob(fx, 0.4, '#000', false, (t) => { const k = (t / 2.4) * TAU; return { x: 0.55 * Math.sin(k), s: 1, a: 0.2 }; });
       const gl = fx.light({ color: '#7fb8ff', intensity: 16, pos: [0, 0.9, 0.4], range: 6, flicker: 0.2, rate: 2 }); fx.on((t) => { gl.l.position.x = 0.55 * Math.sin((t / 2.4) * TAU) + 0.2; });
       fx.emitter({ count: 26, kind: 'smoke', blend: 'normal', lit: 1, shape: 'box', shapeSize: [1.4, 0.02, 0.5], pos: [0, 0.05, 0], dir: [0, 1, 0], spread: 0.5, speed: [0.03, 0.12], life: [2, 3.2], size: [0.5, 1.0], ramp: [[0, '#6a8aa8', 0], [0.3, '#8aa8c8', 0.16], [1, '#4a6a88', 0]], order: -1, turb: [0.1, 0.5] });
-      fx.emitter({ count: 18, kind: 'soft', shape: 'box', shapeSize: [1, 0.5, 0.4], pos: [0, 0.8, 0], size: [0.03, 0.008], life: [1.5, 2.4], speed: [0.05, 0.2], dir: [0, 1, 0], spread: 0.5, intensity: 2, ramp: [[0, '#9cf', 0], [0.3, '#cef', 1], [1, '#68c', 0]] });
+      fx.emitter({ count: 18, kind: 'soft', shape: 'box', shapeSize: [1, 0.5, 0.4], pos: [0, 0.8, 0], size: [0.03, 0.008], life: [1.5, 2.4], speed: [0.05, 0.2], dir: [0, 1, 0], spread: 0.5, intensity: 1.5, ramp: [[0, '#9cf', 0], [0.3, '#cef', 1], [1, '#68c', 0]] });
     } },
 
   /* ===================================================================== JELLYFISH */
@@ -419,11 +419,11 @@ export default [
       const BY = (t) => 1.15 + 0.2 * lift(t);
       fx.mesh(grp, (t) => { const p = pulse(t); mat.uniforms.uP.value = p; mat.uniforms.uT.value = t / 3.2; grp.position.set(0, BY(t), 0); grp.rotation.z = 0.05 * Math.sin((t / 3.2) * TAU); inner.scale.set(1 - 0.2 * p, 0.45 + 0.2 * p, 1 - 0.2 * p); }, {});
       const mkT = (i, n, thick) => { const a0 = (i / n) * TAU + 0.2, R = thick ? 0.12 : 0.44, len = thick ? 1.0 : 0.85 + 0.5 * hash(i + 3), ph = hash(i) * TAU; const fn = (t) => { const pl = pulse(t), by = BY(t); const out = []; const N = 22; for (let j = N; j >= 0; j--) { const s = j / N, lag = Math.sin((t / 3.2) * TAU * 2 - s * 4 + ph); const spread = (1 - 0.28 * pl) * (R + s * 0.05) * (thick ? 1 : 1) ; const sway = (thick ? 0.08 : 0.07) * s * s * lag + 0.03 * s * Math.sin((t / 3.2) * TAU + ph); out.push([Math.cos(a0) * spread + sway, by - 0.01 - s * len * (1 + 0.1 * pl) + 0.05 * lag * s * 0, Math.sin(a0) * spread + sway * Math.sin(ph) + 0.4 * 0]); } return out; }; return fn; };
-      for (let i = 0; i < 5; i++) { const f = mkT(i, 5, true); fx.ribbon({ n: 22, points: (t) => f(t), width: (u) => 0.035 * (0.5 + 0.5 * Math.sin(u * PI * 0.9 + 0.5)) + 0.01, head: () => 1.001, tail: 1.0, intensity: 1.8, core: 3, ramp: [[0, '#fff0ff'], [0.4, '#ff7ad0'], [1, '#601080']] }); }
+      for (let i = 0; i < 5; i++) { const f = mkT(i, 5, true); fx.ribbon({ n: 22, points: (t) => f(t), width: (u) => 0.035 * (0.5 + 0.5 * Math.sin(u * PI * 0.9 + 0.5)) + 0.01, head: () => 1.001, tail: 1.0, intensity: 1.5, core: 3, ramp: [[0, '#fff0ff'], [0.4, '#ff7ad0'], [1, '#601080']] }); }
       for (let i = 0; i < 12; i++) { const f = mkT(i, 12, false); fx.ribbon({ n: 22, points: (t) => f(t), width: 0.012, head: () => 1.001, tail: 1.1, intensity: 1.2, core: 3, ramp: [[0, '#e0f8ff'], [0.4, '#7ad0ff'], [1, '#1030a0']] }); }
-      const lt = fx.light({ color: '#d070ff', intensity: 40, pos: [0, 1.3, 0.2], range: 7 }); fx.on((t) => { lt.l.position.y = BY(t) + 0.1; lt.l.intensity = 0.09 * (30 + 18 * pulse(t)); });
+      const lt = fx.light({ color: '#d070ff', intensity: 25, pos: [0, 1.3, 0.2], range: 7 }); fx.on((t) => { lt.l.position.y = BY(t) + 0.1; lt.l.intensity = 0.09 * (16 + 9 * pulse(t)); });
       fx.emitter({ count: 120, kind: 'soft', shape: 'box', shapeSize: [2.2, 1.6, 1.2], pos: [0, 1.4, 0], size: [0.012, 0.005], life: [3, 5], speed: [0.01, 0.05], dir: [0, 1, 0], spread: 1, intensity: 1.2, ramp: [[0, '#8ef', 0], [0.4, '#bef', 0.6], [1, '#6bd', 0]] });
-      fx.emitter({ count: 20, kind: 'soft', shape: 'sphere', radius: 0.4, pos: [0, 1.3, 0], size: [0.03, 0.01], life: [1.5, 2.5], speed: [0.02, 0.1], intensity: 2.5, ramp: [[0, '#ff9ae0', 0], [0.3, '#ffd0f0', 1], [1, '#a040c0', 0]], follow: (m, ta, t) => { m.position.y = BY(t) - 0.2; } });
+      fx.emitter({ count: 20, kind: 'soft', shape: 'sphere', radius: 0.4, pos: [0, 1.3, 0], size: [0.03, 0.01], life: [1.5, 2.5], speed: [0.02, 0.1], intensity: 1.5, ramp: [[0, '#ff9ae0', 0], [0.3, '#ffd0f0', 1], [1, '#a040c0', 0]], follow: (m, ta, t) => { m.position.y = BY(t) - 0.2; } });
     } },
 
   /* ===================================================================== SLIME */
@@ -478,7 +478,7 @@ export default [
       function smoothC(x) { return x * x * (3 - 2 * x); }
       floorBlob(fx, 1.2, '#000', false, () => ({ x: 0.0, z: 0.0, s: 1.0, a: 0.0 }));
       fx.light({ color: '#ffd8b0', intensity: 30, pos: [1.5, 2.5, 2], range: 9 }); fx.light({ color: '#7f90ff', intensity: 8, pos: [-1.5, 1, -1], range: 6 });
-      fx.emitter({ count: 24, kind: 'dust', blend: 'normal', lit: 1, shape: 'box', shapeSize: [1.0, 0.01, 0.3], pos: [0, 0.02, 0], dir: [-1, 0.3, 0], spread: 0.5, speed: [0.2, 0.5], life: [0.6, 1.3], size: [0.05, 0.16], ramp: [[0, '#8a7a5a', 0], [0.2, '#9a8a68', 0.28], [1, '#6a5a40', 0]], order: -1 });
+      fx.emitter({ count: 24, kind: 'dust', blend: 'normal', lit: 1, shape: 'box', shapeSize: [1.0, 0.01, 0.3], pos: [0, 0.02, 0], dir: [-1, 0.3, 0], spread: 0.5, speed: [0.2, 0.5], life: [0.6, 1.3], size: [0.05, 0.16], ramp: [[0, '#514835', 0], [0.2, '#5a513d', 0.28], [1, '#3e3526', 0]], order: -1 });
     } },
 
   /* ===================================================================== WISP */
@@ -490,9 +490,9 @@ export default [
       fx.orb({ kind: 'fire', r: [0.13, 0.13], ramp, intensity: 0.7, noise: 3.2, scroll: 2.8, disp: 0.55, alpha: 0.9, follow: (o, ta, t) => o.position.set(...path(t)) });
       fx.orb({ kind: 'plasma', r: [0.06, 0.06], ramp: [[0, '#8ff'], [1, '#fff']], intensity: 0.9, noise: 4, scroll: 4, disp: 0.3, follow: (o, ta, t) => o.position.set(...path(t)) });
       fx.trail({ path, t0: -3.2, dur: 6.4, len: 1.1, width: 0.1, n: 80, intensity: 0.8, core: 3, ramp: [[0, '#f0ffff'], [0.25, '#5ff0ff'], [0.6, '#0a8a9a'], [1, '#012a30']] });
-      fx.trail({ path: (t) => { const p = path(t - 0.12); return [p[0], p[1] + 0.03, p[2]]; }, t0: -3.2, dur: 6.4, len: 0.9, width: 0.035, n: 60, intensity: 0.8, core: 4, ramp: [[0, '#fff'], [1, '#2ab8c8']] });
+      fx.trail({ path: (t) => { const p = path(t - 0.12); return [p[0], p[1] + 0.03, p[2]]; }, t0: -3.2, dur: 6.4, len: 0.9, width: 0.035, n: 60, intensity: 0.8, core: 4, ramp: [[0, '#e8f2ff'], [1, '#2ab8c8']] });
       fx.emitter({ count: 36, kind: 'flame', shape: 'disc', radius: 0.05, dir: [0, 1, 0], spread: 0.3, speed: [0.2, 0.6], life: [0.4, 0.8], size: [0.35, 0.08], aspect: 2.0, intensity: 0.35, turb: [0.15, 2], ramp: [[0, '#e8ffff', 1], [0.25, '#4fe8ff', 0.9], [0.7, '#0a7090', 0.5], [1, '#012', 0]], follow: (m, ta, t) => m.position.set(...path(t)) });
-      fx.emitter({ count: 40, kind: 'spark', shape: 'sphere', radius: 0.08, dir: [0, 1, 0], spread: 2, speed: [0.1, 0.5], life: [0.8, 1.8], gravity: [0, 0.2, 0], size: [0.03, 0.008], stretch: 0.5, intensity: 3, ramp: [[0, '#fff'], [0.4, '#5ff0ff'], [1, '#046', 0]], follow: (m, ta, t) => m.position.set(...path(t)) });
+      fx.emitter({ count: 40, kind: 'spark', shape: 'sphere', radius: 0.08, dir: [0, 1, 0], spread: 2, speed: [0.1, 0.5], life: [0.8, 1.8], gravity: [0, 0.2, 0], size: [0.03, 0.008], stretch: 0.5, intensity: 1.5, ramp: [[0, '#fff'], [0.4, '#5ff0ff'], [1, '#046', 0]], follow: (m, ta, t) => m.position.set(...path(t)) });
       dustTrail(fx, path, { n: 40, life: 1.6, color: '#7ff4ff', size: 1.2, drift: 0.18, gravity: 0.1 });
       const lp = fx.light({ color: '#4fe8ff', intensity: 22, pos: [0, 0.7, 0], range: 8, flicker: 0.2, rate: 6 }); fx.on((t) => lp.l.position.set(...path(t)));
       floorBlob(fx, 0.9, '#2ad8f0', true, (t) => { const p = path(t); return { x: p[0], z: p[2], s: 1 + (1 - Math.min(1, p[1])) * 0.2, a: 0.5 }; });

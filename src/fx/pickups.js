@@ -1,5 +1,6 @@
 // pickups: real 3D PBR objects (coin, gem, heart, key, potion, star, shard, chest...) + sparkles / glints / light.
 import * as THREE from 'three';
+import { burst } from './_aaa.js';
 
 const TAU = Math.PI * 2, sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -18,7 +19,7 @@ const glow = (fx, color, x, y, z, I = 14, range = 6, p = {}) => fx.light({ color
 
 /** 4-point glint sparkles scattered around a volume */
 function sparkles(fx, color, pos, rad, n = 8, extra = {}) {
-  return fx.emitter({ count: n, kind: 'glint', shape: 'sphere', radius: rad, pos, size: [0.22, 0.05], sizeVar: 0.5, life: [0.5, 1.1], speed: [0, 0.08], intensity: 3.5,
+  return fx.emitter({ count: n, kind: 'glint', shape: 'sphere', radius: rad, pos, size: [0.22, 0.05], sizeVar: 0.5, life: [0.5, 0.7], speed: [0, 0.08], intensity: 3.5,
     ramp: [[0, color, 0], [0.25, '#fff', 1], [1, color, 0]], rot: 0.5, ...extra });
 }
 
@@ -140,13 +141,13 @@ export default [
       const lo = (t) => sstep(0.85, 1.4, t) * (1 - 0.35 * sstep(2, 4.4, t));
       fx.light({ color: '#ffc457', intensity: 40, pos: [0, 0.8, 0.05], range: 8, env: lo, norm: 40 });
       fx.beam({ pos: [0, 0.45, 0], height: 3.4, r: [0.3, 0.55], t0: 0.85, fade: [0.5, 1.2], intensity: 0.4, noise: 0.7, freq: 2.5, speed: 1, edge: 1.2, ramp: [[0, '#fff2c0'], [0.5, '#ffc55a'], [1, '#a05010']], alpha: 0.7 });
-      fx.beam({ pos: [0, 0.45, 0], height: 2.2, r: [0.12, 0.3], t0: 0.85, fade: [0.2, 1.6], intensity: 0.7, noise: 0.5, edge: 1.0, ramp: [[0, '#fff'], [0.5, '#ffe08a'], [1, '#c70']] });
+      fx.beam({ pos: [0, 0.45, 0], height: 2.2, r: [0.12, 0.3], t0: 0.85, fade: [0.2, 1.6], intensity: 0.7, noise: 0.5, edge: 1.0, ramp: [[0, '#fff2dc'], [0.5, '#ffe08a'], [1, '#c70']] });
       fx.decal({ kind: 'glow', r: [1.4, 1.6], t0: 0.85, fade: [0.4, 1.5], intensity: 0.6, ramp: [[0, '#000'], [0.4, '#a85a10'], [1, '#ffcf70']], alpha: 0.8, y: 0.008 });
-      fx.ring({ t0: 0.95, dur: 0.8, r: [0.2, 2.2], width: [0.2, 0.05], normal: 'up', intensity: 0.7, ramp: [[0, '#fff'], [0.5, '#fd9'], [1, '#c80']] });
-      fx.flash(0.95, 0.25, '#ffe9b0', 0.35); fx.shake(0.9, 0.35, 0.025);
-      fx.emitter({ count: 70, kind: 'soft', shape: 'disc', radius: 0.3, pos: [0, 0.55, 0], dir: [0, 1, 0], spread: 0.7, speed: [0.6, 2.4], life: [1, 2.4], size: [0.08, 0.02], gravity: [0, -0.2, 0], drag: 0.5, ramp: [[0, '#fff3c0'], [0.4, '#ffc040'], [1, '#c60', 0]], intensity: 2.5, delay: 0.95, emit: 0.4, turb: [0.3, 1] });
-      sparkles(fx, '#ffd36a', [0, 0.9, 0], 0.7, 14, { delay: 1.1, emit: 2.5, life: [0.5, 1.2], size: [0.28, 0.06] });
-      fx.emitter({ count: 24, kind: 'dust', blend: 'normal', lit: 1, shape: 'box', shapeSize: [0.4, 0.02, 0.25], pos: [0, 0.5, 0], dir: [0, 1, 0], spread: 1, speed: [0.2, 0.6], life: [1.5, 3], size: [0.2, 0.5], ramp: [[0, '#6b5a40', 0], [0.2, '#8d7a58', 0.25], [1, '#4a3d2a', 0]], delay: 0.9, emit: 0.3, order: -1 });
+      fx.ring({ t0: 0.95, dur: 0.8, r: [0.2, 2.2], width: [0.2, 0.05], normal: 'up', intensity: 0.7, ramp: [[0, '#fff2dc'], [0.5, '#fd9'], [1, '#c80']] });
+      fx.shake(0.9, 0.35, 0.025);
+      fx.emitter({ count: 70, kind: 'soft', shape: 'disc', radius: 0.3, pos: [0, 0.55, 0], dir: [0, 1, 0], spread: 0.7, speed: [0.6, 2.4], life: [1, 2.4], size: [0.08, 0.02], gravity: [0, -0.2, 0], drag: 0.5, ramp: [[0, '#fff3c0'], [0.4, '#ffc040'], [1, '#c60', 0]], intensity: 1.5, delay: 0.95, emit: 0.4, turb: [0.3, 1] });
+      sparkles(fx, '#ffd36a', [0, 0.9, 0], 0.7, 14, { delay: 1.1, emit: 2.5, life: [0.5, 0.7], size: [0.28, 0.06] });
+      fx.emitter({ count: 24, kind: 'dust', blend: 'normal', lit: 1, shape: 'box', shapeSize: [0.4, 0.02, 0.25], pos: [0, 0.5, 0], dir: [0, 1, 0], spread: 1, speed: [0.2, 0.6], life: [1.5, 3], size: [0.2, 0.5], ramp: [[0, '#463b2a', 0], [0.2, '#5d503a', 0.25], [1, '#30281b', 0]], delay: 0.9, emit: 0.3, order: -1 });
     } },
 
   /* ===================================================================== coin-spin */
@@ -163,7 +164,7 @@ export default [
       grp.scale.setScalar(1.35);
       fx.mesh(grp, (t) => { grp.rotation.y = (t / 1.6) * TAU; grp.position.y = 0.66 + Math.sin((t / 1.6) * TAU) * 0.04; grp.rotation.z = 0.12 * Math.sin((t / 1.6) * TAU); });
       contactShadow(fx, 0.34, (t) => ({ s: 1 - 0.1 * Math.sin((t / 1.6) * TAU), a: 0.55 }));
-      glow(fx, '#ffd070', 0.5, 1.0, 0.9, 40, 6); glow(fx, '#6a8cff', -0.8, 0.5, -0.4, 10, 5);
+      glow(fx, '#ffd070', 0.5, 1.0, 0.9, 25, 6); glow(fx, '#6a8cff', -0.8, 0.5, -0.4, 10, 5);
       // sweeping glint when the face turns to the key light
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: [0, 0.66, 0.0], size: [0.55, 0.55], life: [0.28, 0.28], intensity: 4, ramp: [[0, '#fff'], [1, '#ffd070', 0]], delay: 0.18, emit: 0.001, follow: (m, ta, t) => m.position.set(0.14 + 0.03 * Math.sin(t * 6), 0.78, 0.05) });
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: [0.1, 0.55, 0.05], size: [0.4, 0.4], life: [0.25, 0.25], intensity: 3.5, ramp: [[0, '#fff'], [1, '#ffd070', 0]], delay: 0.98, emit: 0.001 });
@@ -171,21 +172,20 @@ export default [
     } },
 
   /* ===================================================================== collect-burst */
-  { id: 'pickups/collect-burst', name: 'Collect burst', category: 'pickups', loop: false, duration: 1.35,
+  { id: 'pickups/collect-burst', name: 'Collect burst', category: 'pickups', loop: false, duration: 1.35, tier: 1,
     stage: { sky: 'dusk', bloom: 0.45, view: { pos: [1.2, 1.4, 4.0], target: [0, 0.85, 0], fov: 38 } },
     build(fx) {
       const c = new THREE.Mesh(coinGeo(), metal('#f4b92c', 0.22)); const g = new THREE.Group(); const inner = new THREE.Group(); inner.rotation.x = Math.PI / 2; inner.add(c); g.add(inner); g.scale.setScalar(1.3);
       fx.mesh(g, (t) => { const u = clamp(t / 0.36); g.position.set(0, 0.5 + 0.55 * Math.min(1, u) + 0.2 * u * u, 0); g.rotation.y = t * 14; g.scale.setScalar(1.3 * (t < 0.36 ? 1 + 0.2 * u : Math.max(0.001, 1 - (t - 0.36) / 0.12) * 1.2)); g.visible = t < 0.5; }, { dur: 0.6 });
       const P = [0, 0.95, 0];
-      fx.flash(0.36, 0.15, '#fff0c0', 0.18); fx.shake(0.36, 0.2, 0.02);
-      fx.light({ color: '#ffd070', intensity: 35, pos: P, range: 6, t0: 0.34, dur: 1, env: (t) => Math.exp(-t * 3.2), norm: 60 });
       fx.ring({ t0: 0.36, dur: 0.7, r: [0.1, 1.0], width: [0.14, 0.03], normal: 'cam', pos: P, intensity: 1.2, ramp: [[0, '#fff0c0'], [0.5, '#ffd060'], [1, '#e90']] });
-      fx.ring({ t0: 0.4, dur: 0.8, r: [0.1, 1.5], width: [0.16, 0.04], normal: 'up', y: 0.02, intensity: 1.0, ramp: [[0, '#fff'], [1, '#d90']] });
+      fx.ring({ t0: 0.4, dur: 0.8, r: [0.1, 1.5], width: [0.08, 0.02], normal: 'up', y: 0.02, intensity: 0.3, fill: 0, ramp: [[0, '#fff2dc'], [1, '#d90']] });
       fx.emitter({ count: 1, kind: 'glint', pos: P, size: [0.8, 0.3], life: [0.32, 0.32], intensity: 1.6, delay: 0.36, ramp: [[0, '#fff'], [1, '#fc6', 0]] });
-      fx.emitter({ count: 1, kind: 'soft', pos: P, size: [0.5, 0.15], life: [0.4, 0.4], intensity: 0.5, delay: 0.36, ramp: [[0, '#fff'], [1, '#fb4', 0]] });
-      fx.emitter({ count: 60, kind: 'spark', shape: 'point', pos: P, dir: [0, 1, 0], spread: 3.14, speed: [1.5, 4.5], life: [0.4, 0.95], gravity: [0, -3.2, 0], drag: 1.2, size: [0.06, 0.015], stretch: 0.9, intensity: 2.5, delay: 0.36, ramp: [[0, '#fff4c8'], [0.4, '#ffc840'], [1, '#c60', 0]] });
-      sparkles(fx, '#ffe090', P, 0.7, 12, { delay: 0.38, emit: 0.25, life: [0.5, 1.0], size: [0.3, 0.06], speed: [0.1, 0.6], radial: 0.3 });
-      fx.emitter({ count: 24, kind: 'soft', shape: 'sphere', radius: 0.6, pos: P, speed: [-1.8, -1.0], radial: 1, life: [0.3, 0.34], size: [0.07, 0.02], intensity: 1.8, t0: 0, t1: 0.36, emit: 0.3, ramp: [[0, '#ffd070', 0], [0.4, '#ffe8a0', 1], [1, '#ffd070', 0]] });
+      fx.emitter({ count: 1, kind: 'soft', pos: P, size: [0.5, 0.15], life: [0.4, 0.4], intensity: 0.5, delay: 0.36, ramp: [[0, '#fff2dc'], [1, '#fb4', 0]] });
+      fx.emitter({ count: 60, kind: 'spark', shape: 'point', pos: P, dir: [0, 1, 0], spread: 3.14, speed: [1.5, 4.5], life: [0.4, 0.7], gravity: [0, -3.2, 0], drag: 1.2, size: [0.06, 0.015], stretch: 0.9, intensity: 2.5, delay: 0.36, ramp: [[0, '#fff4c8'], [0.4, '#ffc840'], [1, '#c60', 0]] });
+      sparkles(fx, '#ffe090', P, 0.7, 12, { delay: 0.38, emit: 0.25, life: [0.5, 0.7], size: [0.3, 0.06], speed: [0.1, 0.6], radial: 0.3 });
+      fx.emitter({ count: 24, kind: 'soft', shape: 'sphere', radius: 0.6, pos: P, speed: [-1.8, -1.0], radial: 1, life: [0.3, 0.34], size: [0.07, 0.02], intensity: 1.5, t0: 0, t1: 0.36, emit: 0.3, ramp: [[0, '#ffd070', 0], [0.4, '#ffe8a0', 1], [1, '#ffd070', 0]] });
+      burst(fx, P, 0.36, { ground: false, impact: false, ramp: [[0, '#fff2dc'], [0.5, '#ffd060'], [1, '#e90']], col: '#ffd070' });
     } },
 
   /* ===================================================================== crystal-shard */
@@ -201,10 +201,10 @@ export default [
       fx.mesh(grp, (t) => { const k = (t / 3.2) * TAU; grp.position.y = 0.92 + 0.07 * Math.sin(k); main.rotation.y = k; main.rotation.z = 0.12 * Math.sin(k); core.rotation.copy(main.rotation); core.scale.setScalar(0.9 * (1 + 0.08 * Math.sin(k * 3)));
         small.forEach((m, i) => { const a = k + (i / 3) * TAU; m.position.set(Math.cos(a) * 0.42, 0.1 * Math.sin(k * 2 + i * 2) + [0.1, -0.1, 0.0][i], Math.sin(a) * 0.42); m.rotation.set(a * 2, a, 0.4 * i); }); });
       contactShadow(fx, 0.45, (t) => ({ s: 1 + 0.08 * Math.sin((t / 3.2) * TAU), a: 0.5 }));
-      fx.light({ color: '#ff9a2a', intensity: 40, pos: [0, 0.95, 0.15], range: 7, env: (t) => 0.8 + 0.2 * Math.sin((t / 3.2) * TAU * 2), norm: 30 });
+      fx.light({ color: '#ff9a2a', intensity: 25, pos: [0, 0.95, 0.15], range: 7, env: (t) => 0.8 + 0.2 * Math.sin((t / 3.2) * TAU * 2), norm: 30 });
       fx.decal({ kind: 'glow', r: [0.95, 0.95], intensity: 1.0, ramp: [[0, '#000'], [0.5, '#a04000'], [1, '#ff9a30']], alpha: 0.7, y: 0.006 });
       sparkles(fx, '#ffcf70', [0, 0.95, 0], 0.55, 8, { size: [0.26, 0.05] });
-      fx.emitter({ count: 22, kind: 'soft', shape: 'sphere', radius: 0.4, pos: [0, 0.8, 0], dir: [0, 1, 0], spread: 0.5, speed: [0.1, 0.4], life: [1.6, 3.2], size: [0.035, 0.01], intensity: 2.5, gravity: [0, 0.1, 0], turb: [0.2, 1], ramp: [[0, '#ffb040', 0], [0.3, '#ffd080', 1], [1, '#f60', 0]] });
+      fx.emitter({ count: 22, kind: 'soft', shape: 'sphere', radius: 0.4, pos: [0, 0.8, 0], dir: [0, 1, 0], spread: 0.5, speed: [0.1, 0.4], life: [1.6, 3.2], size: [0.035, 0.01], intensity: 1.5, gravity: [0, 0.1, 0], turb: [0.2, 1], ramp: [[0, '#ffb040', 0], [0.3, '#ffd080', 1], [1, '#f60', 0]] });
     } },
 
   /* ===================================================================== gem-spin */
@@ -219,7 +219,7 @@ export default [
       fx.mesh(grp, (t) => { const k = (t / 2.4) * TAU; grp.rotation.y = k; grp.rotation.z = 0.18; grp.rotation.x = 0.1 * Math.sin(k); grp.position.y = 0.78 + 0.05 * Math.sin(k); inner.scale.setScalar(1 + 0.08 * Math.sin(k * 2)); });
       contactShadow(fx, 0.42, (t) => ({ s: 1 + 0.06 * Math.sin((t / 2.4) * TAU), a: 0.55 }));
       // two orbiting coloured lights give moving refracted flashes
-      fx.light({ color: '#ff2a55', intensity: 40, pos: [0.4, 0.9, 0.4], range: 5, flicker: 0.1, rate: 2.6 });
+      fx.light({ color: '#ff2a55', intensity: 22, pos: [0.4, 0.9, 0.4], range: 5, flicker: 0.1, rate: 2.6 });
       fx.light({ color: '#ffffff', intensity: 22, pos: [0, 0, 0], range: 5 });
       fx.on((t) => { const a = (t / 2.4) * TAU; const L = fx.parts.filter((p) => p.l); if (L[1]) L[1].l.position.set(Math.cos(-a * 2) * 0.9, 1.2, Math.sin(-a * 2) * 0.9); if (L[0]) L[0].l.position.set(Math.cos(a) * 0.7, 0.6, Math.sin(a) * 0.7); });
       fx.decal({ kind: 'glow', r: [0.9, 0.9], intensity: 0.8, ramp: [[0, '#000'], [0.5, '#80102a'], [1, '#ff3060']], alpha: 0.6, y: 0.006 });
@@ -244,7 +244,7 @@ export default [
       for (let i = 0; i < N; i++) { const mm = new THREE.MeshStandardMaterial({ color: '#ff5a78', emissive: '#ff2040', emissiveIntensity: 1.2, roughness: 0.3, transparent: true, metalness: 0 }); const m = new THREE.Mesh(mini, mm); m.scale.setScalar(0.08); minis.push({ m, a: fx.rng() * TAU, r: 0.28 + fx.rng() * 0.25, ph: i / N }); }
       const gm = new THREE.Group(); minis.forEach((o) => gm.add(o.m));
       fx.mesh(gm, (t) => { minis.forEach((o) => { const u = (t / 1.2 + o.ph) % 1; o.m.position.set(Math.cos(o.a) * o.r * (0.6 + 0.4 * u), 0.7 + u * 0.85, Math.sin(o.a) * o.r * (0.6 + 0.4 * u)); o.m.rotation.y = o.a + u * 4; o.m.rotation.z = Math.sin(u * 8 + o.a) * 0.3; const s = 0.07 * sstep(0, 0.15, u) * (1 - 0.3 * u); o.m.scale.setScalar(Math.max(1e-4, s)); o.m.material.opacity = 1 - sstep(0.6, 1, u); }); });
-      fx.emitter({ count: 18, kind: 'soft', shape: 'sphere', radius: 0.4, pos: [0, 0.8, 0], dir: [0, 1, 0], spread: 0.6, speed: [0.2, 0.6], life: [0.8, 1.2], size: [0.05, 0.01], intensity: 2.5, ramp: [[0, '#ff8090', 0], [0.3, '#ffc0c8', 1], [1, '#f03050', 0]] });
+      fx.emitter({ count: 18, kind: 'soft', shape: 'sphere', radius: 0.4, pos: [0, 0.8, 0], dir: [0, 1, 0], spread: 0.6, speed: [0.2, 0.6], life: [0.8, 1.2], size: [0.05, 0.01], intensity: 1.5, ramp: [[0, '#ff8090', 0], [0.3, '#ffc0c8', 1], [1, '#f03050', 0]] });
       sparkles(fx, '#ff9aaa', [0, 0.85, 0], 0.5, 5, { size: [0.22, 0.05] });
     } },
 
@@ -264,12 +264,12 @@ export default [
       key.rotation.z = 0; grp.scale.setScalar(1.05);
       fx.mesh(grp, (t) => { const u = t / 2; grp.rotation.y = u * TAU; grp.rotation.z = 0.28 + 0.06 * Math.sin(u * TAU * 2); grp.position.y = 0.95 + 0.04 * Math.sin(u * TAU); });
       contactShadow(fx, 0.34, () => ({ s: 1, a: 0.5 }));
-      fx.light({ color: '#cfe0ff', intensity: 55, pos: [0.7, 1.3, 0.9], range: 6 }); fx.light({ color: '#ffd080', intensity: 20, pos: [-0.8, 0.5, 0.5], range: 5 });
+      fx.light({ color: '#cfe0ff', intensity: 25, pos: [0.7, 1.3, 0.9], range: 6 }); fx.light({ color: '#ffd080', intensity: 20, pos: [-0.8, 0.5, 0.5], range: 5 });
       // glint running down the key shaft, ending in a flash at the bit
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: [0, 1.2, 0.05], size: [0.3, 0.3], life: [0.7, 0.7], intensity: 4, ramp: [[0, '#fff', 0], [0.2, '#fff', 1], [0.8, '#dfeaff', 1], [1, '#bcd', 0]], delay: 0.2, emit: 0.001,
         follow: (m, ta, t) => { const u = clamp((t - 0.2) / 0.7); m.position.set(0.02, 1.2 - u * 0.8, 0.07); } });
       fx.emitter({ count: 1, kind: 'glint', pos: [0.04, 0.5, 0.06], size: [0.6, 0.15], life: [0.3, 0.3], intensity: 3.5, ramp: [[0, '#fff'], [1, '#cdf', 0]], delay: 0.9, emit: 0.001 });
-      fx.emitter({ count: 14, kind: 'soft', shape: 'sphere', radius: 0.3, pos: [0, 0.9, 0], size: [0.03, 0.01], life: [0.4, 0.9], speed: [0, 0.3], intensity: 3, delay: 0.9, emit: 0.5, ramp: [[0, '#fff', 0], [0.3, '#fff', 1], [1, '#9bf', 0]] });
+      fx.emitter({ count: 14, kind: 'soft', shape: 'sphere', radius: 0.3, pos: [0, 0.9, 0], size: [0.03, 0.01], life: [0.4, 0.9], speed: [0, 0.3], intensity: 1.5, delay: 0.9, emit: 0.5, ramp: [[0, '#e8f2ff', 0], [0.3, '#fff', 1], [1, '#9bf', 0]] });
     } },
 
   /* ===================================================================== loot-beam */
@@ -279,15 +279,15 @@ export default [
       const sw = swordMesh(); const grp = new THREE.Group(); grp.add(sw); sw.rotation.z = Math.PI / 2 + 0.25; sw.position.set(-0.5, 0, 0); grp.scale.setScalar(1.5);
       fx.mesh(grp, (t) => { const u = t / 2.4; grp.position.y = 0.55 + 0.06 * Math.sin(u * TAU); grp.rotation.y = u * TAU; });
       contactShadow(fx, 0.55, (t) => ({ s: 1 + 0.07 * Math.sin((t / 2.4) * TAU), a: 0.5 }));
-      const rar = [[0, '#ffffff'], [0.35, '#d99bff'], [0.7, '#9a3cff'], [1, '#3a0a80']];
+      const rar = [[0, '#f0e8ff'], [0.35, '#d99bff'], [0.7, '#9a3cff'], [1, '#3a0a80']];
       fx.beam({ pos: [0, 0, 0], height: 6, r: [0.28, 0.2], intensity: 0.5, noise: 0.7, freq: 2.2, speed: 1.1, edge: 1.5, ramp: rar, endFade: 0.3 });
-      fx.beam({ pos: [0, 0, 0], height: 6, r: [0.1, 0.06], intensity: 1.2, noise: 0.3, freq: 3, speed: 2, edge: 1.0, ramp: [[0, '#fff'], [1, '#e0b0ff']], endFade: 0.3 });
+      fx.beam({ pos: [0, 0, 0], height: 6, r: [0.1, 0.06], intensity: 1.2, noise: 0.3, freq: 3, speed: 2, edge: 1.0, ramp: [[0, '#f0e8ff'], [1, '#e0b0ff']], endFade: 0.3 });
       fx.beam({ pos: [0, 0, 0], height: 3.4, r: [0.55, 0.3], intensity: 0.22, noise: 0.9, freq: 1.5, speed: 0.8, edge: 2.2, ramp: rar, endFade: 0.5 });
       fx.decal({ kind: 'glow', r: [1.2, 1.2], intensity: 1.2, ramp: [[0, '#000'], [0.4, '#4a1090'], [1, '#c58bff']], alpha: 0.9, y: 0.006 });
       fx.ring({ r: [0.2, 1.4], width: [0.1, 0.05], normal: 'up', intensity: 1.3, dur: 2.4, ramp: rar, decay: 1 });
       fx.ring({ r: [0.2, 1.4], width: [0.1, 0.05], normal: 'up', intensity: 1.3, dur: 1.2, t0: 1.2, ramp: rar, decay: 1 }); fx.ring({ r: [0.2, 1.4], width: [0.1, 0.05], normal: 'up', intensity: 1.3, dur: 1.2, t0: 0, ramp: rar, decay: 1 });
-      fx.light({ color: '#a560ff', intensity: 30, pos: [0, 1.0, 0], range: 9, flicker: 0.1 }); fx.light({ color: '#e8d0ff', intensity: 24, pos: [0.6, 0.8, 0.6], range: 4 });
-      fx.emitter({ count: 70, kind: 'soft', shape: 'disc', radius: 0.5, dir: [0, 1, 0], spread: 0.1, speed: [0.5, 1.6], life: [1.5, 2.4], size: [0.045, 0.012], intensity: 3, turb: [0.15, 1], swirl: 1.2, ramp: [[0, '#fff', 0], [0.2, '#e8c8ff', 1], [1, '#8a3cff', 0]] });
+      fx.light({ color: '#a560ff', intensity: 22, pos: [0, 1.0, 0], range: 9, flicker: 0.1 }); fx.light({ color: '#e8d0ff', intensity: 24, pos: [0.6, 0.8, 0.6], range: 4 });
+      fx.emitter({ count: 70, kind: 'soft', shape: 'disc', radius: 0.5, dir: [0, 1, 0], spread: 0.1, speed: [0.5, 1.6], life: [1.5, 2.4], size: [0.045, 0.012], intensity: 1.5, turb: [0.15, 1], swirl: 1.2, ramp: [[0, '#f0e8ff', 0], [0.2, '#e8c8ff', 1], [1, '#8a3cff', 0]] });
       sparkles(fx, '#e8c8ff', [0, 0.7, 0], 0.5, 8, { size: [0.3, 0.06] });
     } },
 
@@ -312,10 +312,10 @@ export default [
         const a1 = 0.04 * Math.sin(k * 2), a2 = 0.04 * Math.cos(k * 2 + 1), hump = 0.012 * Math.sin(k * 4);
         for (const i of topIdx) { const x = base[i * 3], z = base[i * 3 + 2]; pos.setY(i, level + a1 * x * 4 + a2 * z * 4 + hump * (x * x + z * z) * 20); } pos.needsUpdate = true; liqG.computeVertexNormals(); liqM.emissiveIntensity = 0.3 + 0.1 * Math.sin(k * 2); });
       contactShadow(fx, 0.4, () => ({ s: 1, a: 0.5 }));
-      fx.light({ color: '#40ff90', intensity: 14, pos: [0, 0.55, 0.2], range: 6, flicker: 0.12, rate: 3 }); fx.light({ color: '#cfe8ff', intensity: 30, pos: [0.8, 1.4, 1.0], range: 6 });
+      fx.light({ color: '#40ff90', intensity: 14, pos: [0, 0.55, 0.2], range: 6, flicker: 0.12, rate: 3 }); fx.light({ color: '#cfe8ff', intensity: 25, pos: [0.8, 1.4, 1.0], range: 6 });
       fx.decal({ kind: 'glow', r: [0.9, 0.9], intensity: 0.9, ramp: [[0, '#000'], [0.5, '#0a6a34'], [1, '#40ff90']], alpha: 0.6, y: 0.006 });
       fx.emitter({ count: 9, kind: 'bubble', shape: 'disc', radius: 0.12, pos: [0, 0.5, 0], dir: [0, 1, 0], spread: 0.15, speed: [0.12, 0.25], life: [0.9, 1.4], size: [0.035, 0.02], intensity: 1.2, ramp: [[0, '#c0ffd8', 0], [0.2, '#c0ffd8', 0.9], [1, '#60ff90', 0]], follow: (m, ta, t) => { const k = (t / 2.4) * TAU; m.position.y = 0.4 + 0.05 * Math.sin(k); } });
-      fx.emitter({ count: 20, kind: 'soft', shape: 'disc', radius: 0.1, pos: [0, 1.25, 0], dir: [0, 1, 0], spread: 0.5, speed: [0.1, 0.4], life: [1, 2], size: [0.04, 0.01], intensity: 2.5, turb: [0.2, 1.2], ramp: [[0, '#80ffb0', 0], [0.3, '#c0ffd8', 1], [1, '#30d070', 0]] });
+      fx.emitter({ count: 20, kind: 'soft', shape: 'disc', radius: 0.1, pos: [0, 1.25, 0], dir: [0, 1, 0], spread: 0.5, speed: [0.1, 0.4], life: [1, 2], size: [0.04, 0.01], intensity: 1.5, turb: [0.2, 1.2], ramp: [[0, '#80ffb0', 0], [0.3, '#c0ffd8', 1], [1, '#30d070', 0]] });
       sparkles(fx, '#b8ffd8', [0, 0.85, 0], 0.4, 4);
     } },
 
@@ -338,12 +338,12 @@ export default [
         rays.quaternion.copy(fx.camQuat); rays.quaternion.premultiply(new THREE.Quaternion()); rays.rotation.z += 0; rayM.uniforms.uA.value = 0.5 + 0.5 * (0.5 + 0.5 * Math.sin(k * 2 + 1)); rays.scale.setScalar(0.9 + 0.2 * Math.sin(k * 2)); rays.rotateZ(u * 0.8); });
       // eyes only visible when facing front; fine
       contactShadow(fx, 0.4, (t) => ({ s: 1 - 0.1 * Math.sin((t / 1.6) * TAU), a: 0.5 }));
-      fx.light({ color: '#ffc830', intensity: 70, pos: [0, 1.0, 0.8], range: 7, env: (t) => 0.8 + 0.3 * Math.sin((t / 1.6) * TAU * 2), norm: 40 });
+      fx.light({ color: '#ffc830', intensity: 22, pos: [0, 1.0, 0.8], range: 7, env: (t) => 0.8 + 0.3 * Math.sin((t / 1.6) * TAU * 2), norm: 40 });
       fx.decal({ kind: 'glow', r: [1.0, 1.0], intensity: 1.0, ramp: [[0, '#000'], [0.5, '#a05a00'], [1, '#ffd040']], alpha: 0.7, y: 0.006 });
-      fx.ring({ pos: [0, 1.0, 0], normal: 'cam', r: [0.4, 0.9], width: [0.04, 0.012], intensity: 0.8, dur: 0.8, loop: true, ramp: [[0, '#fff'], [1, '#fb2']] });
-      fx.ring({ pos: [0, 1.0, 0], normal: 'cam', r: [0.4, 0.9], width: [0.04, 0.012], intensity: 0.8, dur: 0.8, t0: 0.8, ramp: [[0, '#fff'], [1, '#fb2']] });
+      fx.ring({ pos: [0, 1.0, 0], normal: 'cam', r: [0.4, 0.9], width: [0.04, 0.012], intensity: 0.8, dur: 0.8, loop: true, ramp: [[0, '#fff2dc'], [1, '#fb2']] });
+      fx.ring({ pos: [0, 1.0, 0], normal: 'cam', r: [0.4, 0.9], width: [0.04, 0.012], intensity: 0.8, dur: 0.8, t0: 0.8, ramp: [[0, '#fff2dc'], [1, '#fb2']] });
       sparkles(fx, '#fff2a0', [0, 1.0, 0], 0.7, 12, { size: [0.3, 0.06], intensity: 4 });
-      fx.emitter({ count: 22, kind: 'spark', shape: 'sphere', radius: 0.3, pos: [0, 1.0, 0], dir: [0, 1, 0], spread: 3, speed: [0.2, 0.7], radial: 1, life: [0.5, 1.1], size: [0.04, 0.01], stretch: 0.5, intensity: 4, ramp: [[0, '#fff'], [0.4, '#ffd040'], [1, '#f80', 0]] });
+      fx.emitter({ count: 22, kind: 'spark', shape: 'sphere', radius: 0.3, pos: [0, 1.0, 0], dir: [0, 1, 0], spread: 3, speed: [0.2, 0.7], radial: 1, life: [0.5, 0.7], size: [0.04, 0.01], stretch: 0.5, intensity: 4, ramp: [[0, '#fff2dc'], [0.4, '#ffd040'], [1, '#f80', 0]] });
     } },
 
   /* ===================================================================== xp-orb */
@@ -354,13 +354,13 @@ export default [
       const ramp = [[0, '#f4ffd0'], [0.3, '#9aff40'], [0.7, '#2aa820'], [1, '#063']];
       fx.orb({ kind: 'plasma', r: [0.13, 0.13], ramp, intensity: 1.8, noise: 3, scroll: 2, disp: 0.12, power: 2, follow: (o, ta, t) => o.position.set(...path(t)) });
       fx.orb({ kind: 'energy', r: [0.26, 0.26], ramp: [[0, '#082'], [0.5, '#6f4'], [1, '#e8ffb0']], intensity: 0.7, alpha: 0.5, power: 2.4, follow: (o, ta, t) => o.position.set(...path(t)), pulse: [0.1, 7] });
-      fx.trail({ path, len: 0.9, width: 0.07, n: 60, intensity: 2.2, core: 4, ramp: [[0, '#f4ffd0'], [0.3, '#8fff40'], [1, '#0a6a20']] });
+      fx.trail({ path, len: 0.9, width: 0.07, n: 60, intensity: 1.2, core: 4, ramp: [[0, '#f4ffd0'], [0.3, '#8fff40'], [1, '#0a6a20']] });
       fx.trail({ path: (t) => { const p = path(t - 0.2); return p; }, len: 0.7, width: 0.04, n: 50, intensity: 1.3, core: 4, ramp: [[0, '#cfffa0'], [1, '#0a6a20']] });
-      const lightP = fx.light({ color: '#6aff40', intensity: 45, pos: [0, 0.9, 0], range: 6, flicker: 0.15, rate: 8 });
+      const lightP = fx.light({ color: '#6aff40', intensity: 21, pos: [0, 0.9, 0], range: 6, flicker: 0.15, rate: 8 });
       fx.on((t) => { lightP.l.position.set(...path(t)); });
       fx.decal({ kind: 'glow', r: [0.9, 0.9], intensity: 0.9, ramp: [[0, '#000'], [0.5, '#0a5a10'], [1, '#6aff40']], alpha: 0.5, y: 0.006 });
       contactShadow(fx, 0.2, (t) => { const p = path(t); return { s: 1 + 0.5 * (1.1 - p[1]), a: 0.35, x: p[0], z: p[2] }; });
-      fx.emitter({ count: 36, kind: 'soft', shape: 'point', pos: [0, 0.9, 0], dir: [0, 1, 0], spread: 3.14, speed: [0.05, 0.3], life: [0.5, 1.0], size: [0.04, 0.01], intensity: 3, ramp: [[0, '#d0ff90', 0], [0.2, '#d0ff90', 1], [1, '#3c3', 0]], follow: (m, ta, t) => m.position.set(...path(t)) });
-      fx.emitter({ count: 2, kind: 'glint', shape: 'point', pos: [0, 0.9, 0], size: [0.36, 0.1], life: [0.5, 0.9], intensity: 4, ramp: [[0, '#fff', 0], [0.3, '#e8ffc0', 1], [1, '#6f4', 0]], follow: (m, ta, t) => m.position.set(...path(t)) });
+      fx.emitter({ count: 36, kind: 'soft', shape: 'point', pos: [0, 0.9, 0], dir: [0, 1, 0], spread: 3.14, speed: [0.05, 0.3], life: [0.5, 1.0], size: [0.04, 0.01], intensity: 1.5, ramp: [[0, '#d0ff90', 0], [0.2, '#d0ff90', 1], [1, '#3c3', 0]], follow: (m, ta, t) => m.position.set(...path(t)) });
+      fx.emitter({ count: 2, kind: 'glint', shape: 'point', pos: [0, 0.9, 0], size: [0.36, 0.1], life: [0.5, 0.7], intensity: 4, ramp: [[0, '#fff', 0], [0.3, '#e8ffc0', 1], [1, '#6f4', 0]], follow: (m, ta, t) => m.position.set(...path(t)) });
     } },
 ];

@@ -86,7 +86,7 @@ export default [
       fx.emitter({ count: 60, kind: 'spark', shape: 'point', pos: [0, 1.55, 0.2], dir: [0, 1, 0], spread: 3.1, speed: [3, 8], life: [0.3, 0.8], gravity: [0, -3, 0], drag: 1, size: [0.1, 0.03], stretch: 1.2, ramp: [[0, '#fff', 1], [0.4, '#ffb040', 1], [1, '#a30', 0]], intensity: 4, delay: 0.05, emit: 0.001 });
       fx.emitter({ count: 8, kind: 'streak', shape: 'point', pos: [0, 1.55, 0.2], dir: [0, 1, 0], spread: 3.1, speed: [6, 9], life: [0.2, 0.35], size: [0.9, 0.9], stretch: 0.5, ramp: [[0, '#fff', 0.9], [1, '#fa4', 0]], intensity: 3, delay: 0.05, emit: 0.001, radial: 1 });
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: [0, 1.55, 0.3], size: [3.2, 0.5], life: [0.3, 0.3], ramp: [[0, '#fff', 1], [1, '#fa4', 0]], intensity: 3, delay: 0.05, emit: 0.001 });
-      fx.flash(0.05, 0.15, '#ffd090', 0.18);
+      fx.flash(0.05, 0.15, '#ffd090', 0.15);
     } },
 
   /* ================================================================ CONFETTI */
@@ -112,7 +112,7 @@ export default [
       [-3.6, 3.6].forEach((x, i) => { fx.emitter({ count: 24, kind: 'spark', shape: 'point', pos: [x, 0.25, 0], dir: [-Math.sign(x) * 0.5, 1, 0], spread: 0.8, speed: [3, 8], life: [0.3, 0.6], gravity: [0, -6, 0], size: [0.08, 0.02], stretch: 1, ramp: [[0, '#fff', 1], [0.5, '#ffd060', 1], [1, '#f60', 0]], intensity: 3.5, delay: 0.02, emit: 0.001 });
         fx.emitter({ count: 2, kind: 'soft', shape: 'point', pos: [x, 0.3, 0], size: [1.8, 1.8], life: [0.25, 0.25], ramp: [[0, '#fff', 1], [1, '#fc6', 0]], intensity: 2, delay: 0.02, emit: 0.001 });
         fx.emitter({ count: 12, kind: 'smoke', blend: 'normal', shape: 'point', pos: [x, 0.3, 0], dir: [-Math.sign(x) * 0.4, 1, 0], spread: 0.6, speed: [1, 3], life: [0.8, 1.5], size: [0.4, 1.2], ramp: [[0, '#bbb', 0.4], [1, '#888', 0]], lit: 1, delay: 0.02, emit: 0.001, order: -1 }); });
-      fx.flash(0.02, 0.2, '#fff4d8', 0.2);
+      fx.flash(0.02, 0.2, '#fff4d8', 0.15);
       twinkles(fx, [0, 3, 0], [4, 2, 1], 26, 0.2, 2.4, '#fff');
     } },
 
@@ -128,7 +128,7 @@ export default [
         fx.light({ color: col, intensity: 60, pos: [0, 1.6, 2.5], range: 10, t0, dur, fade: [0.02, 0.35], norm: 40 });
         fx.emitter({ count: i === 3 ? 90 : 36, kind: 'spark', shape: 'ring', radius: 0.5, radiusIn: 0.3, pos: [0, 1.5, 0.2], dir: [0, 1, 0], spread: 0, radial: 1, speed: [2, i === 3 ? 9 : 6], life: [0.3, 0.7], size: [0.08, 0.02], stretch: 1.2, ramp: [[0, '#fff', 1], [0.4, col, 1], [1, col, 0]], intensity: 3.5, delay: t0, emit: 0.001 });
       });
-      fx.shake(2.1, 0.3, 0.05); fx.flash(2.1, 0.2, '#b0ffc8', 0.22);
+      fx.shake(2.1, 0.3, 0.05); fx.flash(2.1, 0.2, '#b0ffc8', 0.15);
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: [0, 1.5, 0.3], size: [3.5, 0.5], life: [0.3, 0.3], ramp: [[0, '#fff', 1], [1, '#5aff8a', 0]], intensity: 3, delay: 2.1, emit: 0.001 });
     } },
 
@@ -137,7 +137,7 @@ export default [
     build(fx) {
       backdrop(fx, '#14100f');
       fx.light({ color: '#ff8a30', intensity: 90, pos: [0, 2, 3], range: 12, dur: 1.5, fade: [0.01, 0.6] }); fx.shake(0.06, 0.28, 0.07);
-      fx.flash(0.04, 0.2, '#ffe0a0', 0.4);
+      fx.flash(0.04, 0.2, '#ffe0a0', 0.15);
       fx.text({ text: '247', size: 1.4, font: 118, stroke: 18, t0: 0.04, dur: 1.45, fade: [0.01, 0.3], grad: ['#fffbd0', '#ffd22a', '#ff5a00'], outline: '#3a0600', motion: (pr, t) => { const u = (t ?? 0) - 0.04; const s = u < 0.1 ? lerp(3, 0.85, eOut(u / 0.1)) : u < 0.25 ? lerp(0.85, 1.12, (u - 0.1) / 0.15) : 1.12 - 0.12 * sm(0.25, 0.5, u) + sm(0.9, 1.4, u) * 0.1; return { pos: [0, 1.5 + eOut(u * 0.9) * 0.45, 0.4], scale: s, rot: (1 - eOut(u / 0.2)) * -0.18 }; } });
       fx.text({ text: 'CRITICAL!', size: 0.46, font: 90, stroke: 14, t0: 0.12, dur: 1.3, fade: [0.03, 0.3], grad: ['#ffffff', '#ff6a3a', '#d01010'], outline: '#2a0000', motion: (pr, t) => ({ pos: [0, 2.55 + eOut(((t ?? 0) - 0.12) * 0.9) * 0.4, 0.4], scale: eBack(((t ?? 0) - 0.12) / 0.2) }) });
       fx.ring({ t0: 0.04, dur: 0.45, r: [0.2, 3.0], width: [0.45, 0.04], normal: 'cam', pos: [0, 1.75, 0], intensity: 1.5, ramp: [[0, '#fff'], [0.4, '#ffb040'], [1, '#c20']] });
@@ -218,7 +218,7 @@ export default [
         gL.position.set(-0.55 * k + sh, 0 - 1.6 * sp * sp * 1.6 + 0.3 * Math.sin(sp * 4) * (sp < 0.4 ? 1 : 0), 0); gL.rotation.z = 0.8 * k + sp * 0.4; gL.rotation.y = sp * 0.8;
         gR.position.set(0.55 * k - sh, 0 - 1.6 * sp * sp * 1.8 + 0.3 * Math.sin(sp * 4) * (sp < 0.4 ? 1 : 0), 0); gR.rotation.z = -0.9 * k - sp * 0.5; gR.rotation.y = -sp * 0.9;
         const gm = sm(0.45, 0.95, t); mats.forEach((m) => { m.color.copy(red).lerp(grey, gm); m.emissive.copy(em).multiplyScalar(1 - gm); m.opacity = 1 - sm(1.1, 1.5, t); }); }, { dur: 1.5 });
-      fx.flash(0.45, 0.15, '#ff4050', 0.2); fx.shake(0.45, 0.25, 0.04);
+      fx.flash(0.45, 0.15, '#ff4050', 0.15); fx.shake(0.45, 0.25, 0.04);
       fx.ring({ t0: 0.45, dur: 0.45, r: [0.2, 2.0], width: [0.3, 0.03], normal: 'cam', pos: [0, 1.35, 0.1], intensity: 1.3, ramp: [[0, '#fff'], [0.4, '#ff6a7a'], [1, '#900']] });
       fx.light({ color: '#ff2040', intensity: 60, pos: [0, 1.4, 1.5], range: 8, t0: 0, dur: 1.2, fade: [0.05, 0.5], main: false });
       fx.emitter({ count: 40, kind: 'shard', shape: 'line', shapeSize: [0.02, 0, 0], pos: [0, 1.35, 0.1], dir: [0, 1, 0], spread: 2.4, speed: [1.5, 5], life: [0.6, 1.2], gravity: [0, -7, 0], size: [0.1, 0.05], rot: 8, ramp: [[0, '#ff4a5a', 1], [0.6, '#a01828', 1], [1, '#401018', 0]], intensity: 2.2, delay: 0.45, emit: 0.001 });
@@ -243,7 +243,7 @@ export default [
       fx.emitter({ count: 28, kind: 'glint', shape: 'disc', radius: 1.0, pos: [0, 0.5, 0], dir: [0, 1, 0], spread: 0.15, speed: [1, 2.5], life: [0.6, 1.2], size: [0.2, 0.05], ramp: [[0, '#fff', 1], [1, '#ffd060', 0]], intensity: 3, delay: 0.3, emit: 1.8 });
       fx.text({ text: 'LEVEL UP!', size: 0.95, font: 100, stroke: 16, t0: 0.55, dur: 2.6, fade: [0.05, 0.6], grad: ['#fffbe0', '#ffd23a', '#e07a10'], outline: '#3a1c00', motion: (pr, t) => { const u = (t ?? 0) - 0.55; const s = u < 0.35 ? eBack(u / 0.35) : 1; return { pos: [0, 3.65 + Math.sin(u * 3) * 0.05 + sm(0, 0.8, u) * 0.15, 0.5], scale: s, rot: Math.sin(u * 2.4) * 0.015 }; } });
       fx.text({ text: 'LV 12', size: 0.5, font: 90, stroke: 12, t0: 0.85, dur: 2.3, fade: [0.05, 0.6], grad: ['#fff', '#9fd6ff', '#4a8ae0'], outline: '#041a40', motion: (pr, t) => ({ pos: [0, 2.95, 0.5], scale: eBack(((t ?? 0) - 0.85) / 0.3) }) });
-      fx.flash(0.2, 0.3, '#ffe9a0', 0.3);
+      fx.flash(0.2, 0.3, '#ffe9a0', 0.15);
       // the dummy glows
       fx.on((t) => { const g = Math.exp(-Math.pow((t - 0.5) * 1.2, 2)) * 1.0; fx.body.set({ tint: '#ffd060', tintAmt: 0, glow: g * 1.4, rim: '#ffe9a0', rimAmt: g * 1.5 }); });
     } },

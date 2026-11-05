@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { star, jag } from './impacts.js';
 import { Target } from '../core/dummy.js';
 import { burst } from './_aaa.js';
+import { ENV } from '../core/feel.js';
 
 const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
 const lerp3 = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
@@ -211,7 +212,7 @@ export default [
       const stock = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.02, 0.02), dark); stock.position.set(-0.3, 0.01, 0); gun.add(stock); const hand = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 0.06, 6, 10), mat('#8d939c', 0.5)); hand.position.set(-0.1, -0.15, 0.01); gun.add(hand);
       const D = 1.0, N = 12, M = [0.5, 1.21, 0]; fx.mesh(gun, (t, pr, f, w, o) => { const ph = (t * N) % 1, k = Math.exp(-ph * 9); o.position.set(0.1 - 0.02 * k, 1.2 + 0.006 * k, 0); o.rotation.z = 0.025 * k; }, {});
       for (let i = 0; i < N; i++) { const t0 = i / N + 0.01, ang = (fx.rng() - 0.5) * 0.3; star(fx, { pos: [M[0] + 0.1, M[1], 0.03], t0, dur: 0.045, r: [0.25 + fx.rng() * 0.1, 0.7 + fx.rng() * 0.3], rot: ang, arms: [[0, 1], [0.35, 0.55], [-0.35, 0.55], [0.8, 0.35], [-0.8, 0.35], [1.6, 0.25], [-1.6, 0.25], [2.6, 0.22], [-2.6, 0.22], [3.14, 0.3]], valley: 0.14, c0: '#fff2dc', c1: '#ffc050', c2: '#d04010', intensity: 2.4, fade: [0, 0.03] }); }
-      for (let i = 0; i < N; i++) { const t0 = i / N; fx.light({ color: '#ffb860', intensity: 25, pos: [1.0, 1.5, 1.0], range: 6, t0, dur: 0.06, fade: [0.002, 0.04], norm: 40, main: i === 0 }); }
+      fx.light({ color: '#ffb860', intensity: 25, pos: [1.0, 1.5, 1.0], range: 6, norm: 40, env: (t) => { let m = 0; for (let i = 0; i < N; i++) m = Math.max(m, ENV.impact(t - i / N, 30)); return m; } }); // one light pulsing per shot (V8)
       sparkE(fx, { count: 60, shape: 'point', pos: [M[0] + 0.1, M[1], 0.02], dir: [1, 0.1, 0.3], spread: 0.5, speed: [3, 9], life: [0.15, 0.45], size: [0.05, 0.015], emit: D * 0.98 });
       smokeE(fx, { count: 28, shape: 'sphere', radius: 0.04, pos: [M[0] + 0.1, M[1], 0], dir: [1, 0.3, 0.1], spread: 0.8, speed: [0.3, 1.6], life: [0.8, 1.4], size: [0.12, 0.5], emit: D, drag: 1.6, ramp: [[0, '#55504c', 0], [0.12, '#4c4843', 0.4], [1, '#292521', 0]] });
       fx.emitter({ count: N, kind: 'shard', shape: 'point', pos: [0.15, 1.27, 0.02], dir: [-0.3, 1, 0.9], spread: 0.35, speed: [1.6, 2.6], life: [0.45, 0.5], gravity: [0, -9.8, 0], size: [0.03, 0.025], ramp: [[0, '#d8a840'], [1, '#d8a840', 1]], blend: 'normal', lit: 1, rot: 14, emit: D * 0.98 });
