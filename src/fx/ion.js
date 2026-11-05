@@ -193,14 +193,14 @@ export default [
         k.beam({ from: [P[0] + (i - 1) * 0.8, 6, -2], to: mk, r: [0.01, 0.01], intensity: 1.5, t0: -0.3, dur: 0.9, fade: [0.05, 0.2] });
       }
       k.beam({ pos: P, height: 15, r: [0.35, 0.45], intensity: 1.5, t0: 0.9, dur: 0.8, fade: [0.05, 0.3] });
-      k.beam({ pos: P, height: 15, r: [0.12, 0.14], intensity: 3, t0: 0.9, dur: 0.8, fade: [0.05, 0.3] });
+      k.beam({ pos: P, height: 15, r: [0.12, 0.14], intensity: 2.5, t0: 0.9, dur: 0.8, fade: [0.05, 0.3] });
       k.ring({ t0: 0.9, dur: 0.5, r: [0.3, 3], normal: 'cam', pos: P, intensity: 1.8 });
       k.decal({ kind: 'glow', r: [2.2, 2.2], pos: P, t0: 0.9, dur: 1.2 });
       k.sparks(P, 0.9, 60);
       k.sparks(P, 0.9, 60);
       k.smoke({ ramp: VAPOR, count: 40, shape: 'disc', radius: 0.3, pos: P, radial: 1, speed: [0.5, 1.5], life: [1, 1.6], size: [0.4, 0.9], delay: 0.9, emit: 0.1 });
       k.decal({ kind: 'scorch', r: [1, 1], pos: P, t0: 0.9, dur: 2.0 });
-      if (k.g < 3) { k.ring({ t0: 0.9, dur: 0.6, r: [0.2, 4], normal: 'up', pos: [2.6, 0.02, 0] }); k.light({ pos: [2.6, 1.0, 0.5], t0: 0.9, dur: 1.2, fade: [0.01, 0.4], flicker: 0, intensity: 250 }); fx.flash(0.9, 0.12, k.col(1), 0.15); } // K2/K3: g3 extras owns ring/light/flash
+      if (k.g < 3) { k.ring({ t0: 0.9, dur: 0.6, r: [0.2, 4], normal: 'up', pos: [2.6, 0.02, 0] }); k.light({ pos: [2.6, 1.0, 0.5], t0: 0.9, dur: 1.2, fade: [0.01, 0.4], flicker: 0, intensity: 140 }); fx.flash(0.9, 0.12, k.col(1), 0.15); } // K2/K3: g3 extras owns ring/light/flash
       if (k.g >= 2) for (let j = 0; j < 3; j++) k.ring({ t0: 1.0 + 0.2 * j, dur: 0.4, r: [0.2, 1.2], normal: 'cam', pos: [2.6, 1 + j, 0] });
       if (k.g === 3) {
         k.ring({ t0: 1.4, dur: 0.6, r: [0.2, 2.5], normal: 'cam', pos: P });

@@ -59,7 +59,7 @@ export default [
   { id: 'explosions/cartoon-pow', name: 'Cartoon POW', category: 'explosions', loop: false, duration: 1.05, stage: { sky: 'void', bloom: 0.4, view: { pos: [0, 1.2, 5], target: [0, 1.2, 0], fov: 40 }, ground: false },
     build(fx) {
       const c = [0, 1.2, 0];
-      fx.flash(0, 0.14, '#ffc030', 0.5);
+      fx.flash(0, 0.14, '#ffc030', 0.08);
       fx.ring({ refract: 0.012, t0: 0, dur: 0.4, r: [0.3, 2.3], width: [0.35, 0.05], normal: 'cam', pos: c, intensity: 1.0, ramp: [[0, '#fff2dc'], [1, '#ffc030']] });
       fx.orb({ t0: 0, dur: 0.5, r: [0.3, 1.4], ease: 'out', kind: 'fire', intensity: 0.8, pos: c, fade: [0, 0.35], ramp: [[0, '#c21'], [0.5, '#f80'], [1, '#ffe060']], noise: 2.4, scroll: 4, disp: 0.7 });
       fx.emitter({ count: 14, kind: 'glint', shape: 'point', pos: c, size: [3.2, 4.2], life: [0.45, 0.6], ramp: [[0, '#fff3a0'], [1, '#ff7a20', 0]], intensity: 1.6, rot: 0.3 });
@@ -72,7 +72,7 @@ export default [
 
   { id: 'explosions/dirt-explosion', name: 'Dirt explosion', category: 'explosions', tier: 2, loop: false, duration: 3.6, stage: { sky: 'day', view: { pos: [4.6, 2.0, 6], target: [0, 1.0, 0] } },
     build(fx) {
-      fx.decal({ kind: 'scorch', t0: 0.05, dur: 3.5, r: [1.5, 1.9], fade: [0.1, 1.2], heat: [0.4, 0], ramp: [[0, '#1a120c'], [0.5, '#2a1c12'], [1, '#6a4a2a']] });
+      fx.decal({ kind: 'scorch', t0: 0.05, dur: 3.5, r: [1.5, 1.9], fade: [0.1, 1.2], heat: [0.4, 0], ramp: [[0, '#1a1410'], [0.5, '#2a1c12'], [1, '#6a4a2a']] });
       fx.emitter({ count: 70, kind: 'dust', blend: 'normal', lit: 1, shape: 'disc', radius: 0.4, dir: [0, 1, 0], spread: 0.5, speed: [3, 8], life: [1.2, 2.6], size: [0.8, 2.6], ramp: [[0, '#654f35', 0], [0.12, '#59452d', 0.85], [1, '#362a1f', 0]], drag: 1.3, gravity: [0, -1.5, 0], turb: [0.4, 0.8], pos: [0, 0.1, 0] });
       fx.emitter({ count: 50, kind: 'smoke', blend: 'normal', lit: 1, order: -1, shape: 'disc', radius: 0.8, dir: [0, 1, 0], spread: 1.4, speed: [1, 4], life: [1.5, 2.8], size: [1, 3], ramp: [[0, '#624f38', 0], [0.2, '#56422d', 0.6], [1, '#2f231a', 0]], drag: 1.2, emit: 0.3, gravity: [0, 0.3, 0], pos: [0, 0.1, 0], radial: 0.5 });
       fx.emitter({ count: 80, kind: 'rock', blend: 'normal', lit: 1, shape: 'disc', radius: 0.3, dir: [0, 1, 0], spread: 0.7, speed: [4, 11], life: [1.2, 2.2], gravity: [0, -10, 0], size: [0.12, 0.06], ramp: [[0, '#4a3624'], [1, '#4a3624', 1]], bounce: 0.35, rot: 8, pos: [0, 0.1, 0] });

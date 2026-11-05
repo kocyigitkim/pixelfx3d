@@ -104,7 +104,7 @@ export default [
   { id: 'holy/heal-aoe', name: 'Healing ring', category: 'holy', loop: false, duration: 2.9, stage: { sky: 'dusk', bloom: 0.55, view: { pos: [3.4, 3.0, 4.6], target: [0, 0.3, 0], fov: 42 } },
     build(fx) {
       const RING = [3.5, 1.5]; const speed = 3.2 / 1.2; // ring reaches r=3.2 at t=1.2
-      fx.ring({ t0: 0.0, dur: 1.3, r: [0.2, 3.6], width: [0.45, 0.1], normal: 'up', intensity: 1.0, fill: 0.2, decay: 0.5, ramp: [[0, '#eaf6dc'], [0.4, '#a0ffb8'], [1, '#30c060']] });
+      fx.ring({ t0: 0.0, dur: 1.3, r: [0.2, 3.6], width: [0.45, 0.1], normal: 'up', intensity: 1.0, fill: 0, decay: 0.5, ramp: [[0, '#eaf6dc'], [0.4, '#a0ffb8'], [1, '#30c060']] });
       fx.ring({ t0: 0.12, dur: 1.2, r: [0.2, 3.0], width: [0.2, 0.05], normal: 'up', intensity: 1.0, ramp: [[0, '#eaf6dc'], [1, '#60f090']] });
       fx.decal({ kind: 'glow', r: [3.0, 3.2], t0: 0, dur: 2.9, fade: [0.3, 1.4], ramp: [[0, '#000'], [0.5, '#0a5028'], [1, '#70ffa0']], intensity: 0.9, alpha: 0.7, y: 0.005 });
       fx.decal({ kind: 'rune', r: [1.6, 1.6], glyphs: 12, poly: 6, spin: 0.4, reveal: 0.6, t0: 0.1, dur: 2.7, fade: [0.1, 1.2], ramp: [[0, '#106030'], [0.5, '#50e080'], [1, '#d0ffe0']], intensity: 1.2 });

@@ -95,7 +95,7 @@ export default [
         node.position.set(0.6 * Math.cos(a), 0.06, 0.6 * Math.sin(a));
         k.pop(node, 0.1 + 0.04 * i, 0.4 + 0.04 * i, 2.4, 2.6);
       }
-      k.ring({ t0: 0.3, dur: 1.0, r: [0.2, 3], normal: 'up', fill: 0.3, pos: [0, 0.02, 0] });
+      k.ring({ t0: 0.3, dur: 1.0, r: [0.2, 3], normal: 'up', fill: 0, pos: [0, 0.02, 0] });
       k.em({ count: 100, kind: 'drop', shape: 'ring', radius: 0.4, pos: [0, 0.2, 0], radial: 1, speed: [0.2, 0.6], gravity: [0, -2, 0], life: [1, 1.6], size: [0.05, 0.03], delay: 0.3, emit: 0.8 });
       k.smoke({ ramp: VCY, count: 50, shape: 'disc', radius: 0.5, pos: [0, 0.3, 0], dir: [0, 1, 0], speed: [0.2, 0.6], life: [1.2, 2], size: [0.4, 0.8], delay: 0.3, emit: 1.2 });
       k.decal({ kind: 'rune', r: [1.2, 1.2], pos: [0, 0, 0], t0: 0, dur: 2.4, glyphs: 6, poly: 6 });
@@ -151,7 +151,7 @@ export default [
       for (const dz of [-0.05, 0.05]) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.02, 0.02), metal('#8a929c')); r.position.set(0.3, 0, dz); rails.add(r); }
       const coil = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.01, 6, 16), addMat(k.col(1), 2)); coil.rotation.y = Math.PI / 2; coil.position.x = 0.1; rails.add(coil);
       fx.mesh(rails, () => to(rails), { t0: -0.05, dur: 2.5 });
-      k.beam({ from: A, to: Tg, r: [0.03, 0.03], intensity: 3, t0: 0, dur: 0.15, fade: [0.02, 0.05] });
+      k.beam({ from: A, to: Tg, r: [0.03, 0.03], intensity: 2.5, t0: 0, dur: 0.15, fade: [0.02, 0.05] });
       k.em({ count: 40, kind: 'shard', shape: 'point', pos: Tg, dir: [1, 0.2, 0], spread: 0.8, speed: [2, 5], life: [0.4, 0.8], gravity: [0, -6, 0], size: [0.06, 0.03], intensity: 1.5, delay: 0.05, emit: 0.001 });
       const out = k.g === 3 ? 1.8 : 9;
       for (let i = 0; i < 12; i++) {

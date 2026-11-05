@@ -34,6 +34,8 @@ export const addMat = (c, k = 2, op = 1) => new THREE.MeshBasicMaterial({ color:
 export function grade(o = {}) { const g = Math.min(3, Math.max(1, Math.round(o.grade || 1))); return { g, s: [1, 1.15, 1.3][g - 1], b: [1, 1.15, 1.3][g - 1], extra: g - 1 }; }
 const S = (v, s) => (v == null || typeof v === 'function' ? v : Array.isArray(v) ? v.map((x) => x * s) : v * s);
 const I = (p, d, b, c = 99) => Math.min(c, (p.intensity ?? d) * b);
+// V6: scorch stops never darker than #1a1410 (per-channel max)
+const lift = (r) => r?.map((st) => { const c = new THREE.Color(st[1]), m = new THREE.Color('#1a1410'); return [st[0], '#' + c.setRGB(Math.max(c.r, m.r), Math.max(c.g, m.g), Math.max(c.b, m.b)).getHexString(), ...st.slice(2)]; });
 const SOFT = /^(buff|heal|chain-heal|shield|totem|decoy|link-beam|nova-cleanse|life-steal|rewind-area|lift-area|slow-field|ground-slow|cloud-block|wall|ring-wall)|^teleport(-wind|-portal|-glitch)?$/; // non-impact (soft) archetypes
 /** layer kit: fx builders with grade size (s) and brightness (b) applied, skill ramp as default. */
 export function kit(fx, o, ramp) {
@@ -49,7 +51,7 @@ export function kit(fx, o, ramp) {
     slash: (p) => fx.slash({ ramp: pr, tail: 0.8, sweep: [0, 1.4], ...p, radius: S(p.radius ?? 1.3, s), width: S(p.width ?? 0.2, s), intensity: I(p, 2.6, b, 2.6) }),
     trail: (p) => fx.trail({ ramp: pr, ...p, width: S(p.width ?? 0.06, s), intensity: I(p, 2, b, 1.5) }),
     bolt: (p) => fx.bolt({ ramp: pr, ...p, width: S(p.width ?? 0.05, s), intensity: I(p, 2, b, 3) }),
-    decal: (p) => fx.decal({ ramp: up(pr), ...p, r: S(p.r, s), intensity: I(p, 1.2, b, 1.2) }),
+    decal: (p) => { const q = { ramp: up(pr), ...p }; return fx.decal({ ...q, ramp: q.kind === 'scorch' ? lift(q.ramp) : q.ramp, r: S(p.r, s), intensity: I(p, 1.2, b, 1.2) }); },
     light: (p) => fx.light({ color: col(1), range: 9, norm: 40, ...p, intensity: Math.min(LCAP[G.g], I(p, 50, b) * (G.g === 3 ? 1.3 : 1)) }),
     at: (side = 'armR') => (m) => { fx.body[side].hand.getWorldPosition(m.position); fx.worldToLocal(m.position); },
     sparks: (pos, t, n = 40, p = {}) => k.em({ count: n, kind: 'spark', shape: 'point', pos, dir: [0, 1, 0], spread: 1.4, speed: [2, 7], life: [0.25, 0.7], gravity: [0, -9, 0], size: [0.07, 0.02], stretch: 1.5, intensity: 3, delay: t, t0: t - 0.02, emit: 0.001, ...p }),

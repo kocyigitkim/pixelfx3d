@@ -96,7 +96,7 @@ export default [
       const sk = skull('#a45cff', 3.5); sk.scale.setScalar(0.5); const h = halo('#8a40ff', 2.2, 1.2);
       fx.mesh(sk, (t, pr, f, w, o) => { const a = eob((t - 0.15) / 0.5); const hold = sm(1.5, 2.1, t); o.position.set(0.05, 2.9 - a * 1.1 + Math.sin(t * 6) * 0.01 * (1 - a), 0); const s = 0.5 * (1.6 - 0.6 * a) * (1 - hold * 0.5); o.scale.setScalar(Math.max(1e-3, s) * (t < 0.15 ? 0 : 1)); o.rotation.set(0, Math.PI / 2 + Math.sin(t * 3) * 0.05, 0); sk.userData.jaw.rotation.x = 0.35 * (1 - a) + Math.sin(t * 9) * 0.04 * a; sk.userData.bone.emissiveIntensity = 0.12 + 1.4 * sm(0.6, 0.75, t) * (1 - sm(0.75, 1.3, t)); o.visible = t < 2.2 && t > 0.15; }, { dur: 99 });
       fx.mesh(h, (t, pr, f, w, o) => { o.position.set(0.1, 1.8, 0); o.scale.setScalar(1.2 + 1.5 * sm(0.5, 0.7, t) * (1 - sm(0.7, 1.4, t))); o.material.opacity = 0.35 + 0.5 * sm(0.55, 0.7, t) * (1 - sm(0.7, 1.8, t)); }, { dur: 99 });
-      fx.ring({ t0: 0.62, dur: 0.8, r: [0.2, 2.6], width: [0.3, 0.05], normal: 'up', intensity: 1.0, fill: 0.1, ramp: [[0, '#f0e8ff'], [0.4, '#c090ff'], [1, '#4a1a90']] });
+      fx.ring({ t0: 0.62, dur: 0.8, r: [0.2, 2.6], width: [0.3, 0.05], normal: 'up', intensity: 1.0, fill: 0, ramp: [[0, '#f0e8ff'], [0.4, '#c090ff'], [1, '#4a1a90']] });
       fx.ring({ t0: 0.62, dur: 0.45, r: [0.1, 1.3], width: [0.2, 0.03], normal: 'cam', pos: [0.1, 1.8, 0], intensity: 1.0, ramp: [[0, '#f0e8ff'], [1, '#9a5cff']] });
       fx.shake(0.62, 0.5, 0.05);
       fx.decal({ kind: 'rune', t0: 0.5, dur: 2.7, fade: [0.5, 0.7], r: [1.5, 1.5], reveal: 0.8, glyphs: 14, poly: 5, spin: 0.2, intensity: 1.2, ramp: [[0, '#10001a'], [0.5, '#7a30d8'], [1, '#e0c0ff']] });

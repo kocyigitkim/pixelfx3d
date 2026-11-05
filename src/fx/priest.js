@@ -139,7 +139,7 @@ export default [
       k.glint([G[0], 2.4, 0], 0.3, 1);
       k.smoke({ count: 20, shape: 'disc', radius: 0.5, pos: [G[0], 0.05, 0], ramp: DUST, delay: 0.3, emit: 0.3, t0: 0.3 });
       k.decal({ kind: 'scorch', r: [0.8, 1.2], pos: G, t0: 0.3, dur: 1.5 });
-      k.light({ pos: [G[0], 1.5, 0.8], t0: 0, dur: 2.2, fade: [0.05, 0.6], intensity: 160 });
+      k.light({ pos: [G[0], 1.5, 0.8], t0: 0, dur: 2.2, fade: [0.05, 0.6], intensity: 140 });
       if (k.g >= 2) {
         k.beam({ pos: G, height: 14, r: [0.1, 0.1], intensity: 1, t0: 0.8, dur: 0.6 });
         k.sparks(G, 0.8, 60);

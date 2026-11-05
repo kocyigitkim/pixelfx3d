@@ -146,7 +146,7 @@ export default [
       k.smoke({ count: 30, shape: 'line', shapeSize: [(x1 - x0) / 2, 0, 0], pos: [(x0 + x1) / 2, 0.05, 0], dir: [-1, 0.2, 0], ramp: DUST, delay: t0, emit: 0.3, t0: t0 - 0.02 });
       ct(fx, k, [x1 + 0.4, 1.2, 0.1], 0.02, 40);
       // two fang slashes along the path, then an X-cross at the target
-      for (const y of [1.0, 1.3]) k.ribbon({ points: [[-1, y, 0], [1, y, 0], [3, y, 0]], n: 2, width: 0.05, sweep: [0, 1.5], t0: 0.05, dur: 0.15, intensity: 3 });
+      for (const y of [1.0, 1.3]) k.ribbon({ points: [[-1, y, 0], [1, y, 0], [3, y, 0]], n: 2, width: 0.05, sweep: [0, 1.5], t0: 0.05, dur: 0.15, intensity: 1.5 });
       k.slash({ center: [1.9, 1.15, 0], radius: 0.5, a0: 2.4, a1: 0.7, t0: 0.15, dur: 0.2 });
       k.slash({ center: [1.9, 1.15, 0], radius: 0.5, a0: 0.7, a1: -1.0, t0: 0.15, dur: 0.2 });
       k.light({ pos: [1.9, 1.2, 0.6], t0: 0.1, dur: 0.8, fade: [0.02, 0.4], intensity: 50 });

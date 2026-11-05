@@ -139,7 +139,7 @@ export default [
         const a = -0.1 + i * 0.15, s = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 4), addMat(k.col(1), 2));
         fx.mesh(s, (t) => { to(s); s.position.x += 0.1 + 0.15 * i; s.scale.setScalar(0.01 + sm(a, a + 0.08, t)); }, { t0: -0.1, dur: 1.8 });
       }
-      k.beam({ from: A, to: [7, 1.3, 0], r: [0.03, 0.03], intensity: 3, t0: 0, dur: 0.12 });
+      k.beam({ from: A, to: [7, 1.3, 0], r: [0.03, 0.03], intensity: 2.5, t0: 0, dur: 0.12 });
       k.beam({ from: A, to: [7, 1.3, 0], r: [0.1, 0.1], intensity: 1, t0: 0, dur: 0.12 });
       for (const x of [1.5, 2.5, 3.5]) k.ring({ t0: 0.05, dur: 0.3, r: [0.1, 0.6], normal: [1, 0, 0], pos: [x, 1.3, 0] });
       k.sparks(T, 0.12, 60);
@@ -224,7 +224,7 @@ export default [
       k.ring({ t0: 0, dur: 0.4, r: [0.2, 2.2], normal: 'cam', pos: O1 });
       k.shell({ r: [0.3, 2.2], hemi: true, cells: 6, pos: [0, 0, 0], t0: 0, dur: 0.8, fade: [0.05, 0.4], intensity: 0.8 });
       k.em({ count: 60, kind: 'spark', shape: 'sphere', radius: 0.3, pos: O1, radial: 1, speed: [4, 8], drag: 1.5, life: [0.3, 0.7], size: [0.07, 0.02], stretch: 1.5, intensity: 3, emit: 0.001 });
-      k.light({ pos: [0, 2, 0.8], t0: 0, dur: 1.2, fade: [0.01, 0.5], flicker: 0, intensity: 220 });
+      k.light({ pos: [0, 2, 0.8], t0: 0, dur: 1.2, fade: [0.01, 0.5], flicker: 0, intensity: 140 });
       fx.flash(0, 0.12, k.col(1), 0.15);
       k.decal({ kind: 'rune', r: [1.6, 1.6], pos: [0, 0, 0], t0: 0, dur: 1.8, glyphs: 6, poly: 6, spin: 0.6 });
       if (k.g >= 2) seg(fx, k, 0.3, -1);

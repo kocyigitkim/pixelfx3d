@@ -215,7 +215,7 @@ export default [
       fx.mesh(sc, (t, pr, f, w, o) => { o.position.y = sy(t); o.visible = t > 0.4 && t < TE + 0.1; }, { dur: 99 });
       fx.decal({ kind: 'rune', t0: 0, dur: 3, fade: [0.3, 0.9], r: [1.3, 1.3], glyphs: 12, spin: 1.2, poly: 6, reveal: 0.4, intensity: 1.2, ramp: [[0, '#0a2a60'], [0.5, '#4ac8ff'], [1, '#fff']] });
       fx.light({ color: '#4cc8ff', intensity: 23, pos: [0.3, 1.4, 0.8], range: 10, env: (t) => 0.2 + 0.5 * sm(0, 0.5, t) + 0.8 * win(t, TE, 0.4, 0.01, 0.35) - 0.2 * sm(2.5, 3, t) });
-      fx.ring({ t0: TE, dur: 0.8, r: [0.3, 3.0], width: [0.3, 0.06], normal: 'up', intensity: 1.0, fill: 0.15, ramp: [[0, '#e8f2ff'], [0.4, '#8cf4ff'], [1, '#1a5aff']] });
+      fx.ring({ t0: TE, dur: 0.8, r: [0.3, 3.0], width: [0.3, 0.06], normal: 'up', intensity: 1.0, fill: 0, ramp: [[0, '#e8f2ff'], [0.4, '#8cf4ff'], [1, '#1a5aff']] });
       fx.ring({ t0: 0.2, dur: 1.8, r: [1.4, 0.3], width: [0.06, 0.12], normal: 'up', y: 0.03, intensity: 1.0, ramp: [[0, '#cff'], [1, '#26c']] });
       fx.emitter({ count: 70, kind: 'soft', shape: 'ring', radius: 1.2, radiusIn: 0.8, pos: [0, 0.05, 0], dir: [0, 1, 0], spread: 0.05, radial: 0, speed: [1, 2.6], life: [0.7, 1.4], size: [0.05, 0.02], swirl: 1, ramp: cyRamp, intensity: 1.5, emit: 1.8, delay: 0.3 });
       fx.emitter({ count: 60, kind: 'spark', shape: 'sphere', radius: 0.4, pos: [0, 0.95, 0], dir: [0, 1, 0], spread: 1.5, radial: 1, speed: [-1.5, -2.5], life: [0.3, 0.45], size: [0.06, 0.015], stretch: 1.3, ramp: sparkCy, intensity: 3, delay: 0.6, emit: 1.5 });
@@ -233,7 +233,7 @@ export default [
       fx.decal({ kind: 'rune', t0: 0, dur: 2.6, fade: [0.2, 0.9], r: [1.3, 1.3], glyphs: 12, spin: -1.2, poly: 6, reveal: 0.3, intensity: 1.2, ramp: [[0, '#0a2a60'], [0.5, '#4ac8ff'], [1, '#fff']] });
       fx.light({ color: '#4cc8ff', intensity: 22, pos: [0.3, 1.5, 0.8], range: 10, env: (t) => 0.2 + 0.6 * sm(0, 0.4, t) + 0.8 * win(t, T1, 0.4, 0.01, 0.35) - 0.2 * sm(2.0, 2.6, t) });
       fx.shake(T1, 0.3, 0.02);
-      fx.ring({ t0: T1, dur: 0.8, r: [0.3, 3.2], width: [0.3, 0.06], normal: 'up', intensity: 1.0, fill: 0.15, ramp: [[0, '#e8f2ff'], [0.4, '#8cf4ff'], [1, '#1a5aff']] });
+      fx.ring({ t0: T1, dur: 0.8, r: [0.3, 3.2], width: [0.3, 0.06], normal: 'up', intensity: 1.0, fill: 0, ramp: [[0, '#e8f2ff'], [0.4, '#8cf4ff'], [1, '#1a5aff']] });
       fx.ring({ t0: 0.3, dur: 1.4, r: [1.5, 0.2], width: [0.05, 0.1], normal: 'up', y: 0.03, intensity: 1.0, ramp: [[0, '#cff'], [1, '#26c']] });
       fx.emitter({ count: 60, kind: 'spark', shape: 'box', shapeSize: [0.3, 0.9, 0.2], pos: [0, 0.95, 0], dir: [0, 1, 0], spread: 0.15, speed: [2.5, 7], life: [0.5, 0.7], size: [0.07, 0.015], stretch: 2.0, ramp: [[0, '#fff'], [0.3, '#8cf4ff'], [1, '#1a5aff', 0]], intensity: 3, delay: T0, emit: T1 - T0 });
       fx.emitter({ count: 60, kind: 'soft', shape: 'box', shapeSize: [0.3, 0.9, 0.2], pos: [0, 0.95, 0], dir: [0, 1, 0], spread: 0.2, speed: [1, 3], life: [0.6, 1.2], size: [0.07, 0.02], ramp: cyRamp, intensity: 1.5, delay: T0, emit: T1 - T0 });

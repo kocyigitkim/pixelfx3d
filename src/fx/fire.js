@@ -181,7 +181,7 @@ export default [
       fx.emitter({ count: 34, kind: 'flame', shape: 'sphere', radius: 0.1, dir: [0, 1, 0], spread: 0.15, speed: [0.2, 0.5], life: [0.9, 1.5], size: [0.5, 0.18], aspect: 2.0, ramp: COLD, intensity: 0.6, turb: [0.15, 1.2], pos: [0, 0.95, 0] });
       fx.emitter({ count: 14, kind: 'flame', shape: 'sphere', radius: 0.06, dir: [0, 1, 0], spread: 0.2, speed: [0.1, 0.3], life: [1.2, 1.8], size: [0.35, 0.12], aspect: 1.8, ramp: [[0, '#e8f2ff', 1], [0.3, '#bff4ff', 0.7], [1, '#4a2aff', 0]], intensity: 0.7, turb: [0.1, 1], pos: [0, 0.98, 0] });
       fx.emitter({ count: 40, kind: 'soft', shape: 'sphere', radius: 0.25, dir: [0, 1, 0], spread: 1.2, speed: [0.1, 0.5], life: [1.5, 3], size: [0.05, 0.015], ramp: [[0, '#bff4ff', 0], [0.3, '#7fe8ff', 0.9], [1, '#2a4aff', 0]], intensity: 1.5, turb: [0.3, 1], pos: [0, 1.1, 0] });
-      fx.emitter({ count: 12, kind: 'smoke', blend: 'add', shape: 'point', dir: [0, 1, 0], spread: 0.3, speed: [0.2, 0.4], life: [2, 3], size: [0.3, 0.9], ramp: [[0, '#2a5aff', 0], [0.3, '#2a5aff', 0.12], [1, '#2a2aff', 0]], intensity: 0.7, turb: [0.2, 0.8], pos: [0, 1.2, 0] });
+      fx.emitter({ count: 12, tex: 'explosion-fireball', sizePow: 0.5, blend: 'add', shape: 'point', dir: [0, 1, 0], spread: 0.3, speed: [0.2, 0.4], life: [2, 3], size: [0.3, 0.9], ramp: [[0, '#2a5aff', 0], [0.3, '#2a5aff', 0.12], [1, '#2a2aff', 0]], intensity: 0.7, turb: [0.2, 0.8], pos: [0, 1.2, 0] });
       fx.on((t, a, f) => { const y = 0.05 * Math.sin(t / 3 * Math.PI * 2); f.parts.forEach((p) => { if (p.mesh && p.p.kind) p.mesh.position.y = (p.p.pos ? p.p.pos[1] : 0) + y; }); });
     } },
 

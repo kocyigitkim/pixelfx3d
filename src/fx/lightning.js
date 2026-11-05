@@ -77,7 +77,7 @@ export default [
       fx.decal({ kind: 'glow', t0: 0.2, dur: 2.5, fade: [1.5, 0.5], r: [1.4, 1.4], ramp: [[0, '#000'], [0.5, '#1a2a90'], [1, '#7a96ff']], intensity: 0.9, alpha: 0.8, y: 0.01 });
       // release
       fx.shake(TB, 0.5, 0.08);
-      fx.ring({ t0: TB, dur: 0.8, r: [0.2, 5], width: [0.5, 0.1], normal: 'up', intensity: 1.0, fill: 0.2, ramp: [[0, '#e8f2ff'], [0.4, '#aab8ff'], [1, '#3a2cc0']] });
+      fx.ring({ t0: TB, dur: 0.8, r: [0.2, 5], width: [0.5, 0.1], normal: 'up', intensity: 1.0, fill: 0, ramp: [[0, '#e8f2ff'], [0.4, '#aab8ff'], [1, '#3a2cc0']] });
       fx.ring({ t0: TB, dur: 0.55, r: [0.2, 2.8], width: [0.3, 0.06], normal: 'cam', pos: C, intensity: 1.0, ramp: [[0, '#e8f2ff'], [1, '#8a9cff']] });
       for (let k = 0; k < 7; k++) { const a = (k / 7) * TAU + 0.3, e = (hs(k * 3.3) - 0.3) * 1.2; fx.bolt({ t0: TB, dur: 0.35, fade: [0.01, 0.25], from: C, to: [C[0] + Math.cos(a) * 2.2, Math.max(0.05, C[1] + e), C[2] + Math.sin(a) * 2.2], jag: 0.22, branches: 2, branchLen: 0.3, width: 0.035, rate: 28, flicker: 0.4, ramp: BOLT, intensity: 3 }); }
       fx.emitter({ count: 60, kind: 'spark', shape: 'sphere', radius: 0.15, pos: C, dir: [0, 1, 0], spread: 1.6, radial: 1, speed: [3, 9], life: [0.4, 0.7], gravity: [0, -7, 0], size: [0.07, 0.02], stretch: 1.4, ramp: sparkRamp, intensity: 4, delay: TB, bounce: 0.3 });

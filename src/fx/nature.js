@@ -59,7 +59,7 @@ export default [
       const G = [[0, '#f4ffb0', 1], [0.3, '#b8ff20', 0.9], [1, '#2a7a08', 0.7]];
       const bl = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 16), new THREE.MeshPhysicalMaterial({ color: '#b6ff2a', emissive: '#7ac010', emissiveIntensity: 0.8, roughness: 0.08, transmission: 0, clearcoat: 1 }));
       fx.mesh(bl, (t, pr, f, w, o) => { const u = cl(t / 0.32); o.position.set(0, 3.0 - u * u * 2.92, 0); o.scale.set(0.9 - 0.15 * u, 1.3 * (1 - 0.1 * u), 0.9 - 0.15 * u); o.visible = t < 0.32; }, { dur: 99 });
-      fx.decal({ kind: 'scorch', t0: 0.32, dur: 2.48, r: [0.4, 1.15], fade: [0.1, 1.0], heat: [1, 0.3], growSpeed: 2, ramp: [[0, '#101a04'], [0.5, '#6ab010'], [1, '#d8ff50']] });
+      fx.decal({ kind: 'scorch', t0: 0.32, dur: 2.48, r: [0.4, 1.15], fade: [0.1, 1.0], heat: [1, 0.3], growSpeed: 2, ramp: [[0, '#1a1a10'], [0.5, '#6ab010'], [1, '#d8ff50']] });
       fx.water({ r: 0.85, deep: '#183004', shallow: '#98d818', sky: '#b8e870', horizon: '#d8ff90', t0: 0.32, dur: 2.48, fade: [0.1, 1.0], y: 0.015, ripples: [{ t: 0.34, amp: 0.07 }, { t: 0.6, amp: 0.04 }, { t: 1.0, x: 0.2, z: 0.1, amp: 0.03 }], alpha: 0.9 });
       fx.ring({ t0: 0.32, dur: 0.6, r: [0.1, 1.9], width: [0.125, 0.025], normal: 'up', intensity: 0.3, fill: 0, ramp: [[0, '#f4ffc0'], [0.4, '#b8ff20'], [1, '#2a7a08']] });
       fx.orb({ t0: 0.32, dur: 0.28, r: [0.15, 0.75], ease: 'out', kind: 'water', pos: [0, 0.3, 0], noise: 3, scroll: 2.5, disp: 0.6, power: 2, intensity: 1, fade: [0, 0.2], ramp: [[0, '#2a5a08'], [0.5, '#98e020'], [1, '#f0ffa0']] });
