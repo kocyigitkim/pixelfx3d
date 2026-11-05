@@ -77,7 +77,7 @@ export class Orb extends Prim {
 }
 
 /* ------------------------------------------------------------------ RING (shockwave) */
-const RING_N = /* glsl */ `float ringN(float r, float ang){ float tn=uReal>.5?uSeed*.1+(1.-exp(-3.*uPr))*3.:uTime*1.5; return vnoise(vec3(cos(ang)*2.+uSeed,sin(ang)*2.,r*3.+tn)); }`; // realism: pan fast->slow, loop-safe
+const RING_N = /* glsl */ `float ringN(float r, float ang){ float tn=(uReal>.5&&uPr>=0.)?uSeed*.1+(1.-exp(-3.*uPr))*3.:uTime*1.5; return vnoise(vec3(cos(ang)*2.+uSeed,sin(ang)*2.,r*3.+tn)); }`; // realism: pan fast->slow, loop-safe
 const RING_F = `${NOISE}
 uniform float uR, uW, uInt, uFill, uTime, uSeed, uBreak, uA, uPr, uSoft; uniform sampler2D uRamp; varying vec2 vUv;
 ${DEPTH}
@@ -87,7 +87,7 @@ void main(){ vec2 p=vUv*2.-1.; float r=length(p); float ang=atan(p.y,p.x);
   float a=exp(-d*d*2.)*(1.-smoothstep(.88,1.,r)); float inner=uFill*smoothstep(rr,rr-uW*6.,r)*smoothstep(0.,rr*.7,r)*(.35+.65*n)*step(r,rr+.001);
   float tt=clamp(abs(d)*.55+(1.-a)*.25,0.,1.); vec3 c=texture2D(uRamp,vec2(tt,.5)).rgb;
   float s=(a+inner)*uA;
-  if(uReal>.5){ float e=uPr*.6; s*=smoothstep(e,e+.25,fbm3(vec3(cos(ang)*3.+uSeed,sin(ang)*3.,r*5.))+.1)*softF(uSoft); } // erosion grows over life
+  if(uReal>.5){ float e=max(uPr,0.)*.6; s*=smoothstep(e,e+.25,fbm3(vec3(cos(ang)*3.+uSeed,sin(ang)*3.,r*5.))+.1)*softF(uSoft); } // erosion grows over life
   gl_FragColor=vec4(c*uInt*s,s); }`;
 const PLANE_V = `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
 const RDIST_F = `${NOISE}
@@ -95,7 +95,7 @@ uniform float uR, uW, uTime, uSeed, uBreak, uA, uPr, uRefract, uReal; varying ve
 ${RING_N}
 void main(){ vec2 p=vUv*2.-1.; float r=length(p); float ang=atan(p.y,p.x); float rr=uR+(ringN(r,ang)-.5)*uBreak*uW*2.; float d=(r-rr)/max(uW*1.6,1e-4);
   vec2 g=vec2(dFdx(r),dFdy(r)); float l=length(g); vec2 dir=l>1e-7?g/l:vec2(0.);
-  float m=-d*exp(-d*d*2.)*1.65*(1.-smoothstep(.88,1.,r))*uA*(1.-.5*uPr); gl_FragColor=vec4(dir*m*uRefract,0.,0.); }`;
+  float m=-d*exp(-d*d*2.)*1.65*(1.-smoothstep(.88,1.,r))*uA*(1.-.5*max(uPr,0.)); gl_FragColor=vec4(dir*m*uRefract,0.,0.); }`;
 const RDARK_F = `${NOISE}
 uniform float uR, uW, uTime, uSeed, uBreak, uA, uPr, uDark, uReal; varying vec2 vUv;
 ${RING_N}
@@ -115,7 +115,7 @@ export class Ring extends Prim {
   }
   update(tAbs, t) {
     const w = this.w(t); this.obj.visible = w > 0.001; if (!this.obj.visible) return; const p = this.p, pr = this.prog(t); const [r0, r1] = A(p.r); const [w0, w1] = A(p.width ?? [0.2, 0.08]);
-    this.u.uR.value = lerp(r0, r1, easeOut(pr)) / this.size; this.u.uW.value = lerp(w0, w1, pr) / this.size; this.u.uA.value = w * (1 - (p.decay ?? 0.7) * pr) * (p.alpha ?? 1); this.u.uTime.value = tAbs; this.u.uPr.value = pr;
+    this.u.uR.value = lerp(r0, r1, easeOut(pr)) / this.size; this.u.uW.value = lerp(w0, w1, pr) / this.size; this.u.uA.value = w * (1 - (p.decay ?? 0.7) * pr) * (p.alpha ?? 1); this.u.uTime.value = tAbs; this.u.uPr.value = (p.decay ?? 0.7) === 0 ? -1 : pr;
     if (this.billboard) this.obj.quaternion.copy(this.fx.camQuat);
   }
 }
