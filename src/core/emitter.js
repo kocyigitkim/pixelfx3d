@@ -139,7 +139,7 @@ void main(){
   else if(uKind==11){ float n=vnoise(vec3(p*2.2,seed)); a=step(d+(n-.5)*.7,.78); vec3 nr=normalize(vec3(p*.8,.7)); float lam=clamp(dot(nr,normalize(vec3(.4,.8,.5))),0.,1.); col*=.35+.9*lam; col*=.6+.7*vnoise(vec3(p*7.,seed)); }
   else if(uKind==13){ float n=fbm(vec3(vUv*4.+seed,vU)); a=smoothstep(1.,.3,d)*smoothstep(.2,.7,n+.25)*.8; }
   if(uReal>.5&&uLit>0.){ vec3 N=normalize(vec3(p,sqrt(max(0.,1.-dot(p,p)))+.2)); float wr=max(0.,dot(N,vLd)*.5+.5); float bk=pow(max(0.,-vLd.z),2.)*(1.-N.z)*.6;
-    vec3 L=uAmbient*mix(.7,1.3,dot(N,vUp)*.5+.5)+vLc*(wr+bk); col*=mix(vec3(1.),min(L,vec3(2.5)),uLit); } // sphere-normal sprite: wrap diffuse + back-light rim + hemi ambient
+    col=pow(max(col,vec3(0.)),vec3(.7)); vec3 L=min(uAmbient*3.5,vec3(.6))*mix(.7,1.3,dot(N,vUp)*.5+.5)+vLc*(wr+bk); col*=mix(vec3(1.),min(L,vec3(2.5)),uLit); } // soot ramps are authored for a 0.1 ambient: lift darks, brighter sky ambient // sphere-normal sprite: wrap diffuse + back-light rim + hemi ambient
   a*=vCol.a*softF(uSoft); if(a<.003) discard;
   gl_FragColor=vec4(col*a,a);
 }`;
