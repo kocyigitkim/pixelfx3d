@@ -1,12 +1,12 @@
-// Rigged actor ("the dummy", KayKit Knight/Mage) with a shader-overlay body material (dissolve, frost, stone, tint, rim, scan),
-// a Skeleton_Warrior target and act poses as {clip,time} frames of the shared clips. Faces +X, feet on y=0, ~1.85 m tall.
+// Rigged actor ("the dummy", Quaternius ranger knight / mage) with a shader-overlay body material (dissolve, frost, stone, tint, rim, scan),
+// a peasant target ('skeleton') and act poses as {clip,time} frames of the shared UAL clips. Faces +X, feet on y=0, ~1.85 m tall.
 import * as THREE from 'three';
 import { NOISE } from './glsl.js';
 import { clamp, easeInOut, lerp } from './rng.js';
 import { MODELS, cloneModel } from './models.js';
 
-/** uniform model scale (KayKit units -> metres) */
-export const S = 0.75;
+/** uniform model scale (the Quaternius models are metric) */
+export const S = 1;
 
 /* ---------------------------------------------------------------- body overlay material */
 export function bodyUniforms() {
@@ -40,53 +40,58 @@ function overlay(src, u) {
   return m;
 }
 
-/* ---------------------------------------------------------------- poses: frames of the shared KayKit clips (tools/rig-info.mjs) */
-const C = (clip, time) => ({ clip, time }), SD = '1H_Melee_Attack_Slice_Diagonal', SH = '1H_Melee_Attack_Slice_Horizontal', CH2 = '2H_Melee_Attack_Chop', ST = '1H_Melee_Attack_Stab', CH1 = '1H_Melee_Attack_Chop', JP = 'Jump_Full_Short';
+/* ---------------------------------------------------------------- poses: frames of the shared UAL clips (tools/rig-info.mjs --poses) */
+const C = (clip, time) => ({ clip, time }), SA = 'Sword_Attack', RA = 'Sword_Regular_A', RB = 'Sword_Regular_B', RC = 'Sword_Regular_C', HC = 'Sword_Heavy_Combo', SD = 'Sword_Dash', OT = 'OverhandThrow', JS = 'Jump_Start', JL = 'Jump_Land', IL = 'Idle_Loop';
 export const POSES = {
-  idle: C('Idle', 0), guard: C('Idle', 0),
-  windupHigh: C(SD, 0.3), cut: C(SD, 0.396), follow: C(SD, 0.467), sideBack: C(SH, 0.2), sideCut: C(SH, 0.258),
-  overheadUp: C(CH2, 0.6), smashDown: C(CH2, 0.867), smashGround: C(CH2, 0.95), overhead2: C(CH2, 0.55),
-  pullback: C(ST, 0.3), thrustBack: C(ST, 0.3), lunge: C(ST, 0.433), behind: C(ST, 0.5),
-  castCharge: C('Spellcast_Long', 1.0), castRelease: C('Spellcast_Shoot', 0.3), castUp: C('Spellcast_Raise', 0.667),
-  crouch: C(JP, 0.1), leap: C(JP, 0.45), land: C(JP, 0.7), throwBack: C('Throw', 0.55), throwFwd: C('Throw', 0.8),
-  upLow: C(CH1, 0.03), upHigh: C(CH1, 0.15), slashBack: C(CH1, 0.45),
-  daggerA: C('Dualwield_Melee_Attack_Stab', 0.3), daggerB: C('Dualwield_Melee_Attack_Stab', 0.433), sweepBack: C('2H_Melee_Attack_Spin', 0.55), sweepCut: C('2H_Melee_Attack_Spin', 0.72),
-  roar: C('Cheer', 0.6), armsWide: C('Cheer', 0.3), hurt: C('Hit_A', 0.15), bowDraw: C('1H_Ranged_Aiming', 0.5), bowRelease: C('1H_Ranged_Shoot', 0.2),
-  runA: C('Running_A', 0), runB: C('Running_A', 0.4), runAir: C('Running_B', 0.25), dashLow: C('Dodge_Forward', 0.2), vanish: C('Dodge_Backward', 0.2),
+  idle: C(IL, 0), guard: C(IL, 0),
+  windupHigh: C(SA, 0.333), cut: C(SA, 0.433), follow: C(SA, 0.5), sideBack: C(RC, 0.6), sideCut: C(RC, 0.687),
+  overhead2: C(HC, 2.5), overheadUp: C(HC, 2.533), smashDown: C(HC, 2.6), smashGround: C(HC, 2.65),
+  pullback: C(SD, 0.2), thrustBack: C(SD, 0.2), lunge: C(SD, 0.321), behind: C(SD, 0.5),
+  castCharge: C('Spell_Simple_Enter_R', 0.3), castRelease: C('Spell_Simple_Shoot_R', 0.133), castUp: C('Pistol_Aim_Up', 0),
+  crouch: C(JS, 0), leap: C(JS, 0.57), land: C(JL, 0.2), throwBack: C(OT, 0.27), throwFwd: C(OT, 0.4),
+  upLow: C(RA, 0.2), upHigh: C(RA, 0.3), slashBack: C(RA, 0.433),
+  daggerA: C('Punch_Cross', 0.15), daggerB: C('Punch_Cross', 0.3), sweepBack: C(RB, 0.183), sweepCut: C(RB, 0.25),
+  roar: C(JL, 0), armsWide: C('A_TPose', 0), hurt: C('Hit_Chest', 0.15), bowDraw: C('Pistol_Aim_Neutral', 0), bowRelease: C('Pistol_Shoot', 0.1),
+  runA: C('Sprint_Loop', 0), runB: C('Sprint_Loop', 0.33), runAir: C('Jog_Fwd_Loop', 0.3), dashLow: C('Shield_Dash', 0), vanish: C('Roll', 0.2),
 };
-/** act kind -> [clip, duration, contact time] (contact lands on act time 0; tools/rig-info.mjs: slash/sideslash = blade crosses the front (+X, z~0), smash = tip lands low in front, thrust = full reach) */
-const ACTS = { slash: [SD, 1, 0.396], sideslash: [SH, 1.067, 0.258], smash: [CH2, 1.633, 0.867], thrust: [ST, 1.6, 0.433], cast: ['Spellcast_Shoot', 0.933, 0.3],
-  castup: ['Spellcast_Raise', 2.1, 0.667], stomp: [JP, 1.167, 0.7], throw: ['Throw', 1.367, 0.733] };
-const WLEN = { sword: 1.08, staff: 0.94, hammer: 1.0, spear: 1.8, dagger: 0.42, scythe: 1.4, whip: 0.3 };
-/** per char: chest offset (spine-local), head centre offset (head-local), head radius (m) */
-const RIG = { knight: [[0, 0.237, -0.01], [0, 0.524, 0.023], 0.4], mage: [[0, 0.234, 0.005], [0, 0.394, -0.114], 0.436], skeleton: [[0, 0.215, 0.002], [0, 0.494, -0.002], 0.327] };
+/** act kind -> [clip, duration, contact c, E = clip time where the act leaves for guard (default D), hold at E (s)]; contact lands on act time 0.
+ *  tools/rig-info.mjs (240 Hz): slash/sideslash = fastest blade crossing of the front, smash = tip lands low, thrust = 98% reach, cast = full extension,
+ *  castup = hand highest, stomp = hips lowest, throw = hand fastest; E = end of the settled follow-through (before the clip's recovery / next swing). */
+const ACTS = { slash: [SA, 1.533, 0.433, 0.7], sideslash: [RC, 2, 0.687, 1.067], smash: [HC, 4.333, 2.633, 3.229], thrust: [SD, 1.567, 0.321, 0.921],
+  cast: ['Spell_Simple_Enter_R', 0.533, 0.404, 0.533, 0.35], castup: [OT, 1.333, 0.292, 0.3, 0.4], stomp: [JL, 1.267, 0.2], throw: [OT, 1.333, 0.371] };
+const WLEN = { sword: 1.06, staff: 1.28, hammer: 1.0, spear: 1.8, dagger: 0.42, scythe: 1.4, whip: 0.3 };
+/** per char (rig-info, Idle_Loop@0): chest (spine_03-local), head centre (Head-local), head radius, right grip [hand_r-local pos, blade axis], y0 = lowest skinned point */
+const RIG = {
+  knight: { chest: [0.006, -0.065, -0.006], head: [0.008, 0.058, 0], headR: 0.125, grip: [[-0.034, 0.103, -0.005], [-0.023, 0.293, 0.956]], y0: -0.018 },
+  mage: { chest: [0.005, -0.075, 0.013], head: [-0.001, 0.073, 0.008], headR: 0.115, grip: [[-0.029, 0.077, 0], [-0.023, 0.29, 0.957]], y0: -0.013 },
+  skeleton: { chest: [0.016, -0.084, -0.017], head: [0.008, 0.058, 0], headR: 0.125, grip: [[-0.034, 0.103, -0.005], [-0.023, 0.293, 0.956]], y0: -0.018 },
+};
 
 /* ---------------------------------------------------------------- the actor */
 const _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _v = new THREE.Vector3();
 export class Dummy extends THREE.Group {
   constructor(opts = {}) {
     super(); const char = this.char = opts.char || 'knight'; this.u = bodyUniforms(); this.mats = [];
-    const m = this.model = cloneModel(char); m.scale.setScalar(S); m.rotation.y = opts.rotY ?? Math.PI / 2; this.add(m);
+    const R = RIG[char], m = this.model = cloneModel(char); m.rotation.y = opts.rotY ?? Math.PI / 2; m.position.y = -R.y0; this.add(m);
     this.mixer = new THREE.AnimationMixer(m); this.clips = MODELS[char].clips; this.acts = new Map();
     const cache = new Map(); m.traverse((o) => { if (!o.isMesh) return; o.castShadow = true; o.frustumCulled = false;
       o.material = cache.get(o.material) ?? cache.set(o.material, overlay(o.material, this.u)).get(o.material); });
     this.mats = [...cache.values()]; this.mat = this.mats[0];
-    this.props = MODELS[char].props.map((n) => m.getObjectByName(n)); this.props.forEach((p) => (p.visible = false));
-    const B = (n) => m.getObjectByName(n); this.bones = { hips: B('hips'), spine: B('spine'), head: B('head'), handR: B('handslotr'), handL: B('handslotl') };
-    const hand = (bone) => { const h = new THREE.Object3D(); h.rotation.x = Math.PI; h.scale.setScalar(1 / S); bone.add(h); return { hand: h }; }; // local -Y runs along the blade, metric
-    this.armR = hand(this.bones.handR); this.armL = hand(this.bones.handL);
+    const B = (n) => m.getObjectByName(n); this.bones = { hips: B('pelvis'), spine: B('spine_01'), chest: B('spine_03'), head: B('Head'), handR: B('hand_r'), handL: B('hand_l') };
+    // hand holders in the fist: local -Y runs along the blade (grip axis); the left one is the x-mirror of the right
+    const [gp, ga] = R.grip, q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), new THREE.Vector3(...ga).normalize());
+    const hand = (bone, s) => { const h = new THREE.Object3D(); h.position.set(s * gp[0], gp[1], gp[2]); h.quaternion.set(q.x, s * q.y, s * q.z, q.w); bone.add(h); return { hand: h }; };
+    this.armR = hand(this.bones.handR, 1); this.armL = hand(this.bones.handL, -1);
     this.torso = new THREE.Object3D(); this.neck = new THREE.Object3D(); this.pelvis = new THREE.Object3D(); // offset holders (Dummy frame), see apply()
-    const [chest, headC, headR] = RIG[char]; this.chestOff = new THREE.Vector3(...chest); this.headOff = new THREE.Vector3(...headC); this.headR = headR;
-    this.updateMatrixWorld(true); const hm = this.headMesh = new THREE.Object3D(); hm.position.copy(this.headOff); hm.scale.setScalar(1 / S);
+    this.chestOff = new THREE.Vector3(...R.chest); this.headOff = new THREE.Vector3(...R.head); this.headR = R.headR;
+    this.updateMatrixWorld(true); const hm = this.headMesh = new THREE.Object3D(); hm.position.copy(this.headOff);
     hm.quaternion.copy(this.bones.head.getWorldQuaternion(_q)).invert().multiply(this.getWorldQuaternion(_q2)); this.bones.head.add(hm); // +X = face
     if (opts.color) { this.u.uTint.value.set(opts.color); this.tintAmt = 0.35; this.tintCol = opts.color; this.u.uTintAmt.value = 0.35; }
     this.weaponLen = 1; this.setPose(POSES.idle);
     if (opts.weapon) this.holdWeapon(opts.weapon);
   }
   holdWeapon(kind = 'sword') {
-    this.weapon?.removeFromParent(); this.props.forEach((p) => (p.visible = false)); this.weaponKind = kind; this.weaponLen = WLEN[kind] ?? 1.08;
-    const prop = { sword: '1H_Sword', staff: '2H_Staff' }[kind], pm = prop && this.props.find((p) => p.name === prop);
-    if (pm) { pm.visible = true; this.weapon = pm; return; }
+    this.weapon?.removeFromParent(); this.weaponKind = kind; this.weaponLen = WLEN[kind] ?? WLEN.sword;
     const g = new THREE.Group(); const steel = new THREE.MeshStandardMaterial({ color: '#c9d1da', metalness: 1, roughness: 0.22 }); const grip = new THREE.MeshStandardMaterial({ color: '#3a2a20', roughness: 0.8 });
     if (kind === 'hammer') { const h = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.0, 10), grip); h.position.y = -0.4; g.add(h); const hd = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.2, 0.2), steel); hd.position.y = -0.92; g.add(hd); }
     else if (kind === 'spear') { const h = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.7, 8), grip); h.position.y = -0.7; g.add(h); const tip = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.25, 8), steel); tip.position.y = -1.67; tip.rotation.z = Math.PI; g.add(tip); }
@@ -126,7 +131,7 @@ export class Dummy extends THREE.Group {
     const B = this.bones, at = (o, off) => { o.updateWorldMatrix(true, false); return off ? o.localToWorld(out.copy(off)) : out.setFromMatrixPosition(o.matrixWorld); };
     switch (name) {
       case 'handR': return at(B.handR); case 'handL': return at(B.handL); case 'tip': return this.tip(undefined, out);
-      case 'chest': return at(B.spine, this.chestOff); case 'head': return at(B.head, this.headOff); case 'hips': return at(B.hips);
+      case 'chest': return at(B.chest, this.chestOff); case 'head': return at(B.head, this.headOff); case 'hips': return at(B.hips);
       case 'feet': at(B.hips); this.worldToLocal(out).y = 0; return this.localToWorld(out);
     }
     throw new Error('pixelfx3d: unknown anchor ' + name);
@@ -137,10 +142,10 @@ export class Dummy extends THREE.Group {
   reset() { Object.assign(this.u.uDissolve, { value: -1 }); this.u.uTintAmt.value = this.tintAmt || 0; if (this.tintCol) this.u.uTint.value.set(this.tintCol); this.u.uFrost.value = 0; this.u.uStone.value = 0; this.u.uRimAmt.value = 0; this.u.uAlpha.value = 1; this.u.uScan.value = -10; this.u.uHolo.value = 0; this.u.uGlow.value = 0; this.u.uEmit.value.set(0); }
 }
 
-/** Skeleton_Warrior training target (faces -X). kick(strength) plays a hit reaction; update(dt) advances it, then blends back to Idle. */
+/** training target (peasant, char 'skeleton', faces -X). kick(strength) plays a hit reaction; update(dt) advances it, then blends back to Idle. */
 export class Target extends Dummy {
   constructor() { super({ char: 'skeleton', rotY: -Math.PI / 2 }); this.react = null; this.rt = 0; }
-  kick(s = 1) { this.react = s < 0.8 ? 'Block_Hit' : s < 1.6 ? 'Hit_A' : 'Hit_B'; this.rt = 0; this.update(0); }
+  kick(s = 1) { this.react = s < 1.2 ? 'Hit_Chest' : 'Hit_Head'; this.rt = 0; this.update(0); }
   update(dt) {
     if (!this.react) return; this.rt += dt; const D = this.clips.get(this.react).duration, r = C(this.react, Math.min(this.rt, D)), f = clamp((this.rt - D) / 0.25);
     this.setPose(f <= 0 ? r : f >= 1 ? POSES.idle : { a: r, b: POSES.idle, f: easeInOut(f) }); if (f >= 1) this.react = null;
@@ -149,8 +154,11 @@ export class Target extends Dummy {
 }
 
 const F = (c) => (x) => C(c, x);
-/** act keys: the kind's clip plays linearly, time-warped so its contact frame lands on act time `at` (act.contact, default 0); then back to guard */
-export function actKeys(kind, w = 0.45, at = 0) { const a = ACTS[kind]; if (!a) return [[0, 'idle']]; const [clip, D, c] = a, f = F(clip); return [[at - w, f(Math.max(0, c - w))], [at, f(c)], [at + D - c, f(D)], [at + D - c + 0.25, 'guard']]; }
+/** act keys: the kind's clip plays linearly, time-warped so its contact frame lands on act time `at` (act.contact, default 0), up to E (held `hold` s); then back to guard */
+export function actKeys(kind, w = 0.45, at = 0) {
+  const a = ACTS[kind]; if (!a) return [[0, 'idle']]; const [clip, D, c, E = D, hold = 0] = a, f = F(clip), e = at + E - c;
+  return [[at - w, f(Math.max(0, c - w))], [at, f(c)], [e, f(E)], ...(hold ? [[e + hold, f(E)]] : []), [e + hold + 0.25, 'guard']];
+}
 /** keys [[t, name | {clip,time}, 'snap'?], ...] at time t -> {clip,time} (same clip: clip time interpolated linearly) or {a,b,f} crossfade */
 export function evalKeys(keys, t) {
   const P = (n) => (typeof n === 'string' ? POSES[n] || POSES.idle : n);

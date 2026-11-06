@@ -144,7 +144,7 @@ export default [
   /* ------------------------------------------------------------------ resurrection */
   { id: 'holy/resurrection', name: 'Resurrection', category: 'holy', loop: false, duration: 4.8, body: true, stage: { ...SKY, bloom: 0.45, view: { pos: [3.6, 1.8, 5.0], target: [-0.2, 1.0, 0], fov: 44 } },
     build(fx) {
-      const TS = 1.5, TW = 2.6, TX = 3.7, UP = CLIPS.get('Lie_StandUp').duration; const L = wingGroup(1), R = wingGroup(-1);
+      const TS = 1.5, TW = 2.6, TX = 3.7, UP = CLIPS.get('LayToIdle').duration; const L = wingGroup(1), R = wingGroup(-1);
       const WY = fx.anchor('chest')[1] + 0.17, dy = WY - 1.42; // wings on the upper back (P5: chest + .17)
       const wings = new THREE.Group(); L.position.z = 0.1; R.position.z = -0.1; R.scale.z = -1; wings.add(L, R); wings.position.set(-0.12, WY, 0);
       fx.mesh(wings, (t) => {
@@ -152,7 +152,7 @@ export default [
         const a = 1 - sm(TX - 0.2, TX + 0.4, t); L.userData.mat.opacity = a * sm(TW - 0.05, TW + 0.15, t); wings.rotation.y = 0; wings.scale.setScalar(0.8 + 0.4 * o + 0.1 * Math.sin(t * 2)); wings.position.y = WY + 0.03 * Math.sin(t * 2.2);
       }, { dur: 99 });
       fx.on((t) => {
-        fx.body.setPose({ clip: 'Lie_StandUp', time: sm(TS, TS + 1.3, t) * UP }); // lying -> standing
+        fx.body.setPose({ clip: 'LayToIdle', time: sm(TS, TS + 1.3, t) * UP }); // lying -> standing
         const k = sm(0.6, 1.6, t) * (1 - sm(3.4, 4.6, t)); fx.body.set({ tint: '#ffe8a8', tintAmt: 0.5 * k + 0.3 * (1 - sm(0.4, 1.2, t)) * 0.0, glow: 0.6 * k + 0.4 * Math.exp(-Math.pow((t - TS - 1.3) / 0.3, 2)), rim: '#ffd070', rimAmt: 0.9 * k });
       });
       fx.beam({ pos: [0, 0, 0], height: 7, r: [0.9, 0.5], intensity: 0.35, t0: 0.3, dur: 3.2, fade: [0.8, 1.2], ramp: [[0, '#ffb040'], [0.5, '#ffe0a0'], [1, '#fff4d8']], noise: 0.7, speed: 1.2, edge: 1.8, grow: [0.6, 1] });

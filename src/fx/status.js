@@ -43,10 +43,9 @@ const rig = (fx) => { const o = [0, 0.95, 1.25, 1.73], h = [0, fx.anchor('hips')
   return ([x, y, z]) => { let i = 1; while (i < 3 && y > o[i]) i++; return [x, h[i - 1] + ((h[i] - h[i - 1]) * (y - o[i - 1])) / (o[i] - o[i - 1]), z]; }; };
 /** head point from a P5 head-relative offset (P5 head radius .115), scaled to this rig's head */
 const headAt = (fx, x, y, z) => fx.anchor('head', 0, [x, y, z].map((v) => (v * fx.body.headR) / 0.115));
-/** little eyes on the dummy's face (+X); P5 sizes scaled by k = headR / .115; hides the knight helmet. returns the pupils */
+/** little eyes on the dummy's face (+X); P5 sizes scaled by k = headR / .115. returns the pupils */
 function eyes(fx, open) {
   const hm = fx.body.headMesh, k = fx.body.headR / 0.115, out = []; const white = new THREE.MeshBasicMaterial({ color: '#f4f4f4' }), blk = new THREE.MeshBasicMaterial({ color: '#0a0a0e' });
-  const helm = fx.body.model.getObjectByName('Knight_Helmet'); if (helm) helm.visible = false;
   for (const s of [-1, 1]) {
     if (open) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.03 * k, 12, 10), white); e.position.set(0.1 * k, 0.02 * k, 0.045 * k * s); e.scale.set(0.6, 1, 1); hm.add(e); const p = new THREE.Mesh(new THREE.SphereGeometry(0.015 * k, 10, 8), blk); p.position.set(0.026 * k, 0, 0); e.add(p); out.push(p); }
     else { const e = new THREE.Mesh(new THREE.CapsuleGeometry(0.003 * k, 0.03 * k, 3, 6), blk); e.position.set(0.114 * k, 0.012 * k, 0.045 * k * s); e.rotation.x = Math.PI / 2; e.scale.set(1.2, 1, 1); hm.add(e); }
@@ -150,7 +149,7 @@ export default [
     build(fx) {
       const ghosts = [];
       for (let i = 1; i <= 3; i++) { const d = new Dummy({ color: '#ffd24a' }); d.position.x = -0.42 * i; d.u.uHolo.value = 1; d.u.uScanCol.value.set('#ffcf40'); d.u.uAlpha.value = 0.5 - i * 0.12; d.u.uTint.value.set('#ffd24a'); d.u.uTintAmt.value = 0.6; d.u.uGlow.value = 1; ghosts.push(d); fx.mesh(d, null, { dur: 99 }); }
-      const bobP = (t) => ({ clip: 'Running_A', time: fr(t / 0.6) * 0.8 }); // run cycle, one stride per 0.6 s
+      const bobP = (t) => ({ clip: 'Sprint_Loop', time: fr(t / 0.6) * 0.667 }); // run cycle, one stride per 0.6 s
       fx.emitter({ count: 40, kind: 'streak', shape: 'box', shapeSize: [0.4, 0.9, 0.9], pos: [-0.8, 1.0, 0], dir: [-1, 0, 0], spread: 0.02, speed: [6, 9], life: [0.3, 0.45], size: [0.3, 0.3], ramp: [[0, '#fff6c0', 0], [0.3, '#ffe070', 0.8], [1, '#ffc020', 0]], intensity: 0.8, stretch: 0 });
       fx.emitter({ count: 30, kind: 'dust', blend: 'normal', shape: 'box', shapeSize: [0.1, 0.02, 0.15], pos: [-0.1, 0.05, 0], dir: [-1, 0.5, 0], spread: 0.5, speed: [0.8, 2], life: [0.5, 0.9], size: [0.15, 0.5], ramp: [[0, '#5b503f', 0], [0.2, '#5b503f', 0.5], [1, '#453b2c', 0]], lit: 1, order: -1, gravity: [0, 0.2, 0], drag: 1.5 });
       fx.emitter({ count: 26, kind: 'spark', shape: 'box', shapeSize: [0.2, 0.9, 0.3], pos: [-0.2, 1.0, 0], dir: [-1, 0.1, 0], spread: 0.3, speed: [2, 4], life: [0.3, 0.6], size: [0.05, 0.01], stretch: 1.5, ramp: [[0, '#fff2dc'], [0.4, '#ffd040'], [1, '#a05000', 0]], intensity: 3 }); // anchor-ok
