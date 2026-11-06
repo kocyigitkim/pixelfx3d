@@ -49,8 +49,8 @@ export const POSES = {
   pullback: C(ST, 0.3), thrustBack: C(ST, 0.3), lunge: C(ST, 0.433), behind: C(ST, 0.5),
   castCharge: C('Spellcast_Long', 1.0), castRelease: C('Spellcast_Shoot', 0.3), castUp: C('Spellcast_Raise', 0.667),
   crouch: C(JP, 0.1), leap: C(JP, 0.45), land: C(JP, 0.7), throwBack: C('Throw', 0.55), throwFwd: C('Throw', 0.8),
-  upLow: C('2H_Melee_Attack_Slice', 0.25), upHigh: C(CH1, 0.533), slashBack: C(CH1, 0.45),
-  daggerA: C('Dualwield_Melee_Attack_Stab', 0.25), daggerB: C('Dualwield_Melee_Attack_Stab', 0.375), sweepBack: C('2H_Melee_Attack_Spin', 0.55), sweepCut: C('2H_Melee_Attack_Spin', 0.733),
+  upLow: C(CH1, 0.03), upHigh: C(CH1, 0.15), slashBack: C(CH1, 0.45),
+  daggerA: C('Dualwield_Melee_Attack_Stab', 0.3), daggerB: C('Dualwield_Melee_Attack_Stab', 0.433), sweepBack: C('2H_Melee_Attack_Spin', 0.55), sweepCut: C('2H_Melee_Attack_Spin', 0.72),
   roar: C('Cheer', 0.6), armsWide: C('Cheer', 0.3), hurt: C('Hit_A', 0.15), bowDraw: C('1H_Ranged_Aiming', 0.5), bowRelease: C('1H_Ranged_Shoot', 0.2),
   runA: C('Running_A', 0), runB: C('Running_A', 0.4), runAir: C('Running_B', 0.25), dashLow: C('Dodge_Forward', 0.2), vanish: C('Dodge_Backward', 0.2),
 };
@@ -149,8 +149,8 @@ export class Target extends Dummy {
 }
 
 const F = (c) => (x) => C(c, x);
-/** act keys: the kind's clip plays linearly, time-warped so its contact frame lands on t=0; then back to guard */
-export function actKeys(kind, w = 0.45) { const a = ACTS[kind]; if (!a) return [[0, 'idle']]; const [clip, D, c] = a, f = F(clip); return [[-w, f(Math.max(0, c - w))], [0, f(c)], [D - c, f(D)], [D - c + 0.25, 'guard']]; }
+/** act keys: the kind's clip plays linearly, time-warped so its contact frame lands on act time `at` (act.contact, default 0); then back to guard */
+export function actKeys(kind, w = 0.45, at = 0) { const a = ACTS[kind]; if (!a) return [[0, 'idle']]; const [clip, D, c] = a, f = F(clip); return [[at - w, f(Math.max(0, c - w))], [at, f(c)], [at + D - c, f(D)], [at + D - c + 0.25, 'guard']]; }
 /** keys [[t, name | {clip,time}, 'snap'?], ...] at time t -> {clip,time} (same clip: clip time interpolated linearly) or {a,b,f} crossfade */
 export function evalKeys(keys, t) {
   const P = (n) => (typeof n === 'string' ? POSES[n] || POSES.idle : n);

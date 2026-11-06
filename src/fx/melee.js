@@ -59,9 +59,9 @@ const feet = (fx, F, t) => fx.emitter({ count: 8, kind: 'dust', blend: 'normal',
 
 export default [
   { id: 'melee/sword-slash', name: 'Sword slash', category: 'melee', loop: false, duration: 0.75, tier: 2, stage: { sky: 'night', view: VIEW },
-    act: { kind: 'slash', weapon: 'sword', target: [1.85, 0, 0], windup: 0.45, hits: [{ t: 0.07, stop: 0.09, shake: 0.2, amp: 0.03, push: 1.4 }] },
+    act: { kind: 'slash', weapon: 'sword', target: [1.41, 0, 0], windup: 0.45, contact: 0.07, hits: [{ t: 0.07, stop: 0.09, shake: 0.2, amp: 0.03, push: 1.4 }] },
     build(fx) {
-      const T = 0.07, C = [1.62, 1.2, 0.1], H = [0.57, 1.2, 0.1], F = [1.85, 0.05, 0]; // T = hit, C = contact, H = hand pivot (outer blade 1.05 reaches C), F = target feet
+      const T = 0.07, C = fx.anchor('tip', T), H = fx.anchor('handR', T), F = fx.anchor('tgtFeet', 0, [0, 0.05, 0]); // T = hit (= act.contact), C = blade tip at contact, H = hand pivot, F = target feet
       const { B } = swing(fx, { t0: -0.07, t1: 0.2, len: 0.25, inner: 0.65, outer: 1.05, c0: '#ffffff', c1: '#a9d6ff', c2: '#1b3fa8', intensity: 1.2, edge: 3 }); // len .25: tail erodes to 1 in .25 s
       // anticipation: faint glint at the blade tip, 0.1 s before the hit
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: B(T - 0.1), size: [0.5, 0.3], life: [0.12, 0.12], ramp: [[0, '#fff'], [1, '#9cf', 0]], intensity: 1.5, delay: T - 0.1, t0: T - 0.12, emit: 0.001 });
@@ -76,48 +76,49 @@ export default [
     } },
 
   { id: 'melee/claw-swipe', name: 'Claw swipe', category: 'melee', loop: false, duration: 0.9, stage: { sky: 'dusk', view: VIEW },
-    act: { kind: 'sideslash', target: [1.6, 0, 0], windup: 0.4, hits: [{ t: 0.05, stop: 0.07, shake: 0.2, amp: 0.035, push: 1.6 }] },
+    act: { kind: 'sideslash', target: [1.4, 0, 0], windup: 0.4, contact: 0.05, hits: [{ t: 0.05, stop: 0.07, shake: 0.2, amp: 0.035, push: 1.6 }] },
     build(fx) {
-      const hot = [[0, '#ffe0c0'], [0.3, '#ff8a40'], [1, '#a01008']];
+      const hot = [[0, '#ffe0c0'], [0.3, '#ff8a40'], [1, '#a01008']], G = fx.anchor('tgt');
       for (let k = -1; k <= 1; k++) {
-        const pts = []; for (let i = 0; i <= 20; i++) { const u = i / 20; pts.push([1.15 + 0.2 * k + 0.62 * u, 1.9 - 0.08 * k - 1.3 * u + 0.1 * Math.sin(Math.PI * u), 0.32 + 0.1 * k]); }
+        const pts = []; for (let i = 0; i <= 20; i++) { const u = i / 20; pts.push([G[0] - 0.45 + 0.2 * k + 0.62 * u, G[1] + 0.8 - 0.08 * k - 1.3 * u + 0.1 * Math.sin(Math.PI * u), 0.32 + 0.1 * k]); } // claw marks on the target chest
         const w = (u) => 0.06 * Math.pow(Math.sin(Math.PI * Math.min(1, u * 0.96 + 0.02)), 0.6);
         fx.ribbon({ points: pts, n: 20, width: w, t0: 0.0 + 0.025 * (k + 1), dur: 0.2, sweep: [0, 1.5], ease: 'out', tail: 0.9, intensity: 1.5, ramp: hot });
         fx.ribbon({ points: pts, n: 20, width: (u) => w(u) * 0.55, head: () => 1.2, tail: 3.5, t0: 0.05 + 0.025 * (k + 1), dur: 0.75, fade: [0.03, 0.6], intensity: 0.8, ramp: [[0, '#ff7a30'], [0.5, '#d01808'], [1, '#500']] });
       }
       swing(fx, { t0: -0.08, t1: 0.14, len: 0.1, inner: 0.0, outer: 0.28, c0: '#ffe0c0', c1: '#ff7040', c2: '#600', intensity: 1.2, edgeW: 0.03, edgeInt: 2.6 });
-      contact(fx, [1.5, 1.2, 0.4], 0.05, { light: '#ff6a3a', mid: '#ff9050', cold: '#800', sparks: 40, glintCol: '#f84', glint: 0.7 });
-      feet(fx, [1.6, 0.05, 0], 0.05);
-      fx.emitter({ count: 22, kind: 'drop', shape: 'box', shapeSize: [0.3, 0.55, 0.02], pos: [1.5, 1.3, 0.3], dir: [0.1, -0.2, 0], spread: 0.6, speed: [0.1, 1.0], life: [0.4, 0.9], gravity: [0, -6, 0], size: [0.035, 0.02], ramp: [[0, '#ff7030'], [0.6, '#c01008'], [1, '#400', 0]], intensity: 1.5, delay: 0.1, emit: 0.35, bounce: 0.2 });
+      contact(fx, fx.anchor('tgt', 0, [-0.1, 0.1, 0.4]), 0.05, { light: '#ff6a3a', mid: '#ff9050', cold: '#800', sparks: 40, glintCol: '#f84', glint: 0.7 });
+      feet(fx, fx.anchor('tgtFeet', 0, [0, 0.05, 0]), 0.05);
+      fx.emitter({ count: 22, kind: 'drop', shape: 'box', shapeSize: [0.3, 0.55, 0.02], pos: fx.anchor('tgt', 0, [-0.1, 0.2, 0.3]), dir: [0.1, -0.2, 0], spread: 0.6, speed: [0.1, 1.0], life: [0.4, 0.9], gravity: [0, -6, 0], size: [0.035, 0.02], ramp: [[0, '#ff7030'], [0.6, '#c01008'], [1, '#400', 0]], intensity: 1.5, delay: 0.1, emit: 0.35, bounce: 0.2 });
     } },
 
   { id: 'melee/dagger-flurry', name: 'Dagger flurry', category: 'melee', loop: false, duration: 0.95, stage: { sky: 'night', view: VIEW },
-    act: { weapon: 'dagger', target: [1.75, 0, 0], windup: 0.3,
+    act: { weapon: 'dagger', target: [1.05, 0, 0], windup: 0.3,
       keys: [[-0.3, 'guard'], [-0.1, 'daggerA'], [0, 'daggerB', 'snap'], [0.12, 'daggerA'], [0.2, 'daggerB', 'snap'], [0.32, 'sideBack'], [0.4, 'sideCut', 'snap'], [0.52, 'windupHigh'], [0.62, 'cut', 'snap'], [0.72, 'follow'], [0.95, 'guard']],
       hits: [{ t: 0.0, stop: 0.03, shake: 0.08, amp: 0.012, push: 0.4 }, { t: 0.2, stop: 0.03, shake: 0.08, amp: 0.012, push: 0.4 }, { t: 0.4, stop: 0.03, shake: 0.1, amp: 0.015, push: 0.5 }, { t: 0.62, stop: 0.12, shake: 0.3, amp: 0.04, push: 1.8 }] },
     build(fx) {
       const cols = { c0: '#e8f2ff', c1: '#bfe6ff', c2: '#2a5ab0' };
-      const C = [1.55, 1.2, 0.2];
+      const C = fx.anchor('tip', 0), C2 = fx.anchor('tip', 0.2), C3 = fx.anchor('tip', 0.4); // stab flashes at the blade tip of each hit
       arc(fx, { center: C, radius: 0.7, a0: 2.5, a1: 0.1, tilt: 0.3, t0: -0.04, dur: 0.14, ...cols, width: 0.1, intensity: 1.5 });
-      arc(fx, { center: [C[0], C[1] - 0.1, 0.2], radius: 0.75, a0: -0.5, a1: 2.6, tilt: -0.3, t0: 0.14, dur: 0.14, ...cols, width: 0.1, intensity: 1.5 });
-      arc(fx, { center: C, radius: 0.7, a0: 3.0, a1: 0.5, tilt: 0.1, t0: 0.34, dur: 0.14, ...cols, width: 0.1, intensity: 1.5 });
-      arc(fx, { center: [1.0, 1.0, 0.2], radius: 1.3, a0: 2.1, a1: -0.45, tilt: 0.12, t0: 0.57, dur: 0.22, ramp: [[0, '#fff2dc'], [0.3, '#ffe9a0'], [1, '#c06010']], width: 0.26, intensity: 2.6 });
-      [0.0, 0.2, 0.4].forEach((t) => contact(fx, [1.5 + fx.rng() * 0.15, 1.1 + fx.rng() * 0.3, 0.2], t + 0.03, { sparks: 14, speed: 5, lightI: 25, glint: 0.5, light: '#b0d8ff' }));
-      contact(fx, [1.65, 1.15, 0.2], 0.65, { sparks: 60, speed: 10, lightI: 70, glint: 1.2, light: '#ffd890' });
-      feet(fx, [1.75, 0.05, 0], 0.62);
+      arc(fx, { center: C2, radius: 0.75, a0: -0.5, a1: 2.6, tilt: -0.3, t0: 0.14, dur: 0.14, ...cols, width: 0.1, intensity: 1.5 });
+      arc(fx, { center: C3, radius: 0.7, a0: 3.0, a1: 0.5, tilt: 0.1, t0: 0.34, dur: 0.14, ...cols, width: 0.1, intensity: 1.5 });
+      arc(fx, { ...fx.bladeArc(0.52, 0.72), t0: 0.57, dur: 0.22, ramp: [[0, '#fff2dc'], [0.3, '#ffe9a0'], [1, '#c06010']], width: 0.26, intensity: 2.6 });
+      [0.0, 0.2, 0.4].forEach((t) => contact(fx, fx.anchor('tip', t, [fx.rng() * 0.15, fx.rng() * 0.3 - 0.15, 0]), t + 0.03, { sparks: 14, speed: 5, lightI: 25, glint: 0.5, light: '#b0d8ff' }));
+      contact(fx, fx.anchor('tip', 0.62), 0.65, { sparks: 60, speed: 10, lightI: 70, glint: 1.2, light: '#ffd890' });
+      feet(fx, fx.anchor('tgtFeet', 0, [0, 0.05, 0]), 0.62);
     } },
 
   { id: 'melee/double-slash', name: 'Double slash', category: 'melee', loop: false, duration: 0.8, stage: { sky: 'night', view: VIEW },
-    act: { weapon: 'sword', target: [1.85, 0, 0], windup: 0.4,
+    act: { weapon: 'sword', target: [1.43, 0, 0], windup: 0.4,
       keys: [[-0.4, 'guard'], [-0.15, 'windupHigh'], [0, 'cut', 'snap'], [0.1, 'upLow'], [0.22, 'upHigh', 'snap'], [0.4, 'follow'], [0.8, 'guard']],
       hits: [{ t: 0.04, stop: 0.05, shake: 0.12, amp: 0.02, push: 0.8 }, { t: 0.23, stop: 0.1, shake: 0.25, amp: 0.04, push: 1.6, flash: 0.25 }] },
     build(fx) {
       swing(fx, { t0: -0.07, t1: 0.12, len: 0.12, inner: 0.65, outer: 1.05, c0: '#e8f2ff', c1: '#9fe0ff', c2: '#1a50b0', intensity: 1.4, edge: 3, edgeInt: 1.5 });
       swing(fx, { t0: 0.15, t1: 0.3, len: 0.2, inner: 0.65, outer: 1.05, c0: '#fff2dc', c1: '#ffd890', c2: '#b05010', intensity: 1.4, edge: 3, edgeInt: 2.6 });
-      contact(fx, [1.62, 1.35, 0.1], 0.04, { sparks: 24, lightI: 35, light: '#8fd0ff' });
-      contact(fx, [1.65, 1.3, 0.1], 0.23, { sparks: 60, speed: 10, lightI: 70, glint: 1.6, light: '#ffe0a0', glintCol: '#fc8' });
-      fx.ring({ t0: 0.23, dur: 0.4, r: [0.1, 1.2], width: [0.12, 0.02], normal: 'cam', pos: [1.65, 1.3, 0.1], intensity: 1.2, ramp: [[0, '#fff2dc'], [1, '#fc8']] });
-      feet(fx, [1.85, 0.05, 0], 0.23);
+      const C1 = fx.anchor('tip', 0.04), C2 = fx.anchor('tip', 0.23);
+      contact(fx, C1, 0.04, { sparks: 24, lightI: 35, light: '#8fd0ff' });
+      contact(fx, C2, 0.23, { sparks: 60, speed: 10, lightI: 70, glint: 1.6, light: '#ffe0a0', glintCol: '#fc8' });
+      fx.ring({ t0: 0.23, dur: 0.4, r: [0.1, 1.2], width: [0.12, 0.02], normal: 'cam', pos: C2, intensity: 1.2, ramp: [[0, '#fff2dc'], [1, '#fc8']] });
+      feet(fx, fx.anchor('tgtFeet', 0, [0, 0.05, 0]), 0.23);
     } },
 
   { id: 'melee/hammer-smash', name: 'Hammer smash', category: 'melee', tier: 3, loop: false, duration: 2.0, stage: { sky: 'dusk', bloom: 0.4, view: WIDE },
@@ -153,37 +154,37 @@ export default [
     } },
 
   { id: 'melee/scythe-reap', name: 'Scythe reap', category: 'melee', loop: false, duration: 2.1, stage: { sky: 'dusk', bloom: 0.4, view: HIGH },
-    act: { weapon: 'scythe', target: [1.9, 0, 0], windup: 0.7,
+    act: { weapon: 'scythe', target: [1.61, 0, 0], windup: 0.7,
       keys: [[-0.7, 'guard'], [-0.35, 'sideBack'], [0.25, 'sideCut'], [0.9, 'sideCut'], [1.6, 'guard']],
       hits: [{ t: 0.16, stop: 0.12, shake: 0.3, amp: 0.04, push: 1.2 }] },
     build(fx) {
       const O = bladeTable(fx, -0.35, 0.4, 1.4);
-      sweepSurface(fx, bladeTable(fx, -0.35, 0.4, 1.0), bladeTable(fx, -0.35, 0.4, 1.7), { t0: -0.35, t1: 0.4, len: 0.45, n: 40, normal: true, c0: '#7a48d0', c1: '#4a2898', c2: '#1a0840', intensity: 0.9, edge: 0.8 });
-      sweepSurface(fx, bladeTable(fx, -0.35, 0.4, 1.0), bladeTable(fx, -0.35, 0.4, 1.7), { t0: -0.35, t1: 0.4, len: 0.45, n: 40, c0: '#e8f4ff', c1: '#9a70e0', c2: '#2a1060', intensity: 0.8, edge: 6 });
-      fx.trail({ path: bladeTable(fx, -0.35, 0.4, 1.7), len: 0.4, n: 40, width: 0.03, t0: -0.35, dur: 1.3, fade: [0, 0.6], intensity: 1.5, ramp: [[0, '#e8e0ff'], [0.5, '#a888ff'], [1, '#4020a0']] });
+      sweepSurface(fx, bladeTable(fx, -0.35, 0.4, 1.0), bladeTable(fx, -0.35, 0.4, 1.45), { t0: -0.35, t1: 0.4, len: 0.45, n: 40, normal: true, c0: '#7a48d0', c1: '#4a2898', c2: '#1a0840', intensity: 0.9, edge: 0.8 });
+      sweepSurface(fx, bladeTable(fx, -0.35, 0.4, 1.0), bladeTable(fx, -0.35, 0.4, 1.45), { t0: -0.35, t1: 0.4, len: 0.45, n: 40, c0: '#e8f4ff', c1: '#9a70e0', c2: '#2a1060', intensity: 0.8, edge: 6 });
+      fx.trail({ path: bladeTable(fx, -0.35, 0.4, 1.45), len: 0.4, n: 40, width: 0.03, t0: -0.35, dur: 1.3, fade: [0, 0.6], intensity: 1.5, ramp: [[0, '#e8e0ff'], [0.5, '#a888ff'], [1, '#4020a0']] });
       for (let i = 0; i < 7; i++) {
         const ts = -0.1 + i * 0.07, p = O(ts);
         fx.emitter({ count: 12, kind: 'smoke', blend: 'normal', shape: 'sphere', radius: 0.12, pos: p, dir: [0.2, 0.6, -0.2], spread: 1.3, speed: [0.2, 0.8], life: [1.0, 1.9], size: [0.3, 0.9], ramp: [[0, '#2a1048', 0], [0.2, '#1a0a2e', 0.55], [1, '#0a0412', 0]], lit: 1, drag: 1.2, turb: [0.5, 1.0], delay: ts + 0.35, t0: ts + 0.34, emit: 0.1, order: -1 });
         fx.emitter({ count: 8, kind: 'soft', shape: 'sphere', radius: 0.1, pos: p, dir: [0.2, 1, 0], spread: 1.2, speed: [0.2, 1.0], life: [0.8, 1.6], size: [0.1, 0.02], ramp: [[0, '#d8e8ff'], [0.4, '#8a60e0'], [1, '#201050', 0]], intensity: 1.2, drag: 1.0, turb: [0.8, 1.4], gravity: [0, 0.5, 0], delay: ts + 0.35, t0: ts + 0.34, emit: 0.1 });
       }
-      contact(fx, [1.7, 1.2, 0.15], 0.16, { hot: '#eef', mid: '#a080ff', cold: '#204', light: '#9070ff', sparks: 30, speed: 5, glintCol: '#a8f', lightI: 50 });
-      feet(fx, [1.9, 0.05, 0], 0.16);
+      contact(fx, fx.anchor('tip', 0.16), 0.16, { hot: '#eef', mid: '#a080ff', cold: '#204', light: '#9070ff', sparks: 30, speed: 5, glintCol: '#a8f', lightI: 50 });
+      feet(fx, fx.anchor('tgtFeet', 0, [0, 0.05, 0]), 0.16);
     } },
 
   { id: 'melee/spear-sweep', name: 'Spear sweep', category: 'melee', loop: false, duration: 1.5, stage: { sky: 'dusk', view: HIGH },
-    act: { weapon: 'spear', target: [1.95, 0, 0], windup: 0.5,
-      keys: [[-0.5, 'guard'], [-0.2, 'sweepBack'], [0, 'sweepCut', 'snap'], [0.4, 'sweepCut'], [1.1, 'guard']],
+    act: { weapon: 'spear', target: [2.06, 0, 0], windup: 0.5,
+      keys: [[-0.5, 'guard'], [-0.2, 'sweepBack'], [-0.03, 'sweepCut', 'snap'], [0.4, 'sweepCut'], [1.1, 'guard']],
       hits: [{ t: -0.03, stop: 0.08, shake: 0.25, amp: 0.04, push: 1.3 }] },
     build(fx) {
       const B = bladeTable(fx, -0.2, 0.2, 1.8), A = bladeTable(fx, -0.2, 0.2, 1.0);
       sweepSurface(fx, A, B, { t0: -0.2, t1: 0.1, len: 0.2, n: 36, c0: '#fff2dc', c1: '#ffe0b0', c2: '#905020', intensity: 1.1, edge: 2.5 });
       fx.trail({ path: B, len: 0.15, n: 30, width: 0.04, t0: -0.2, dur: 0.5, fade: [0, 0.2], intensity: 2.6, ramp: [[0, '#fff2dc'], [0.5, '#ffd8a0'], [1, '#a05010']] });
       for (let i = 0; i < 9; i++) { const ts = -0.1 + i * 0.025, p = B(ts); dust(fx, [p[0], 0.1, p[2]], ts, 8, [0.3, 0.9], [0.5, 1.8]); }
-      contact(fx, [1.85, 0.45, 0.1], -0.03, { sparks: 30, lightI: 40, light: '#ffd090', glint: 0.7, dust: 18, ground: true });
+      contact(fx, fx.anchor('tip', -0.03), -0.03, { sparks: 30, lightI: 40, light: '#ffd090', glint: 0.7, dust: 18, ground: true });
     } },
 
   { id: 'melee/spin-slash', name: 'Spin slash', category: 'melee', loop: false, duration: 0.8, stage: { sky: 'night', view: HIGH },
-    act: { weapon: 'sword', target: [1.55, 0, 0], windup: 0.35,
+    act: { weapon: 'sword', target: [1.47, 0, 0], windup: 0.35,
       keys: [[-0.35, 'guard'], [-0.1, 'sideBack'], [0, 'sideCut', 'snap'], [0.45, 'sideCut'], [0.8, 'guard']],
       hits: [{ t: 0.3, stop: 0.08, shake: 0.3, amp: 0.05, push: 1.4 }] },
     build(fx) {
@@ -192,15 +193,15 @@ export default [
       const A = bladeTable(fx, -0.05, 0.4, 0.5, rotY), B = bladeTable(fx, -0.05, 0.4, 1.05, rotY);
       sweepSurface(fx, A, B, { t0: -0.05, t1: 0.36, len: 0.3, n: 44, c0: '#e8f2ff', c1: '#a8e0ff', c2: '#2060c0', intensity: 1.0, edge: 2.4 });
       fx.trail({ path: B, len: 0.22, n: 44, width: 0.04, t0: -0.05, dur: 0.6, fade: [0, 0.2], intensity: 2.6, ramp: [[0, '#e8f2ff'], [0.5, '#bfe8ff'], [1, '#2060c0']] });
-      fx.ring({ t0: 0.0, dur: 0.5, r: [1.4, 2.2], width: [0.1, 0.02], normal: 'up', pos: [0, 1.2, 0], intensity: 1.0, ramp: [[0, '#e8f2ff'], [1, '#6ac']], fade: [0.05, 0.4] });
-      fx.emitter({ count: 60, kind: 'spark', shape: 'ring', radius: 1.5, radiusIn: 1.3, pos: [0, 1.25, 0], dir: [0, 0.2, 0], radial: 1, spread: 0.5, speed: [1.5, 5], life: [0.3, 0.7], gravity: [0, -6, 0], size: [0.06, 0.02], stretch: 1.5, ramp: [[0, '#fff'], [0.4, '#9cf'], [1, '#124', 0]], intensity: 4, delay: 0.3, emit: 0.05 });
-      contact(fx, [1.5, 1.25, 0.1], 0.3, { light: '#8fc0ff', glintCol: '#9cf', sparks: 40 });
-      feet(fx, [1.55, 0.05, 0], 0.3);
-      fx.light({ color: '#8fc0ff', intensity: 50, pos: [0, 1.4, 0.8], range: 8, t0: -0.05, dur: 0.6, fade: [0.05, 0.4], norm: 40 });
+      fx.ring({ t0: 0.0, dur: 0.5, r: [1.4, 2.2], width: [0.1, 0.02], normal: 'up', pos: [0, fx.anchor('tip', 0.3)[1], 0], intensity: 1.0, ramp: [[0, '#e8f2ff'], [1, '#6ac']], fade: [0.05, 0.4] }); // blade height
+      fx.emitter({ count: 60, kind: 'spark', shape: 'ring', radius: 1.5, radiusIn: 1.3, pos: [0, fx.anchor('tip', 0.3)[1], 0], dir: [0, 0.2, 0], radial: 1, spread: 0.5, speed: [1.5, 5], life: [0.3, 0.7], gravity: [0, -6, 0], size: [0.06, 0.02], stretch: 1.5, ramp: [[0, '#fff'], [0.4, '#9cf'], [1, '#124', 0]], intensity: 4, delay: 0.3, emit: 0.05 });
+      contact(fx, fx.anchor('tip', 0.3), 0.3, { light: '#8fc0ff', glintCol: '#9cf', sparks: 40 });
+      feet(fx, fx.anchor('tgtFeet', 0, [0, 0.05, 0]), 0.3);
+      fx.light({ color: '#8fc0ff', intensity: 50, pos: [0, 1.4, 0.8], range: 8, t0: -0.05, dur: 0.6, fade: [0.05, 0.4], norm: 40 }); // anchor-ok
     } },
 
   { id: 'melee/thrust', name: 'Thrust', category: 'melee', loop: false, duration: 0.75, stage: { sky: 'night', view: { pos: [1.6, 1.7, 7.4], target: [1.5, 1.15, 0] } },
-    act: { weapon: 'spear', target: [2.75, 0, 0], windup: 0.4, keys: [[-0.4, 'guard'], [-0.14, 'thrustBack'], [0, 'lunge', 'snap'], [0.25, 'lunge'], [0.7, 'guard']], hits: [{ t: 0.04, stop: 0.1, shake: 0.22, amp: 0.035, push: 1.6 }] },
+    act: { weapon: 'spear', target: [2.51, 0, 0], windup: 0.4, keys: [[-0.4, 'guard'], [-0.14, 'thrustBack'], [0, 'lunge', 'snap'], [0.25, 'lunge'], [0.7, 'guard']], hits: [{ t: 0.04, stop: 0.1, shake: 0.22, amp: 0.035, push: 1.6 }] },
     build(fx) {
       const T = bladeTable(fx, -0.07, 0.1, 1.85), tip = T(0.04);
       sweepSurface(fx, bladeTable(fx, -0.07, 0.1, 1.2), T, { t0: -0.07, t1: 0.06, len: 0.14, n: 24, c0: '#e8f2ff', c1: '#bfe0ff', c2: '#2850a0', intensity: 1.0, edge: 3 });
@@ -209,31 +210,31 @@ export default [
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: tip, size: [1.6, 0.4], life: [0.3, 0.3], ramp: [[0, '#fff'], [1, '#9cf', 0]], intensity: 4, delay: 0.04, emit: 0.001 });
       contact(fx, [tip[0] + 0.1, tip[1], 0.1], 0.04, { dir: [0.9, 0.2, 0.5], sparks: 45, speed: 9, light: '#8fc0ff', glintCol: '#9cf', glint: 0.5 });
       fx.ring({ t0: 0.04, dur: 0.35, r: [0.1, 1.0], width: [0.12, 0.02], normal: [1, 0, 0], pos: [tip[0], tip[1], 0.1], intensity: 1.2, ramp: [[0, '#e8f2ff'], [1, '#8cf']] });
-      feet(fx, [2.75, 0.05, 0], 0.04);
+      feet(fx, fx.anchor('tgtFeet', 0, [0, 0.05, 0]), 0.04);
     } },
 
   { id: 'melee/uppercut', name: 'Uppercut', category: 'melee', tier: 2, loop: false, duration: 0.85, stage: { sky: 'dusk', view: VIEW },
-    act: { target: [1.55, 0, 0], windup: 0.4,
+    act: { target: [1.0, 0, 0], windup: 0.4,
       keys: [[-0.4, 'guard'], [-0.12, 'upLow'], [0.04, 'upHigh', 'snap'], [0.3, 'upHigh'], [0.8, 'guard']],
       hits: [{ t: 0.04, stop: 0.14, shake: 0.4, amp: 0.07, push: 2.2 }] },
     build(fx) {
       const H = bladeTable(fx, -0.04, 0.12, 0.15), T = bladeTable(fx, -0.04, 0.12, 0.45);
       sweepSurface(fx, H, T, { t0: -0.04, t1: 0.1, len: 0.14, n: 24, c0: '#fff2dc', c1: '#ffd890', c2: '#c05010', intensity: 1.3, edge: 2.5 });
       fx.trail({ path: H, len: 0.12, n: 24, width: 0.07, t0: -0.04, dur: 0.4, fade: [0, 0.2], intensity: 1.5, ramp: [[0, '#fff2dc'], [0.4, '#ffd070'], [1, '#c05010']] });
-      arc(fx, { center: [0.9, 0.55, 0.25], radius: 1.1, a0: -0.8, a1: 1.1, tilt: 0.1, t0: -0.04, dur: 0.18, ramp: [[0, '#fff2dc'], [0.3, '#ffd890'], [1, '#c06010']], width: 0.22, intensity: 2.4 });
-      const C = [1.4, 1.45, 0.3];
+      arc(fx, { ...fx.bladeArc(-0.1, 0.06), t0: -0.04, dur: 0.18, ramp: [[0, '#fff2dc'], [0.3, '#ffd890'], [1, '#c06010']], width: 0.22, intensity: 2.4 });
+      const C = fx.anchor('tgtHead', 0, [-0.15, -0.17, 0.3]); // chin offset (off, not a point) // anchor-ok
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: C, size: [1.8, 0.6], life: [0.3, 0.3], ramp: [[0, '#fff'], [0.5, '#ffe090'], [1, '#f80', 0]], intensity: 2, delay: 0.04, emit: 0.001 });
       fx.emitter({ count: 22, kind: 'streak', shape: 'point', pos: C, dir: [0, 1, 0], spread: 3.14, speed: [4, 9], size: [0.5, 0.2], life: [0.18, 0.3], ramp: [[0, '#fff'], [0.4, '#ffd070'], [1, '#f60', 0]], intensity: 1.8, stretch: 2, delay: 0.04, emit: 0.001 });
       fx.ring({ t0: 0.04, dur: 0.4, r: [0.1, 1.6], width: [0.2, 0.03], normal: 'cam', pos: C, intensity: 1.5, ramp: [[0, '#fff2dc'], [0.5, '#ffd890'], [1, '#f80']] });
       contact(fx, C, 0.04, { dir: [0.4, 1, 0.4], sparks: 50, speed: 9, light: '#ffc070', lightI: 0, glint: 0.001, flare: 0.5, dust: 12 });
-      feet(fx, [1.55, 0.05, 0], 0.04);
+      feet(fx, fx.anchor('tgtFeet', 0, [0, 0.05, 0]), 0.04);
       burst(fx, C, 0.04, { ramp: [[0, '#fff2dc'], [0.5, '#ffd890'], [1, '#c06010']], col: '#ffc070', dir: [0.4, 1, 0.4], debris: false, marks: false });
     } },
 
   { id: 'melee/whip-crack', name: 'Whip crack', category: 'melee', tier: 1, loop: false, duration: 0.85, stage: { sky: 'dusk', view: { pos: [1.5, 1.7, 7.0], target: [1.4, 1.2, 0] } },
     act: { kind: 'throw', weapon: 'whip', target: [2.45, 0, 0], windup: 0.45, hits: [{ t: 0.0, stop: 0.07, shake: 0.12, amp: 0.025, push: 1.0 }] },
     build(fx) {
-      const Hd = bladeTable(fx, -0.45, 0.6, 0.25), T = [2.2, 1.35, 0.1], N = 28;
+      const Hd = bladeTable(fx, -0.45, 0.6, 0.25), T = fx.anchor('tgt', 0, [-0.25, 0.25, 0.1]), N = 28;
       const ss = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
       const pts = (t) => {
         const h = Hd(t), e = 0.3 + 0.7 * ss(-0.2, 0.0, t), ar = (1 - ss(-0.2, 0.0, t)), after = ss(0.02, 0.4, t), out = [];
@@ -248,6 +249,6 @@ export default [
       fx.ring({ t0: 0, dur: 0.3, r: [0.05, 0.9], width: [0.1, 0.015], normal: 'cam', pos: T, intensity: 1.4, ramp: [[0, '#fff2dc'], [1, '#fc9']] });
       fx.emitter({ count: 14, kind: 'smoke', blend: 'normal', shape: 'sphere', radius: 0.08, pos: T, dir: [0.3, 0.6, 0], spread: 1.4, speed: [0.3, 1.4], life: [0.6, 1.2], size: [0.2, 0.7], ramp: [[0, '#564f48', 0], [0.15, '#423d37', 0.5], [1, '#1a1815', 0]], lit: 1, drag: 1.8, delay: 0.0, emit: 0.05, order: -1 });
       contact(fx, T, 0.0, { sparks: 22, speed: 6, lightI: 40, light: '#ffd8a0', glint: 0.001, flare: 0.001 });
-      feet(fx, [2.45, 0.05, 0], 0);
+      feet(fx, fx.anchor('tgtFeet', 0, [0, 0.05, 0]), 0);
     } },
 ];

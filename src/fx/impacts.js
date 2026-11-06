@@ -41,7 +41,7 @@ const smoke = (fx, p, o = {}) => fx.emitter({ count: o.n ?? 30, kind: 'smoke', b
 const rocks = (fx, p, o = {}) => fx.emitter({ count: o.n ?? 20, kind: 'rock', blend: 'normal', shape: 'disc', radius: o.radius ?? 0.25, pos: p, dir: [0, 1, 0], spread: o.spread ?? 0.9, speed: o.speed || [2.5, 7], life: [1.0, 1.9], gravity: [0, -10, 0], size: o.size || [0.14, 0.08], ramp: [[0, o.col || '#5f4f3f'], [1, o.col || '#5f4f3f', 1]], lit: 1, bounce: 0.35, rot: 6, delay: o.t ?? 0, t0: (o.t ?? 0) - 0.02, emit: 0.001 });
 const hurtAct = (t0 = 0.03, hits = {}, extra = {}) => ({ target: false, windup: 0.1, keys: [[-0.1, 'guard'], [t0, 'hurt', 'snap'], [0.6, 'hurt'], [1.2, 'guard']], hits: [{ t: t0, stop: 0.08, shake: 0.25, amp: 0.04, ...hits }], ...extra });
 const BODYVIEW = { pos: [1.1, 1.5, 3.9], target: [0.2, 1.1, 0] };
-const C0 = [0.25, 1.15, 0.2];
+const hitAt = (fx, off = [0.25, -0.05, 0.2]) => fx.anchor('chest', 0, off); // hit point on the actor's chest (front, slightly right)
 
 export default [
   { id: 'impacts/hit-spark', name: 'Hit spark', category: 'impacts', tier: 1, loop: false, duration: 0.5, stage: { sky: 'dusk', bloom: 0.4, view: { pos: [0.8, 1.4, 3.0], target: [0, 1.15, 0] } },
@@ -58,6 +58,7 @@ export default [
   { id: 'impacts/hit-flash', name: 'Hit flash', category: 'impacts', tier: 1, loop: false, duration: 0.5, stage: { sky: 'dusk', bloom: 0.4, view: BODYVIEW },
     act: hurtAct(0.03, { stop: 0.07, shake: 0.18, amp: 0.03 }),
     build(fx) {
+      const C0 = hitAt(fx);
       fx.on((t) => {
         let tint = '#fff', amt = 0, glow = 0;
         if (t >= 0.0 && t < 0.07) { amt = 1; glow = 1; } else if (t >= 0.07 && t < 0.42) { const k = Math.floor((t - 0.07) / 0.06), fade = 1 - (t - 0.07) / 0.35; tint = k % 2 === 0 ? '#ff2a1a' : '#ffffff'; amt = 0.85 * fade; glow = 0.6 * fade; }
@@ -78,7 +79,7 @@ export default [
       if(p<.72){ vec3 inv=vec3(1.)-c; return mix(c,inv,step(.5,fract(p*13.))*.9); }
       return mix(c*(1.+.0),c,1.); }` },
     build(fx) {
-      fx.flash(0, 0.1, '#ffe8c0', 0.15);
+      const C0 = hitAt(fx); fx.flash(0, 0.1, '#ffe8c0', 0.15);
       star(fx, { pos: C0, t0: 0, dur: 0.2, r: [0.4, 1.8], arms: jag(fx, 14, 0.3, 1), valley: 0.1, c0: '#fff', c1: '#fff', c2: '#ccc', intensity: 2 });
       camLines(fx, { pos: C0, n: 20, r: [0.5, 2.6], t0: 0, dur: 0.22, width: 0.04, intensity: 2, ramp: [[0, '#fff'], [1, '#fff']] });
     } },
@@ -86,6 +87,7 @@ export default [
   { id: 'impacts/crit-hit', name: 'Critical hit', category: 'impacts', tier: 2, loop: false, duration: 0.9, stage: { sky: 'dusk', bloom: 0.5, view: BODYVIEW },
     act: hurtAct(0.03, { stop: 0.12, shake: 0.4, amp: 0.07 }),
     build(fx) {
+      const C0 = hitAt(fx);
       fx.on((t) => { const a = t > 0 && t < 0.3 ? 0.8 * (1 - t / 0.3) : 0; fx.body.set({ tint: '#ff3020', tintAmt: a, glow: a * 0.8 }); });
       fx.flash(0.0, 0.1, '#fff3d0', 0.08);
       star(fx, { pos: C0, t0: 0, dur: 0.5, scale: (pr) => (pr < 0.18 ? 0.3 + 1.5 * ease(pr / 0.18) : 1.8 - 0.7 * ease((pr - 0.18) / 0.82)), arms: jag(fx, 16, 0.25, 1), valley: 0.08, c0: '#fff2dc', c1: '#ffd040', c2: '#e02010', intensity: 1.5, spin: 0.25, fade: [0, 0.3], power: 1.4 });
@@ -102,12 +104,12 @@ export default [
     act: hurtAct(0.04, { stop: 0.1, shake: 0.3, amp: 0.05 }),
     build(fx) {
       fx.on((t) => { const a = t > 0.04 && t < 0.4 ? 0.4 * (1 - (t - 0.04) / 0.36) : 0; fx.body.set({ tint: '#ffb090', tintAmt: a }); });
-      const G = [0.2, 0.05, 0.1], B = [0.25, 1.05, 0.25];
+      const G = fx.anchor('feet', 0, [0.2, 0.05, 0.1]), B = hitAt(fx, [0.25, -0.15, 0.25]);
       fx.ring({ refract: 0.012, t0: 0.04, dur: 0.4, r: [0.15, 0.8], width: [0.2, 0.05], normal: 'cam', pos: B, intensity: 0.28, fill: 0.04, ramp: [[0, '#fff2dc'], [0.4, '#d8c8b0'], [1, '#8a7a68']] });
       smoke(fx, B, { n: 18, shape: 'sphere', radius: 0.12, dir: [0.3, 0.2, 1], spread: 1.6, radial: 0.8, speed: [0.5, 2], size: [0.25, 0.7], rise: 0.1, t: 0.04, emit: 0.08, life: [0.5, 1.1] });
       smoke(fx, G, { n: 40, radius: 0.35, speed: [0.8, 3.2], size: [0.5, 1.5], t: 0.04, emit: 0.1 });
       fx.ring({ refract: 0.02, dark: 0.3, t0: 0.04, dur: 0.7, r: [0.3, 2.6], width: [0.15, 0.05], normal: 'up', pos: G, intensity: 0.3, fill: 0, ramp: [[0, '#c8b8a0'], [1, '#6a5a48']], decay: 1 });
-      rocks(fx, [0.25, 1.0, 0.1], { n: 12, spread: 1.4, speed: [1, 3.5], size: [0.07, 0.04], t: 0.04, col: '#7a6850' });
+      rocks(fx, hitAt(fx, [0.25, -0.2, 0.1]), { n: 12, spread: 1.4, speed: [1, 3.5], size: [0.07, 0.04], t: 0.04, col: '#7a6850' });
       burst(fx, B, 0.04, { ramp: [[0, '#fff2dc'], [0.4, '#d8c8b0'], [1, '#8a7a68']], col: '#ffc890', dir: [-1, 0, 0] });
     } },
 

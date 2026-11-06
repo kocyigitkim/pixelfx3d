@@ -149,6 +149,8 @@ export interface ActDef {
   kind: string; weapon?: string; target?: Vec3 | false; windup?: number;
   /** actor model; default: mage for staff / weaponless casts, else knight */
   char?: 'knight' | 'mage';
+  /** act time where the kind's contact frame lands (blade crosses the front / full reach / chop lands); default 0. Set it to the blade hit t. */
+  contact?: number;
   /** pose keys [t, POSES name | {clip,time}, 'snap'?] (default: from kind) */
   keys?: Array<[number, string | { clip: string; time: number }, 'snap'?]>;
   hits?: Array<{ t: number; stop?: number; shake?: number; amp?: number; push?: number }>;
@@ -180,6 +182,8 @@ export class Fx extends THREE.Group {
   target?: THREE.Group & { set(params: Record<string, unknown>): void; point(name: 'chest' | 'head' | 'feet', out?: THREE.Vector3): THREE.Vector3; mat: THREE.MeshStandardMaterial; kick(s?: number): void };
   /** fx-local [x,y,z] of a rig anchor at act time t (poses the body at t, then restores); off adds [dx,dy,dz] */
   anchor(name: AnchorName, t?: number, off?: Vec3): Vec3;
+  /** fx.slash() params {center, radius, a0, a1, tilt, depth} fitted to the real blade (handR pivot, tip path) over act time [t0, t1] */
+  bladeArc(t0: number, t1: number, n?: number): { center: Vec3; radius: number; a0: number; a1: number; tilt: number; depth: number };
   emitter(p: EmitterParams): Part;
   orb(p: OrbParams): Part;
   ring(p: RingParams): Part;

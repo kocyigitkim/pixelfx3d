@@ -32,7 +32,7 @@ export class Fx extends THREE.Group {
   setupActor() {
     const d = this.def, a = d.act, char = a?.char || (a ? (a.weapon === 'staff' || (/^cast(up)?$/.test(a.kind) && !a.weapon) ? 'mage' : 'knight') : /^(mage|priest|shaman|arcane|holy)$/.test(d.category) ? 'mage' : 'knight');
     this.body = new Dummy({ weapon: a?.weapon, char }); this.add(this.body); this.actor = a || null;
-    if (a) { this.lead = a.lead ?? a.windup ?? 0.45; this.keys = a.keys || actKeys(a.kind || 'slash', this.lead); if (a.target !== false) { this.target = new Target(); const t = a.target || [2.2, 0, 0]; this.target.position.set(t[0], t[1] || 0, t[2] || 0); this.add(this.target); } (a.hits || []).forEach((h) => this.hit(h.t, h)); }
+    if (a) { this.lead = a.lead ?? a.windup ?? 0.45; this.keys = a.keys || actKeys(a.kind || 'slash', this.lead, a.contact); if (a.target !== false) { this.target = new Target(); const t = a.target || [2.2, 0, 0]; this.target.position.set(t[0], t[1] || 0, t[2] || 0); this.add(this.target); } (a.hits || []).forEach((h) => this.hit(h.t, h)); }
   }
   /** fx-local [x,y,z] of a rig anchor at act time t; poses body at t then restores. off adds [dx,dy,dz].
    *  body: handR handL tip chest head hips feet; target: tgt (= tgtChest) tgtChest tgtHead tgtFeet. Ignores fx.on()-driven body moves. */
@@ -42,6 +42,16 @@ export class Fx extends THREE.Group {
     this.updateMatrixWorld(true); const p = this.worldToLocal(o.point(tg ? name.slice(3).toLowerCase() || 'chest' : name, _va));
     if (keep) { o.pose = keep; o.apply(); }
     return [p.x + (off?.[0] ?? 0), p.y + (off?.[1] ?? 0), p.z + (off?.[2] ?? 0)];
+  }
+  /** fx.slash() params {center, radius, a0, a1, tilt} fitted to the real blade over act time [t0,t1]: pivot = handR at mid-window,
+   *  plane = Newell normal of the tip path (projected to slash()'s X-axis tilt family), angles unwrapped along the sweep. */
+  bladeArc(t0, t1, n = 12) {
+    const c = new THREE.Vector3(...this.anchor('handR', (t0 + t1) / 2)), d = [], nn = new THREE.Vector3();
+    for (let i = 0; i <= n; i++) d.push(new THREE.Vector3(...this.anchor('tip', t0 + ((t1 - t0) * i) / n)).sub(c));
+    for (let i = 0; i < n; i++) nn.add(_vv.crossVectors(d[i], d[i + 1]));
+    const tilt = Math.atan2(-nn.y, nn.z), e2 = new THREE.Vector3(0, Math.cos(tilt), Math.sin(tilt)); let a = 0, prev = 0, R = 0; const as = [];
+    for (const v of d) { const x = v.x, y = v.dot(e2), ai = Math.atan2(y, x); a = as.length ? a + Math.atan2(Math.sin(ai - prev), Math.cos(ai - prev)) : ai; prev = ai; as.push(a); R += Math.hypot(x, y) / d.length; }
+    return { center: [c.x, c.y, c.z], radius: R, a0: as[0], a1: as[n], tilt, depth: 0 };
   }
   /* ---------------------------------------------------------- builders */
   _add(p) { this.parts.push(p); return p; }
