@@ -16,8 +16,9 @@ Keys: `↑/↓` next effect · `R` replay · `Space` pause · `T` tour · `P` PN
 
 ## use one
 ```js
-import { Stage, registerAll, createFx } from './src/index.js';
+import { Stage, registerAll, createFx, loadTextures, loadModels } from './src/index.js';
 registerAll();
+await Promise.all([loadTextures(), loadModels()]);   // once; effects with an actor/target need the character models
 
 const stage = new Stage(document.querySelector('#view'));   // renderer + sky + ground + HDR bloom
 stage.start();
@@ -75,6 +76,9 @@ node tools/alpha-test.mjs                # no baseline worktree needed; corner a
 node tools/shots.mjs /tmp/w/shots/me all 0.5
 node tools/shots.mjs /tmp/w/shots/me fire/campfire 0.5 host=1   # host scene (stage.attach)
 node tools/gpu-scan.mjs all 0.1,0.5,-0.9   # real-GPU blank-frame / console-error scan (headed Chromium)
+node tools/anchor-audit.mjs --check        # no browser: hard-coded hand/head/target literals (docs/AUTHORING.md "Actor, target and anchors")
+node tools/actor-smoke.mjs all             # no browser: every actor effect steps without NaN, deterministic
+BASE_PORT=8124 node tools/same-test.mjs    # non-actor effects identical to a baseline server
 ```
 
 ## types and entry points

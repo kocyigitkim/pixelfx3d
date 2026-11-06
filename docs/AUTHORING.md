@@ -27,7 +27,7 @@ export const ENV = {
 Skills use `grade(o).g` as the tier; other effects pass `tier` (1–3) explicitly. Bursts use `sizePow` 0.4–0.6; alpha fades over the last 40% of life.
 
 
-World: **meters, +Y up, characters face +X, feet on y = 0, 1.8 m tall.** Default camera sits at +Z/+X looking at (0,1,0)
+World: **meters, +Y up, characters face +X, feet on y = 0, ~1.8 m tall (chibi: big head, short body; see "Actor, target and anchors").** Default camera sits at +Z/+X looking at (0,1,0)
 (override per effect with `stage.view`). Origin of an effect = the spot on the ground in front of/under the action.
 
 ## An effect file
@@ -39,14 +39,40 @@ export default [{
   name: 'Campfire', category: 'fire',
   loop: true, duration: 3,    // loop => seamless period in seconds; one-shot => length in seconds
   stage: { sky: 'night', view: { pos: [2.6,1.5,3.2], target: [0,0.55,0], fov: 40 }, bloom: 0.45, ground: true, exposure: 1 },
-  act:  { kind: 'slash', weapon: 'sword', target: [2.1,0,0], windup: 0.45, hits: [{ t: 0.07, stop: 0.09, shake: 0.2, amp: 0.03, push: 1.4 }] }, // optional
-  body: true,                 // optional: show the mannequin (no attack) so you can drive its shader (fx.body.set)
+  act:  { kind: 'slash', weapon: 'sword', target: [1.41,0,0], windup: 0.45, contact: 0.07, hits: [{ t: 0.07, stop: 0.09, shake: 0.2, amp: 0.03, push: 1.4 }] }, // optional; char/keys too, see below
+  body: true,                 // optional: show the actor (knight, mage for caster categories) without an attack; drive its shader with fx.body.set, its pose with fx.body.setPose
   screen: { glsl: '...' },    // optional: full-screen transition (see below)
   build(fx, o) { ... },       // create parts with the fx.* builders. o = user options (o.palette, o.seed ...)
 }];
 ```
 `stage.sky`: `night | dusk | day | dark | void | storm`. Time `t` is seconds from the effect's first frame (`t=0`).
-Acts run the mannequin from `-windup` s before t=0 (wind-up) to the recovery; hit-stop / camera shake / target kick are `hits`.
+Acts run the actor from `-windup` s before t=0 (wind-up) to the recovery; hit-stop / camera shake / target kick are `hits`.
+
+## Actor, target and anchors
+* **Models.** The actor and the target are rigged KayKit characters (`assets/models/*.glb`, CC0, see NOTICE.md): `knight`, `mage` (actor) and `skeleton` (target, `act.target`). One scale `S` for all (~1.8 m), chibi proportions: idle hips y ≈ .29, chest ≈ .62, head centre ≈ 1.31 (head radius `fx.body.headR` ≈ .40 knight), right hand ≈ [.08, .48, .37]. Target chest ≈ (x, .60), head ≈ 1.29. Never assume the old 1.25 m chest / 1.73 m head.
+* **Loading.** Models load once: `await loadModels()` (with `loadTextures()`, both idempotent) before creating any effect with `act` or `body`; otherwise the constructor throws `pixelfx3d: await loadModels() before creating effects with an actor`.
+* **Char.** `act.char: 'knight' | 'mage'` overrides the default: `mage` for `weapon: 'staff'` or `cast`/`castup` without a weapon (and for body-only effects in mage/priest/shaman/arcane/holy), else `knight`.
+* **Poses.** Every pose is a frame of a KayKit clip: `POSES.<name>` = `{clip, time}` (idle, guard, windupHigh, cut, lunge, castRelease, throwFwd …, `src/core/dummy.js`). `fx.body.setPose(p)` takes a `POSES` entry, any `{clip, time}` (e.g. `{clip: 'Running_A', time: ((t / 0.6) % 1) * 0.8}`) or a blend `{a, b, f}`. `act.keys: [[t, 'poseName', 'snap'?], …]` replaces the kind's timeline; same-clip neighbours play the clip, others crossfade. Old joint-angle objects (`aR`, `lean`, `py` …) do nothing any more. Offset holders `fx.body.torso / neck / pelvis` still add rotation/position/scale on top of the clip (spine / head / hips bones).
+* **Contact.** `act.kind` picks the clip; its contact frame lands on act time `act.contact` (default 0):
+
+  | kind | clip | contact (clip s) |
+  |---|---|---|
+  | slash | 1H_Melee_Attack_Slice_Diagonal | .396 (blade crosses the front) |
+  | sideslash | 1H_Melee_Attack_Slice_Horizontal | .258 |
+  | smash | 2H_Melee_Attack_Chop | .867 (tip lands low in front) |
+  | thrust | 1H_Melee_Attack_Stab | .433 (full reach) |
+  | cast | Spellcast_Shoot | .3 (release) |
+  | castup | Spellcast_Raise | .667 |
+  | stomp | Jump_Full_Short | .7 (landing) |
+  | throw | Throw | .733 (release) |
+
+  If the first hit is not at t=0, set `contact` to the hit time so the blade/hand is at the target then.
+* **Anchors.** `fx.anchor(name, t = 0, off)` returns the fx-local `[x, y, z]` of a rig point with the actor posed at act time `t` (build time, no live follow). Body names: `handR handL tip chest head hips feet`; target: `tgt` (= `tgtChest`), `tgtChest`, `tgtHead`, `tgtFeet`. `off` adds `[dx, dy, dz]`. It does not see moves you make in `fx.on()` (dashes, teleports): add that offset yourself (`C = fx.anchor('handR', 0.02); C[0] += x1`). Body-only effects: call `fx.body.setPose(...)` before the first `fx.anchor`.
+  Typical: projectile `from = fx.anchor('handR', tRelease)`, `to = fx.anchor('tgt')`; melee contact `C = fx.anchor('tip', T)`, pivot `H = fx.anchor('handR', T)`; mouth `fx.anchor('head', 0, [0.85 * fx.body.headR, -0.45 * fx.body.headR, 0])`.
+* **Live followers.** `k.at(name)` (skills) returns a mover `(obj) => …` that places an object at the live anchor each frame (`'handR'` default; aliases `'armR'`/`'armL'`; target names work too). Low level: `fx.body.point(name, outVector3)` (world space; convert with `fx.worldToLocal`).
+* **Blade arcs.** `fx.bladeArc(t0, t1)` returns `fx.slash()` params `{center, radius, a0, a1, tilt}` fitted to the real blade tip path over act time `[t0, t1]`; use it for crescents so they pass through the weapon.
+* **Target.** `fx.target` (skeleton) reacts to `hits`; tint it with `fx.target.set({...})` and the actor with `fx.body.set({...})`; never change shared model materials directly. For melee set `act.target` x so the blade tip at the hit reaches the target (`anchor-audit` prints `REACH … suggest target.x`).
+* **Rule.** Never hard-code hand, head or target coordinates. Body-volume centres (auras, shells, body-filling emitters) may keep fixed heights; mark such lines with a trailing `// anchor-ok`. Check with `node tools/anchor-audit.mjs <files> --check` (exit 1 on unmarked literals near an anchor) and `node tools/actor-smoke.mjs cat:<category>` (NaN / determinism / binding warnings, no browser).
 
 ## Builders on `fx` (all take `t0`, `dur`, `fade:[in,out]` seconds; default = whole effect; coordinates are fx-local meters)
 * `fx.emitter(p)` – GPU particles (analytic, deterministic). Params (defaults in brackets):
@@ -130,8 +156,8 @@ The 162 MMORPG skills (22 `src/fx/<category>.js` files) are built from shared he
   * Layer builders (each applies `k.s` / `k.b` and the ramp by default): `k.em`, `k.smoke`, `k.ring`, `k.orb`, `k.shell`, `k.beam`, `k.ribbon`, `k.slash`, `k.trail`, `k.bolt`, `k.decal`, `k.light`.
   * Composites: `k.gather(pos, t0, dur, R, n, follow)`, `k.impact(pos, t, n, r)` (sparks, glint, ring, light, shake), `k.sparks(pos, t, n, p)`, `k.glint(pos, t, size)`, `k.extras(pos, t)` (grade layers, see below).
   * `k.pop(obj, t0, t1, t2, t3, fn)` – scales a mesh in and out (`t0..t1` grow, `t2..t3` shrink).
-  * `k.at(side)` – returns a mover that places an object at the hand (`'armR'` by default).
-  * `k.ghost(pose, pos, t0, dur, a)` – holographic mannequin ghost.
+  * `k.at(name)` – returns a mover that places an object at a live anchor (`'handR'` by default; `'armR'`/`'armL'` aliases, `tip chest head hips feet`, target names `tgt…`).
+  * `k.ghost(pose, pos, t0, dur, a)` – holographic ghost of the knight model in `POSES[pose]` (name string).
 * Grade rules: `grade()` clamps to 1-3. Grade 2 adds one layer inside `if (k.g >= 2)` (a flash). Grade 3 adds two layers inside `if (k.g === 3)` (an extra ring plus sparks, glint and light). `k.light` also gets x1.3 intensity at grade 3.
 * Element ramps (exported): `FIRE, WATER, EARTH, AIR, STEAM, LAVA, STORM, FROST, SWAMP, DUNE, PLASMA, CRYO, NANO, ION, QUANTUM`. Also exported for other skills: `STEEL, BLOOD, POISON, HOLY, VOID, ARCANE, SPIRIT, NATURE`.
 * Look ramps (normal blend, alpha rises then falls): `SMOKE, DUST, VAPOR, MUD, SAND`.
