@@ -4,7 +4,7 @@ import { kit, SKILL, meta, act, sm, clamp, TAU, POSES, metal, addMat, DUST, ION 
 import { contact } from './melee.js';
 
 const m = meta('ion', 'tech');
-const T = [3.8, 1.2, 0];
+
 /** T-MEL contact burst with n sparks (n + 2 particles) */
 const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n, ...o });
 const VAPOR = [[0, '#b7bcbf', 0], [0.15, '#b0b6b9', 0.55], [1, '#7a848b', 0]]; // kit VAPOR darkened to <= #b8c0c8 (V5 vapor exception)
@@ -16,7 +16,7 @@ export default [
     act: act('throw', 0.0, 2.45, { weapon: 'whip' }),
     // P3=132
     build(fx, o) {
-      const k = kit(fx, o, ION), to = k.at('armR'), H = [0.6, 1.38, 0.2], TIP = [2.2, 1.35, 0.1];
+      const k = kit(fx, o, ION), to = k.at('armR'), H = fx.anchor('handR', 0), TIP = fx.anchor('tgt', 0, [-0.25, 0, 0.1]); // whip from release hand, tip lands on target chest
       const pts = (t) => { const u = sm(0, 0.5, t), out = []; for (let i = 0; i <= 5; i++) { const f = i / 5, bump = 0.2 * Math.sin(f * Math.PI) * (1 - sm(0.4, 0.8, t)) * u; out.push([H[0] + (TIP[0] - H[0]) * f * u, H[1] + (TIP[1] - H[1]) * f * u + bump, H[2] + (TIP[2] - H[2]) * f * u]); } return out; };
       const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.2, 8), metal('#5a626c'));
       const coil = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.01, 6, 12), addMat(k.col(1), 2)); coil.rotation.x = Math.PI / 2; handle.add(coil);
@@ -43,11 +43,11 @@ export default [
     act: act('cast', 0.15, 4),
     // P3=262
     build(fx, o) {
-      const k = kit(fx, o, ION), to = k.at('armR'), MZ = [0.8, 1.3, 0.2], TG = [3.8, 1.2, 0];
+      const k = kit(fx, o, ION), to = k.at('armR'), MZ = fx.anchor('handR', 0.15, [0.2, 0, 0]), T = fx.anchor('tgt'), y = (x) => MZ[1] + ((T[1] - MZ[1]) * (x - MZ[0])) / (T[0] - MZ[0]); // horn muzzle at the shot; y(): cone line muzzle -> target chest
       const horn = new THREE.Group();
       const cone = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.4, 16, 1, true), metal('#8a929c')); cone.rotation.z = -Math.PI / 2; cone.position.x = 0.2; horn.add(cone);
       fx.mesh(horn, () => to(horn), { t0: -0.3, dur: 2.0 });
-      for (let i = 0; i < 6; i++) k.ring({ t0: 0.15 + 0.03 * i, dur: 0.5, r: [0.2, 0.5 + 0.2 * i], normal: [1, 0, 0], pos: [1 + 0.5 * i, 1.3, 0] });
+      for (let i = 0; i < 6; i++) k.ring({ t0: 0.15 + 0.03 * i, dur: 0.5, r: [0.2, 0.5 + 0.2 * i], normal: [1, 0, 0], pos: [1 + 0.5 * i, y(1 + 0.5 * i), 0] });
       k.em({ count: 80, kind: 'streak', shape: 'point', pos: MZ, dir: [1, 0, 0], spread: 0.05, speed: [12, 18], life: [0.15, 0.25], size: [0.05, 0.02], intensity: 1.5, delay: 0.15, emit: 0.001 });
       k.smoke({ ramp: VAPOR, count: 40, shape: 'disc', radius: 0.15, pos: MZ, dir: [1, 0, 0], radial: 1, speed: [2, 4], life: [0.4, 0.8], size: [0.15, 0.35], delay: 0.15, emit: 0.001 });
       ct(fx, k, T, 0.15, 38, { lightI: 0 });
@@ -65,7 +65,7 @@ export default [
     act: act('cast', 0.8, 3.4, { hits: [1.2, 1.6].map((t) => ({ t, stop: 0.04, shake: 0.2, amp: 0.03, push: 1 })) }),
     // P3=119
     build(fx, o) {
-      const k = kit(fx, o, ION), H = [0.6, 1.38, 0.2], DH = [2.2, 2, 0.6], P2 = [3.8, 0.1, 1.2], P3 = [4.2, 0.1, -1];
+      const k = kit(fx, o, ION), H = fx.anchor('handR', 0), T = fx.anchor('tgt'), DH = [2.2, 2, 0.6], P2 = [3.8, 0.1, 1.2], P3 = [4.2, 0.1, -1];
       const drone = (hov, t0) => {
         const g = new THREE.Group(); g.scale.setScalar(2.5);
         g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.06, 6), metal('#5a626c', k.col(1), 0.3)));
@@ -96,7 +96,7 @@ export default [
     act: act('throw', 1.0, 3.2),
     // P3=442
     build(fx, o) {
-      const k = kit(fx, o, ION), A = [0.6, 1.38, 0.2], G = [3, 0, 0], BP = [3, 0.4, 0];
+      const k = kit(fx, o, ION), A = fx.anchor('handR', 0), G = [3, 0, 0], BP = [3, 0.4, 0];
       const P = (t) => { const u = clamp(t / 0.5), h = 1.0 * Math.sin(Math.PI * u); return [A[0] + (G[0] - A[0]) * u, A[1] + (G[1] - A[1]) * u + h, A[2] + (G[2] - A[2]) * u]; };
       const gren = new THREE.Group();
       gren.add(new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8), metal('#5a626c')));
@@ -130,24 +130,24 @@ export default [
     act: act('none', null, 3.3, { keys: [[-0.8, 'guard'], [-0.5, 'dashLow'], [0, 'lunge', 'snap'], [0.3, 'lunge'], [0.9, 'guard']] }),
     // P3=237
     build(fx, o) {
-      const k = kit(fx, o, ION), t0 = -0.5, x0 = 0, x1 = 3;
+      const k = kit(fx, o, ION), t0 = -0.5, x0 = 0, x1 = 3, C = fx.anchor('handR', 0.02), NY = fx.anchor('chest', 0)[1]; C[0] += x1; // lunge hand + dash offset; thrusters at chest height
       const X = (t) => (t < t0 ? x0 : t < 0 ? x0 + (x1 - x0) * sm(t0, 0, t) : x1);
       fx.on((t) => { fx.body.position.x = X(t); });
       for (const y of [0.5, 0.8, 1.1, 1.4]) k.ribbon({ points: (t) => { const x = X(clamp(t, t0, 0)); return [[x - 1.4, y, 0], [x - 0.6, y, 0], [x, y, 0]]; }, head: () => 1.001, width: 0.025, fade: [0.03, 0.12], t0, dur: 1.0 });
       for (const z of [0.15, -0.15]) {
         const noz = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.2, 8), metal('#5a626c'));
         noz.rotation.z = Math.PI / 2;
-        fx.mesh(noz, (t) => noz.position.set(X(t) - 0.25, 1.0, z), { t0, dur: 1.0 });
-        k.em({ count: 60, kind: 'flame', shape: 'point', dir: [-1, 0, 0], spread: 0.25, speed: [2, 4], life: [0.2, 0.4], size: [0.15, 0.05], aspect: 1.8, emit: 1.0, t0, follow: (mm, ta, t) => mm.position.set(X(t) - 0.25, 1.0, z) });
+        fx.mesh(noz, (t) => noz.position.set(X(t) - 0.25, NY, z), { t0, dur: 1.0 });
+        k.em({ count: 60, kind: 'flame', shape: 'point', dir: [-1, 0, 0], spread: 0.25, speed: [2, 4], life: [0.2, 0.4], size: [0.15, 0.05], aspect: 1.8, emit: 1.0, t0, follow: (mm, ta, t) => mm.position.set(X(t) - 0.25, NY, z) });
       }
-      k.ring({ t0, dur: 0.3, r: [0.2, 1.2], normal: [1, 0, 0], pos: [0, 1.2, 0] });
+      k.ring({ t0, dur: 0.3, r: [0.2, 1.2], normal: [1, 0, 0], pos: [0, 1.2, 0] }); // anchor-ok
       k.ring({ t0: -0.25, dur: 0.3, r: [0.2, 1.2], normal: [1, 0, 0], pos: [1.5, 1.2, 0] });
       k.trail({ path: (t) => [X(t) - 0.2, 1.1, 0], t0, dur: 0.6, len: 0.4, width: 0.04 });
       k.em({ count: 5, kind: 'shard', shape: 'point', size: [0.2, 0.1], life: [0.3, 0.4], emit: 0.5, t0, follow: (mm, ta, t) => mm.position.set(X(t) - 0.4, 1.0, 0) });
-      ct(fx, k, [3.4, 1.2, 0.1], 0.02, 38, { lightI: 0 });
-      k.ring({ t0: 0, dur: 0.4, r: [0.2, 2], normal: [1, 0, 0], pos: [3.3, 1.2, 0] });
-      k.sparks([3.3, 1.2, 0], 0, 30);
-      k.extras([3.4, 1.2, 0.1], 0);
+      ct(fx, k, C, 0.02, 38, { lightI: 0 });
+      k.ring({ t0: 0, dur: 0.4, r: [0.2, 2], normal: [1, 0, 0], pos: C });
+      k.sparks(C, 0, 30);
+      k.extras(C, 0);
     } }),
 
   // 6. pulse-ring: three hex EMP rings expand from the target, a radial spark burst follows
@@ -164,7 +164,7 @@ export default [
         hr.rotation.x = -Math.PI / 2; hr.position.set(P[0], 0.05, 0);
         fx.mesh(hr, (t) => { const u = sm(0.1 * i, 0.6 + 0.1 * i, t); hr.scale.setScalar(1 + 5 * u); hr.material.opacity = 1 - u; }, { t0: 0, dur: 1.0 });
       }
-      k.bolt({ from: [2.6, 1.2, 0.2], to: [2.6, 0.3, -0.1], jag: 0.04, width: 0.02, rate: 10, t0: 0.05, dur: 0.3 });
+      k.bolt({ from: [2.6, 1.2, 0.2], to: [2.6, 0.3, -0.1], jag: 0.04, width: 0.02, rate: 10, t0: 0.05, dur: 0.3 }); // anchor-ok
       k.bolt({ from: [2.8, 1.4, -0.2], to: [2.5, 0.4, 0.1], jag: 0.04, width: 0.02, rate: 10, t0: 0.05, dur: 0.3 });
       k.em({ count: 60, kind: 'spark', shape: 'sphere', radius: 0.2, pos: [2.6, 0.6, 0], radial: 1, speed: [4, 8], life: [0.3, 0.6], size: [0.07, 0.02], stretch: 1.5, intensity: 3, delay: 0.05, emit: 0.001 });
       fx.on((t) => { if (fx.target && fx.target.set) fx.target.set({ rim: k.col(1), rimAmt: (Math.floor(t * 6) % 2 ? 1.2 : 0.2) * (1 - sm(0.6, 1.2, t)) }); });
@@ -201,7 +201,7 @@ export default [
       k.smoke({ ramp: VAPOR, count: 40, shape: 'disc', radius: 0.3, pos: P, radial: 1, speed: [0.5, 1.5], life: [1, 1.6], size: [0.4, 0.9], delay: 0.9, emit: 0.1 });
       k.decal({ kind: 'scorch', r: [1, 1], pos: P, t0: 0.9, dur: 2.0 });
       if (k.g < 3) { k.ring({ t0: 0.9, dur: 0.6, r: [0.2, 4], normal: 'up', pos: [2.6, 0.02, 0] }); k.light({ pos: [2.6, 1.0, 0.5], t0: 0.9, dur: 1.2, fade: [0.01, 0.4], flicker: 0, intensity: 140 }); fx.flash(0.9, 0.12, k.col(1), 0.15); } // K2/K3: g3 extras owns ring/light/flash
-      if (k.g >= 2) for (let j = 0; j < 3; j++) k.ring({ t0: 1.0 + 0.2 * j, dur: 0.4, r: [0.2, 1.2], normal: 'cam', pos: [2.6, 1 + j, 0] });
+      if (k.g >= 2) for (let j = 0; j < 3; j++) k.ring({ t0: 1.0 + 0.2 * j, dur: 0.4, r: [0.2, 1.2], normal: 'cam', pos: [2.6, 1 + j, 0] }); // anchor-ok
       if (k.g === 3) {
         k.ring({ t0: 1.4, dur: 0.6, r: [0.2, 2.5], normal: 'cam', pos: P });
         k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 1.5, pos: P, size: [0.25, 0.08], life: [0.2, 0.3], intensity: 3, delay: 1.4, emit: 0.001 });
@@ -214,7 +214,7 @@ export default [
     body: true, view: 'body', sky: 'dark',
     // P3=141
     build(fx, o) {
-      const k = kit(fx, o, ION), CEN = [0, 1.1, 0];
+      const k = kit(fx, o, ION), CEN = [0, 1.1, 0]; // anchor-ok
       fx.body.setPose(POSES.guard);
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(2.6, 3.0, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u }); });
       const turbine = (y) => {

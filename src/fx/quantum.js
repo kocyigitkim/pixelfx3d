@@ -5,7 +5,7 @@ import { Dummy, evalKeys, Target } from '../core/dummy.js';
 import { contact } from './melee.js';
 
 const m = meta('quantum', 'quantum');
-const A = [0.6, 1.38, 0.2], C = [1.62, 1.2, 0.1];
+
 const lerp3 = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u];
 /** T-MEL contact burst with n sparks (n + 2 particles) */
 const ct = (fx, k, p, h, n) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n });
@@ -46,11 +46,11 @@ export default [
       ghost(fx, 'behind', [B[0], 0, -0.06], 0, 1.8, 0.45, k.col(0));
       ghost(fx, 'behind', [B[0], 0, 0.06], 0, 1.8, 0.45, k.col(1));
       glitchBars(fx, k, 12, B, 0.4, 1.8);
-      k.ring({ t0: -0.1, dur: 0.5, r: [0.2, 1.4], normal: 'up', pos: [0, 0.02, 0] });
+      k.ring({ t0: -0.1, dur: 0.5, r: [0.2, 1.4], normal: 'up', pos: [0, 0.02, 0] }); // anchor-ok
       k.ring({ t0: 0, dur: 0.5, r: [0.2, 1.4], normal: 'up', pos: [B[0], 0.02, 0] });
       k.light({ pos: [1.4, 1.2, 0.8], t0: 0, dur: 1.8, fade: [0.05, 0.5], flicker: 0.3, intensity: 60 });
       if (k.g >= 2) k.em({ count: 40, kind: 'soft', shape: 'box', shapeSize: [0.25, 0.5, 0.1], pos: [B[0], 1, 0], dir: [0, 1, 0], spread: 0.5, speed: [0, 0.4], life: [0.3, 0.6], size: [0.08, 0.02], intensity: 1.2, emit: 1.8, t0: 0 });
-      if (k.g === 3) for (let i = 1; i <= 3; i++) ghost(fx, 'idle', lerp3(A, B, i / 4), 0.1 * i, 1.2, 0.3 * (1 - i / 4), k.col(i % 2));
+      if (k.g === 3) for (let i = 1; i <= 3; i++) ghost(fx, 'idle', lerp3([0, 0, 0], B, i / 4), 0.1 * i, 1.2, 0.3 * (1 - i / 4), k.col(i % 2)); // anchor-ok
     } }),
 
   SKILL('quantum/singularity-seed', 'Singularity seed', m(['quantum'], 'black-hole', 0.6, 18, 7, 'point'), 2.4, {
@@ -59,6 +59,7 @@ export default [
     // P3=322
     build(fx, o) {
       const k = kit(fx, o, QUANTUM), S = [1.8, 1.2, 0];
+      const A = fx.anchor('handR', 0); // cast hand
       k.trail({ path: (t) => lerp3(A, S, clamp(t / 0.6)), t0: 0, dur: 0.6, len: 0.4, width: 0.06 });
       k.orb({ kind: 'void', r: [0.05, 0.35], pos: S, t0: 0.3, dur: 1.3, fade: [0.2, 0.3] });
       k.ring({ t0: 0.3, dur: 1.3, r: [0.7, 0.7], width: [0.25, 0.25], normal: [0.2, 1, 0.3], pos: S });
@@ -101,19 +102,20 @@ export default [
 
   SKILL('quantum/echo-clone', 'Echo clone', m(['quantum'], 'clone-attack', 0.4, 14, 3, 'point'), 2.0, {
     view: 'side', sky: 'dark',
-    act: act('slash', 0, 2, { weapon: 'sword' }),
+    act: act('slash', 0, 1.41, { weapon: 'sword' }),
     // P3=166
     build(fx, o) {
       const k = kit(fx, o, QUANTUM), KEYS = [[0, 'guard'], [0.3, 'windupHigh'], [0.5, 'cut', 'snap'], [0.7, 'follow']];
       const clone = (z) => {
         const d = new Dummy({ weapon: 'sword' }); d.position.set(1, 0, z); d.set({ holo: 1, scanCol: k.col(0), alpha: 0.8 });
+        d.setPose(evalKeys(KEYS, 0.5)); d.updateMatrixWorld(true); const CH = d.point('handR').toArray(), CT = d.point('tip').toArray(); // clone hand / blade tip at its cut (t .5)
         fx.mesh(d, (t) => { d.setPose(evalKeys(KEYS, t)); d.set({ alpha: 0.8 * sm(0, 0.3, t) * (1 - sm(1.0, 1.2, t)) }); }, { t0: 0, dur: 1.2 });
         for (let i = 1; i <= 3; i++) ghost(fx, 'guard', [1 - 0.25 * i, 0, z], 0.1 * i, 1.0, 0.25, k.col(i % 2));
-        k.slash({ center: [1.5, 1.25, z], radius: 1.1, a0: -0.7, a1: 0.9, t0: 0.45, dur: 0.35 });
-        ct(fx, k, [1.6, 1.2, z], 0.5, 40);
+        k.slash({ center: CH, radius: Math.hypot(CT[0] - CH[0], CT[1] - CH[1]), a0: -0.7, a1: 0.9, t0: 0.45, dur: 0.35 });
+        ct(fx, k, CT, 0.5, 40);
         k.em({ count: 30, kind: 'soft', shape: 'sphere', radius: 0.5, pos: [1, 1, z], radial: 1, speed: [0.5, 1.5], life: [0.4, 0.8], size: [0.08, 0.02], intensity: 1.2, delay: 1.2, emit: 0.2, t0: 1.15 });
       };
-      ct(fx, k, C, 0, 20);
+      ct(fx, k, fx.anchor('tip', 0), 0, 20);
       clone(0.8);
       fx.flash(0.5, 0.12, k.col(1), 0.15);
       k.light({ pos: [1.4, 1.3, 0.4], t0: 0.4, dur: 1.4, fade: [0.02, 0.5], intensity: 70 });
@@ -126,7 +128,7 @@ export default [
     act: act('cast', null, 3, { hits: [0.9, 1.5].map((t) => ({ t, stop: 0.04, shake: 0.2, amp: 0.03, push: 0.5 })) }),
     // P3=170
     build(fx, o) {
-      const k = kit(fx, o, QUANTUM), H = [0.9, 1.5], P0 = [0.1, 1.2, 0], P1 = [3.4, 1.2, 1.6];
+      const k = kit(fx, o, QUANTUM), H = [0.9, 1.5], P0 = fx.anchor('chest', 0), P1 = [3.4, fx.anchor('tgt')[1], 1.6], A = fx.anchor('handR', 0.3); // caster chest -> T2 chest (T2 = same rig as the target)
       const T2 = new Target(); T2.position.set(3.4, 0, 1.6);
       fx.mesh(T2, (t) => { let r = 0; for (const h of H) if (t >= h) r += -0.15 * Math.exp(-(t - h) * 6) * Math.sin(40 * (t - h)); T2.rotation.z = r; }, { t0: -0.5, dur: 3 });
       const helix = (ph) => (t) => { const pts = []; for (let i = 0; i <= 16; i++) { const s = i / 16, a = s * TAU * 3 + ph + 6 * t, r = 0.12 * Math.sin(Math.PI * s), b = lerp3(P0, P1, s); pts.push([b[0], b[1] + r * Math.cos(a), b[2] + r * Math.sin(a)]); } return pts; };
@@ -171,21 +173,21 @@ export default [
     act: act('sideslash', 0.5, 2.4, { weapon: 'sword', hits: [0.5, 0.7, 0.9].map((t) => ({ t, stop: 0.05, shake: 0.2, amp: 0.03, push: 1.2 })) }),
     // P3=176
     build(fx, o) {
-      const k = kit(fx, o, QUANTUM), R = [1.6, 1.1, 0];
+      const k = kit(fx, o, QUANTUM), R = [1.6, 1.1, 0], SC = fx.anchor('tgt', 0, [-0.2, 0, 0]), SP = fx.anchor('tgt', 0, [-0.2, 0, 0.1]); // rift portal; slashes on the target chest
       const rift = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 2), new THREE.ShaderMaterial({ uniforms: { uTime: { value: 0 }, uOpen: { value: 0 }, uPulse: { value: 0 } }, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }', fragmentShader: RIFT_F, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
       rift.position.set(...R);
       fx.mesh(rift, (t) => { const u = rift.material.uniforms; u.uTime.value = t; u.uOpen.value = sm(0, 0.4, t) * (1 - sm(1.4, 1.8, t)); u.uPulse.value = k.g >= 2 ? sm(0.6, 0.8, t) * (1 - sm(0.9, 1.2, t)) : 0; }, { t0: -0.2, dur: 2.2 });
-      for (const h of [0.45, 0.65, 0.85]) { k.slash({ center: [2.2, 1.2, 0], radius: 0.9, a0: -0.8, a1: 0.8, t0: h - 0.1, dur: 0.3, width: 0.12 }); ct(fx, k, [2.2, 1.2, 0.1], h, 30); }
+      for (const h of [0.45, 0.65, 0.85]) { k.slash({ center: SC, radius: 0.9, a0: -0.8, a1: 0.8, t0: h - 0.1, dur: 0.3, width: 0.12 }); ct(fx, k, SP, h, 30); }
       k.sparks([R[0], 2.0, 0], 0.3, 20);
       k.sparks([R[0], 0.2, 0], 0.3, 20);
       glitchBars(fx, k, 8, R, 0.3, 2.0);
       k.light({ pos: [R[0], R[1], 0.8], t0: 0.3, dur: 1.6, fade: [0.02, 0.4], intensity: 90 });
       fx.flash(0.45, 0.12, k.col(1), 0.15);
-      if (k.g >= 2) k.em({ count: 40, kind: 'soft', shape: 'box', shapeSize: [0.1, 1, 0.05], pos: R, dir: [0, 1, 0], speed: [0.1, 0.6], life: [0.3, 0.6], size: [0.06, 0.02], intensity: 1.2, delay: 0.6, emit: 0.5, t0: 0.55 });
+      if (k.g >= 2) k.em({ count: 40, kind: 'soft', shape: 'box', shapeSize: [0.1, 1, 0.05], pos: R, dir: [0, 1, 0], speed: [0.1, 0.6], life: [0.3, 0.6], size: [0.06, 0.02], intensity: 1.2, delay: 0.6, emit: 0.5, t0: 0.55 }); // anchor-ok
       if (k.g === 3) {
         k.ring({ t0: 0.5, dur: 0.5, r: [0.2, 2.2], normal: 'cam', pos: R });
-        k.slash({ center: [2.2, 1.2, 0], radius: 0.8, a0: 0.8, a1: -0.8, t0: 0.95, dur: 0.3 });
-        k.slash({ center: [2.2, 1.2, 0], radius: 0.8, a0: -0.8, a1: 0.8, t0: 1.05, dur: 0.3 });
+        k.slash({ center: SC, radius: 0.8, a0: 0.8, a1: -0.8, t0: 0.95, dur: 0.3 });
+        k.slash({ center: SC, radius: 0.8, a0: -0.8, a1: 0.8, t0: 1.05, dur: 0.3 });
       }
     } }),
 
@@ -194,11 +196,11 @@ export default [
     act: act('cast', null, 4, { hits: [0.9, 1.2, 1.5].map((t) => ({ t, stop: 0.04, shake: 0.2, amp: 0.03, push: 0.8 })) }),
     // P3=322 (worst case: 26 volleys, each hit or split at 10 sparks max, plus impact 61 + burst core 1)
     build(fx, o) {
-      const k = kit(fx, o, QUANTUM), SRC = [0.6, 1.5, 0.2];
+      const k = kit(fx, o, QUANTUM), SRC = fx.anchor('handR', 0), T = fx.anchor('tgt'); // cast hand -> target chest
       const RAMPS = [[[0, k.col(0), 1], [1, k.col(2), 0]], [[0, k.col(1), 1], [1, k.col(2), 0]]];
       const volley = (t0) => {
         const fate = fx.rng.pick(['hit', 'miss', 'split']), c = fx.rng.pick([0, 1]);
-        const end = fate === 'miss' ? [6, 1.2 + fx.rng.range(-0.8, 0.8), fx.rng.range(-0.6, 0.6)] : [3.8 + fx.rng.range(-0.2, 0.2), 1.2 + fx.rng.range(-0.3, 0.3), fx.rng.range(-0.3, 0.3)];
+        const end = fate === 'miss' ? [6, 1.2 + fx.rng.range(-0.8, 0.8), fx.rng.range(-0.6, 0.6)] : [T[0] - 0.2 + fx.rng.range(-0.2, 0.2), T[1] + fx.rng.range(-0.3, 0.3), fx.rng.range(-0.3, 0.3)];
         k.trail({ path: (s) => lerp3(SRC, end, clamp((s - t0) / 0.4)), t0, dur: 0.45, len: 0.15, width: 0.05, ramp: RAMPS[c] });
         if (fate === 'hit') k.sparks(end, t0 + 0.4, 10);
         if (fate === 'split') {
@@ -210,6 +212,6 @@ export default [
       k.light({ pos: [2, 1.4, 1.0], t0: 0, dur: 2.4, fade: [0.1, 0.4], flicker: 0.3, intensity: 60 });
       fx.flash(0.9, 0.1, k.col(1), 0.12);
       if (k.g >= 2) for (let i = 0; i < 6; i++) volley(0.9 + 0.03 * i);
-      if (k.g === 3) { k.impact([4, 1.2, 0], 1.8, 60, 1.4); fx.hit(1.8, { stop: 0.05, push: 1 }); fx.flash(1.8, 0.12, k.col(1), 0.15); } // K1: burst impact owns the shake
+      if (k.g === 3) { k.impact(T, 1.8, 60, 1.4); fx.hit(1.8, { stop: 0.05, push: 1 }); fx.flash(1.8, 0.12, k.col(1), 0.15); } // K1: burst impact owns the shake
     } }),
 ];

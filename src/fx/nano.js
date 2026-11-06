@@ -4,7 +4,7 @@ import { kit, SKILL, meta, act, sm, clamp, TAU, POSES, metal, addMat, NANO } fro
 import { bladeTable, sweepSurface, contact } from './melee.js';
 
 const m = meta('nano', 'tech');
-const C = [1.62, 1.2, 0.1], T = [3.8, 1.2, 0], G = [3, 0, 0];
+const G = [3, 0, 0];
 /** T-MEL contact burst with n sparks (n + 2 particles) */
 const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n, ...o });
 const VAPOR = [[0, '#b7bcbf', 0], [0.15, '#b0b6b9', 0.55], [1, '#7a848b', 0]]; // kit VAPOR darkened to <= #b8c0c8 (V5 vapor exception)
@@ -13,10 +13,10 @@ export default [
   // 1. swarm-blade: 20 metal chips assemble along the blade, then scatter
   SKILL('nano/swarm-blade', 'Swarm blade', m(['earth', 'nano'], 'melee-swarm', 0.3, 6, 2, 'arc'), 1.4, {
     view: 'side', sky: 'dark',
-    act: act('slash', 0.07, 1.85),
+    act: act('slash', 0.07, 1.6, { contact: 0.07 }),
     // P3=194
     build(fx, o) {
-      const k = kit(fx, o, NANO), grip = bladeTable(fx, -0.05, 0.35, 0.3), tip = bladeTable(fx, -0.05, 0.35, 1.0);
+      const k = kit(fx, o, NANO), grip = bladeTable(fx, -0.05, 0.35, 0.3), tip = bladeTable(fx, -0.05, 0.35, 1.0), C = bladeTable(fx, -0.05, 0.35, 1.3)(0.07); // swarm-blade middle at contact
       const at = (t, f) => { const g = grip(clamp(t, -0.05, 0.35)), e = tip(clamp(t, -0.05, 0.35)); return [0, 1, 2].map((j) => g[j] + (e[j] - g[j]) * f); };
       for (let i = 0; i < 20; i++) {
         const piece = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.03), metal('#c9d3dc', k.col(1), 0.5)), f = i / 19;
@@ -37,7 +37,7 @@ export default [
     act: act('cast', 1.0, 4, { hits: [1.0, 1.2].map((t) => ({ t, stop: 0.04, shake: 0.2, amp: 0.03, push: 1 })) }),
     // P3=258
     build(fx, o) {
-      const k = kit(fx, o, NANO), to = k.at('armR'), H = [0.6, 1.38, 0.2];
+      const k = kit(fx, o, NANO), to = k.at('armR'), H = fx.anchor('handR', 0), T = fx.anchor('tgt'); // magnet hand, target chest
       const mag = new THREE.Group();
       mag.add(new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.05, 8, 24, Math.PI), metal('#5a626c')));
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.2, 6), addMat(k.col(1), 2)); pole.position.set(0.2, 0, 0); mag.add(pole);
@@ -57,7 +57,7 @@ export default [
       fx.flash(1.0, 0.1, k.col(0), 0.15);
       if (k.g >= 2) for (let i = 14; i < 18; i++) scrap(i);
       if (k.g === 3) { const plate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 0.4), metal('#5a626c', k.col(1), 0.4)); plate.position.set(0.8, 1.2, 0); k.pop(plate, 0.5, 0.8, 2.2, 2.4); }
-      k.extras(C, 1.2, 'B');
+      k.extras(T, 1.2, 'B');
     } }),
 
   // 3. lattice-wall: hex cells pop out of the ground into a wall
@@ -66,7 +66,7 @@ export default [
     act: act('castup', null, false),
     // P3=194
     build(fx, o) {
-      const k = kit(fx, o, NANO), H = [0.6, 1.38, 0.2], WX = 2.2, hexG = new THREE.CylinderGeometry(0.22, 0.22, 0.05, 6), edgeG = new THREE.RingGeometry(0.19, 0.22, 6);
+      const k = kit(fx, o, NANO), H = fx.anchor('handR', 0), WX = 2.2, hexG = new THREE.CylinderGeometry(0.22, 0.22, 0.05, 6), edgeG = new THREE.RingGeometry(0.19, 0.22, 6);
       for (let r = 0; r < 3; r++) for (let c = 0; c < 7; c++) {
         const cell = new THREE.Mesh(hexG, metal('#3a424c', k.col(1), 0.2)), edge = new THREE.Mesh(edgeG, addMat(k.col(1), 2));
         cell.rotation.z = Math.PI / 2; edge.rotation.x = Math.PI / 2; edge.position.y = 0.026; cell.add(edge);
@@ -124,7 +124,7 @@ export default [
     body: true, view: 'body', sky: 'dark',
     // P3=311
     build(fx, o) {
-      const k = kit(fx, o, NANO), CEN = [0, 1.0, 0];
+      const k = kit(fx, o, NANO), CEN = [0, 1.0, 0]; // anchor-ok
       const DP = (a0, t) => { const a = a0 + (TAU * t) / 3; return [0.9 * Math.cos(a), 1.3 + 0.1 * Math.sin((TAU * t) / 1.5), 0.9 * Math.sin(a)]; };
       fx.body.setPose(POSES.idle);
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(2.4, 3.0, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u, scan: 0.2 + 1.6 * ((t * 2) / 3 % 1), scanCol: k.col(1) }); });
@@ -146,7 +146,7 @@ export default [
       }
       if (k.g >= 2) fx.flash(2.9, 0.12, k.col(1), 0.15);
       if (k.g === 3) { k.sparks(CEN, 2.9, 40); k.ring({ t0: 2.9, dur: 0.4, r: [0.2, 2.0], normal: 'cam', pos: CEN }); }
-      k.extras([0, 1.1, 0], 0.3);
+      k.extras(fx.anchor('chest', 0), 0.3);
     } }),
 
   // 6. titan-fist: plates assemble on the hand, a rocket fist punches the target
@@ -155,7 +155,7 @@ export default [
     act: act('thrust', 0.3, 3.2, { hits: [{ t: 0.3, stop: 0.14, shake: 0.45, amp: 0.06, push: 2.2 }] }),
     // P3=252
     build(fx, o) {
-      const k = kit(fx, o, NANO), to = k.at('armR'), F = [3.2, 1.2, 0], H = [0.6, 1.38, 0.2];
+      const k = kit(fx, o, NANO), to = k.at('armR'), F = fx.anchor('tgt'), H = fx.anchor('handR', 0); // fist flies hand -> target chest
       for (let i = 0; i < 8; i++) {
         const a = (i * TAU) / 8, off = [0.12 * Math.cos(a), 0.12 * Math.sin(a)], sc = [fx.rng.range(-0.8, 0.8), fx.rng.range(-0.8, 0.8), fx.rng.range(-0.8, 0.8)];
         const pl = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.06), metal('#c9d3dc', k.col(1), 0.4));
@@ -188,7 +188,7 @@ export default [
     act: act('throw', 1.2, 3.4),
     // P3=336
     build(fx, o) {
-      const k = kit(fx, o, NANO), A = [0.6, 1.38, 0.2], CN = [3, 0, 0], pts = [], tds = [];
+      const k = kit(fx, o, NANO), A = fx.anchor('handR', 0), CN = [3, 0, 0], pts = [], tds = [];
       for (let i = 0; i < 9; i++) {
         const gx = CN[0] + (i % 3 - 1) * 0.7, gz = (Math.floor(i / 3) - 1) * 0.7, dist = Math.hypot(gx - CN[0], gz), td = 1.2 + 0.08 * dist, d = 0.04 * i;
         const E = [gx, 0.02, gz], P = (t) => { const u = clamp((t - d) / 0.3), h = 1.2 * Math.sin(Math.PI * u); return [0, 1, 2].map((j) => A[j] + (E[j] - A[j]) * u + (j === 1 ? h : 0)); };
@@ -223,7 +223,7 @@ export default [
     act: act('castup', 2.0, 4, { hits: [2.3, 2.6].map((t) => ({ t, stop: 0.05, shake: 0.25, amp: 0.03, push: 1 })) }),
     // P3=271
     build(fx, o) {
-      const k = kit(fx, o, NANO), B = [3, 0, 0], M = [3.5, 1.44, 0], TG = [3.8, 1.2, 0];
+      const k = kit(fx, o, NANO), B = [3, 0, 0], M = [3.5, 1.44, 0], TG = fx.anchor('tgt');
       const parts = [
         [new THREE.CylinderGeometry(0.25, 0.3, 0.2, 8), [B[0], 0.1, 0], 'metal'],
         [new THREE.BoxGeometry(0.12, 0.4, 0.12), [B[0], 0.4, 0], 'metal'],

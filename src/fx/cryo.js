@@ -4,7 +4,6 @@ import { kit, SKILL, meta, act, sm, clamp, TAU, POSES, metal, addMat, DUST, CRYO
 import { bladeTable, contact } from './melee.js';
 
 const m = meta('cryo', 'tech');
-const T = [2.2, 1.35, 0.1]; // whip tip
 const G = [3, 0, 0];         // ground target
 /** nitrogen fog: VAPOR ramp with a cyan tint */
 const VCY = [[0, '#afc0c0', 0], [0.15, '#90b7c0', 0.55], [1, '#478aa3', 0]]; // x0.75 to <= #b8c0c8 (V5 vapor exception)
@@ -17,7 +16,7 @@ export default [
     act: { kind: 'throw', weapon: 'whip', target: [2.5, 0, 0], windup: 0.45, hits: [{ t: 0, stop: 0.07, shake: 0.12, amp: 0.025, push: 1 }] },
     // P3=222
     build(fx, o) {
-      const k = kit(fx, o, CRYO), N = 28;
+      const k = kit(fx, o, CRYO), N = 28, T = fx.anchor('tgt', 0, [-0.25, 0, 0.1]); // whip tip lands on target chest
       const Hd = bladeTable(fx, -0.45, 0.6, 0.25);
       const pts = (t) => {
         const h = Hd(t), e = 0.3 + 0.7 * sm(-0.2, 0, t), ar = 1 - sm(-0.2, 0, t), after = sm(0.02, 0.4, t), out = [];
@@ -49,7 +48,7 @@ export default [
     act: act('throw', 0.6, 3.2),
     // P3=248
     build(fx, o) {
-      const k = kit(fx, o, CRYO), A = [0.6, 1.38, 0.2];
+      const k = kit(fx, o, CRYO), A = fx.anchor('handR', 0); // release hand
       const P = (t) => { const u = clamp(t / 0.6); return [A[0] + (G[0] - A[0]) * u, A[1] + (G[1] - A[1]) * u + 1.2 * Math.sin(Math.PI * u), A[2] + (G[2] - A[2]) * u]; };
       const can = new THREE.Group();
       can.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.16, 8), metal('#8a929c')));
@@ -89,7 +88,7 @@ export default [
       const k = kit(fx, o, CRYO);
       fx.body.setPose(POSES.idle);
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(2.2, 2.6, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u }); });
-      k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
+      k.gather([0, 1, 0], 0, 0.3, 1.2, 30); // anchor-ok
       for (let i = 0; i < 6; i++) {
         const a = (i * TAU) / 6, node = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.12, 6), metal('#8a929c', k.col(1), 0.5));
         node.position.set(0.6 * Math.cos(a), 0.06, 0.6 * Math.sin(a));
@@ -102,7 +101,7 @@ export default [
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: 2.6, fade: [0.1, 0.6], flicker: 0, env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / 2.6), intensity: 40 });
       if (k.g >= 2) k.em({ count: 60, kind: 'soft', shape: 'ring', radius: 0.6, pos: [0, 0.2, 0], radial: 1, speed: [0.5, 1], life: [0.8, 1.2], delay: 1.4, emit: 0.8 });
       if (k.g === 3) k.em({ count: 50, kind: 'soft', shape: 'disc', radius: 0.6, pos: [0, 0.1, 0], dir: [0, 1, 0], speed: [0.5, 1.2], life: [1, 1.5], delay: 1.8, emit: 0.6 });
-      k.extras([0, 1.1, 0], 0.3);
+      k.extras(fx.anchor('chest', 0), 0.3);
     } }),
 
   SKILL('cryo/ice-drone-swarm', 'Ice drone swarm', m(['water', 'cryo'], 'orbit-ram', 0.6, 14, 7, 'point'), 2.6, {
@@ -110,7 +109,7 @@ export default [
     act: act('cast', null, 3.6, { hits: [1.6, 1.8, 1.9].map((t) => ({ t, stop: 0.05, shake: 0.2, amp: 0.03, push: 1 })) }),
     // P3=113
     build(fx, o) {
-      const k = kit(fx, o, CRYO), TG = [3.6, 1.2, 0], TF = 1.4, F = 0.4, N = k.g >= 2 ? 8 : 6;
+      const k = kit(fx, o, CRYO), TG = fx.anchor('tgt'), TF = 1.4, F = 0.4, N = k.g >= 2 ? 8 : 6;
       const orbit = (a0, t) => { const a = a0 + (TAU * t) / 1.6; return [0.5 + 1.1 * Math.cos(a), 1.2 + 0.25 * Math.sin(2 * a), 1.1 * Math.sin(a)]; };
       const path = (a0) => (t) => {
         if (t < TF) return orbit(a0, t);
@@ -146,7 +145,7 @@ export default [
     act: act('cast', 0.05, 4.2),
     // P3=232
     build(fx, o) {
-      const k = kit(fx, o, CRYO), to = k.at('armR'), A = [0.6, 1.38, 0.2], Tg = [3.8, 1.2, 0];
+      const k = kit(fx, o, CRYO), to = k.at('armR'), A = fx.anchor('handR', 0.05), Tg = [3.8, 1.2, 0];
       const rails = new THREE.Group();
       for (const dz of [-0.05, 0.05]) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.02, 0.02), metal('#8a929c')); r.position.set(0.3, 0, dz); rails.add(r); }
       const coil = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.01, 6, 16), addMat(k.col(1), 2)); coil.rotation.y = Math.PI / 2; coil.position.x = 0.1; rails.add(coil);
@@ -177,15 +176,15 @@ export default [
       for (const y of [0.1, 1.9]) { const hx = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.58, 6), addMat(k.col(1), 2)); hx.rotation.x = -Math.PI / 2; hx.position.y = y; cage.add(hx); }
       const scan = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.53, 6), addMat(k.col(0), 2)); scan.rotation.x = -Math.PI / 2; cage.add(scan);
       fx.mesh(cage, (t) => { cage.position.set(C[0], 3 * (1 - sm(0.4, 0.7, t)), C[2]); scan.position.y = 1.9 * ((2 * t) % 1); }, { t0: 0, dur: 2.6 });
-      k.smoke({ ramp: VCY, count: 60, shape: 'disc', radius: 0.5, pos: [3, 0.9, 0], dir: [0, 1, 0], speed: [0.1, 0.4], life: [1.2, 2], size: [0.4, 0.8], delay: 0.4, emit: 1.6 });
-      k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 0.5, pos: [3, 1, 0], speed: [0.1, 0.4], life: [0.2, 0.4], size: [0.12, 0.05], intensity: 2.5, delay: 0.4, emit: 1.6 });
+      k.smoke({ ramp: VCY, count: 60, shape: 'disc', radius: 0.5, pos: [3, 0.9, 0], dir: [0, 1, 0], speed: [0.1, 0.4], life: [1.2, 2], size: [0.4, 0.8], delay: 0.4, emit: 1.6 }); // anchor-ok
+      k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 0.5, pos: [3, 1, 0], speed: [0.1, 0.4], life: [0.2, 0.4], size: [0.12, 0.05], intensity: 2.5, delay: 0.4, emit: 1.6 }); // anchor-ok
       k.light({ pos: [3, 1.5, 0.6], t0: 0.4, dur: 2.0, fade: [0.1, 0.5], flicker: 0, intensity: 60 });
       if (k.g >= 2) k.ring({ t0: 0.6, dur: 1.2, r: [0.2, 0.4], normal: 'cam', pos: [3, 2.2, 0] });
       if (k.g === 3) {
-        k.ring({ t0: 0.6, dur: 0.6, r: [0.3, 1.4], normal: 'cam', pos: [3, 1, 0] });
-        k.em({ count: 40, kind: 'flake', shape: 'sphere', radius: 0.6, pos: [3, 1, 0], speed: [0.2, 0.5], life: [1, 1.6], size: [0.05, 0.03], delay: 0.6, emit: 0.001 });
+        k.ring({ t0: 0.6, dur: 0.6, r: [0.3, 1.4], normal: 'cam', pos: fx.anchor('tgt') });
+        k.em({ count: 40, kind: 'flake', shape: 'sphere', radius: 0.6, pos: [3, 1, 0], speed: [0.2, 0.5], life: [1, 1.6], size: [0.05, 0.03], delay: 0.6, emit: 0.001 }); // anchor-ok
       }
-      k.extras([3, 1, 0], 0.4);
+      k.extras(fx.anchor('tgt'), 0.4);
     } }),
 
   SKILL('cryo/cryo-pod-drop', 'Cryo pod drop', m(['water', 'cryo'], 'summon-nova', 0.8, 20, 6, 'circle'), 2.8, {
