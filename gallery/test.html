@@ -2,7 +2,7 @@
 <script type="importmap">{"imports":{"three":"../node_modules/three/build/three.module.js","three/addons/":"../node_modules/three/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
-import { Stage, registerAll, registry, loadTextures } from '../src/index.js';
+import { Stage, registerAll, registry, loadTextures, loadModels } from '../src/index.js';
 registerAll();
 // query: host=1 (demo host scene via stage.attach), view=top|low (camera override after play), transparent=1, quality=low|medium|high, w, h, bg=hex
 const q = new URLSearchParams(location.search), v = document.getElementById('v');
@@ -15,6 +15,6 @@ window.__stage = stage; window.__ids = [...registry.keys()];
 const VIEW = { top: [0, 6, 2.5], low: [0, 0.3, 2.5] }[q.get('view')]; // 3-view check: applied after play, target stays the effect's
 window.__play = (id, opts = q.has('grade') ? { grade: +q.get('grade') } : {}) => { stage.autoReplay = false; stage.play(id, opts); if (VIEW) { stage.camera.position.set(...VIEW); stage.controls.update(); } return stage.fx.duration; };
 window.__seek = (t) => { stage.seek(t); return true; };
-await loadTextures();
+await Promise.all([loadTextures(), loadModels()]);
 window.__ready = true;
 </script>

@@ -264,6 +264,11 @@ export function loadTextures(base?: string | URL): Promise<void>;
 export function getTex(name: string): TexEntry;
 export const TEX: Record<string, TexEntry>;
 
+/* ---------- character models (assets/models, KayKit CC0) ---------- */
+/** Load Knight / Mage / Skeleton_Warrior. Await before creating effects with an actor (act/body). Idempotent. */
+export function loadModels(base?: string | URL): Promise<void>;
+export const MODELS: Record<'knight' | 'mage' | 'skeleton', { scene: THREE.Object3D; props: string[]; clips: Map<string, THREE.AnimationClip> }>;
+
 /* ---------- parametric mesh builders (src/core/meshes.js) ---------- */
 export function surface(nu: number, nv: number, f: (u: number, v: number) => Vec3): THREE.BufferGeometry;
 export interface SpiralParams { turns?: number; r0?: number; r1?: number; h?: number; w?: number; }

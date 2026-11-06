@@ -6,6 +6,7 @@ export { Dummy, Target, POSES } from './core/dummy.js';
 export { makeRng, clamp, lerp, smooth, easeOut, easeIn, easeInOut, win } from './core/rng.js';
 export { NOISE } from './core/glsl.js';
 export { loadTextures, getTex, TEX } from './core/textures.js';
+export { loadModels, MODELS } from './core/models.js';
 import { register } from './core/fx.js';
 import { CATEGORIES } from './fx/index.js';
 export { CATEGORIES };
