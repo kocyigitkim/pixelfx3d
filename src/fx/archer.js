@@ -11,7 +11,7 @@ const VAP = [[0, '#b7bcbf', 0], [0.15, '#b0b6b9', 0.55], [1, '#7a848b', 0]]; // 
 /** bow held in the left hand, follows armL */
 const bowOf = (fx, k) => { const g = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.017, 8, 40, 1.9), new THREE.MeshStandardMaterial({ color: '#6b4426', roughness: 0.6 })); g.rotation.z = -0.95; const h = new THREE.Group(); h.add(g); g.position.x = -0.5; const to = k.at('armL'); fx.mesh(h, () => to(h), { t0: -3, dur: 99 }); return h; };
 /** bow act: draw, release at hit time T */
-const ACT_BOW = (T, wind = 0.7) => ({ kind: 'cast', target: [4.2, 0, 0], windup: wind, keys: [[-wind, 'guard'], [-wind + 0.3, 'bowDraw'], [0, 'bowDraw'], [0.05, 'bowRelease', 'snap'], [0.6, 'bowRelease'], [1.2, 'guard']], hits: [{ t: T, stop: 0.05, shake: 0.2, amp: 0.03, push: 1.2 }] });
+const ACT_BOW = (T, wind = 0.7) => ({ kind: 'cast', char: 'knight', target: [4.2, 0, 0], windup: wind, keys: [[-wind, 'guard'], [-wind + 0.3, 'bowDraw'], [0, 'bowDraw'], [0.05, 'bowRelease', 'snap'], [0.6, 'bowRelease'], [1.2, 'guard']], hits: [{ t: T, stop: 0.05, shake: 0.2, amp: 0.03, push: 1.2 }] });
 /** arrow mesh, shaft and head along +x */
 const arrow = () => { const g = new THREE.Group(); const s = new THREE.Mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.78, 8), new THREE.MeshStandardMaterial({ color: '#b8935a', roughness: 0.6 })); s.rotation.z = Math.PI / 2; g.add(s); const h = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.07, 8), metal('#c9d1da')); h.rotation.z = -Math.PI / 2; h.position.x = 0.42; g.add(h); return g; };
 /** arrow flying along path(t) (absolute effect time) from t0 for dur; the nose follows the path */

@@ -12,19 +12,6 @@ const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const HP = V();
 const hand = (fx, side = 'armR', o = HP) => fx.body[side].hand.getWorldPosition(o);
 
-// extra poses (additive)
-const IDLE = POSES.idle;
-const addPose = (n, o) => { if (!POSES[n]) POSES[n] = { ...IDLE, ...o }; };
-addPose('bowDraw', { aR: 88, eR: 140, aL: 94, eL: 0, twist: -14, lean: 2, py: 0.92, tR: 14, kR: -22, tL: -10, kL: -14 });
-addPose('bowRelease', { aR: 70, eR: 160, aL: 94, eL: 0, twist: -10, lean: -2, py: 0.92, tR: 14, kR: -22, tL: -10, kL: -14, aR2: 0 });
-addPose('runA', { aR: 60, eR: 85, aL: -35, eL: 70, lean: -14, twist: 10, py: 0.9, tR: -38, kR: -70, tL: 35, kL: -8, x: 0.05 });
-addPose('runB', { aR: -35, eR: 70, aL: 60, eL: 85, lean: -14, twist: -10, py: 0.9, tR: 35, kR: -8, tL: -38, kL: -70, x: 0.05 });
-addPose('runAir', { aR: 70, eR: 70, aL: -45, eL: 60, lean: -18, twist: 8, py: 1.0, tR: -55, kR: -95, tL: 50, kL: -10, x: 0.05 });
-addPose('dashLow', { aR: 95, eR: 0, aL: -20, eL: 60, lean: -32, twist: 20, py: 0.78, tR: 55, kR: -70, tL: -50, kL: -6, x: 0.35 });
-addPose('slashBack', { aR: 160, eR: 30, aL: 30, eL: 60, lean: 14, twist: -36, py: 0.92, tR: 14, kR: -26 });
-addPose('overhead2', { aR: 168, eR: 20, aL: 120, eL: 40, lean: 18, twist: 0, py: 0.98, kR: -10 });
-addPose('vanish', { aR: 30, eR: 80, aL: 20, eL: 70, lean: 6, py: 0.9, tR: 12, kR: -30 });
-addPose('behind', { aR: 100, eR: 8, aL: 30, eL: 50, lean: -14, twist: 30, py: 0.86, tR: 30, kR: -40, tL: -20, kL: -12 });
 
 /* ---------------------------------------------------------------- helpers */
 const FIRE = [[0, '#fff2c0', 0.95], [0.25, '#ffb030', 0.9], [0.65, '#e04010', 0.55], [1, '#300', 0]];
@@ -50,7 +37,7 @@ export default [
   /* =============================================================== ARROW SHOT */
   { id: 'moves/arrow-shot', name: 'Arrow shot', category: 'moves', loop: false, duration: 1.3,
     stage: { sky: 'dusk', bloom: 0.45, view: { pos: [1.4, 1.55, 6.2], target: [1.2, 1.2, 0], fov: 38 } },
-    act: { kind: 'cast', target: [2.4, 0, 0], windup: 0.7, keys: [[-0.7, 'guard'], [-0.4, 'bowDraw'], [0, 'bowDraw'], [0.05, 'bowRelease', 'snap'], [0.6, 'bowRelease'], [1.2, 'guard']], hits: [{ t: 0.2, stop: 0.04, shake: 0.12, amp: 0.02, push: 1.0 }] },
+    act: { kind: 'cast', char: 'knight', target: [2.4, 0, 0], windup: 0.7, keys: [[-0.7, 'guard'], [-0.4, 'bowDraw'], [0, 'bowDraw'], [0.05, 'bowRelease', 'snap'], [0.6, 'bowRelease'], [1.2, 'guard']], hits: [{ t: 0.2, stop: 0.04, shake: 0.12, amp: 0.02, push: 1.0 }] },
     build(fx) {
       const wood = new THREE.MeshStandardMaterial({ color: '#6b4426', roughness: 0.6 }), strM = new THREE.MeshStandardMaterial({ color: '#e8e0c8', roughness: 0.8 });
       const R = 0.5, arc = 1.9; const bow = new THREE.Group(); const limb = new THREE.Mesh(new THREE.TorusGeometry(R, 0.017, 8, 40, arc), wood); limb.rotation.z = -arc / 2; limb.position.x = -R; bow.add(limb);

@@ -141,8 +141,16 @@ export interface StageDef {
   bloom?: number; ground?: boolean; exposure?: number;
 }
 
+/** rig anchors for Fx.anchor(): actor body, or the target (tgt = tgtChest) */
+export type AnchorName = 'handR' | 'handL' | 'tip' | 'chest' | 'head' | 'hips' | 'feet' | 'tgt' | 'tgtChest' | 'tgtHead' | 'tgtFeet';
+/** a frame of a shared KayKit clip, or a crossfade of two */
+export type Pose = { clip: string; time: number } | { a: { clip: string; time: number }; b: { clip: string; time: number }; f: number };
 export interface ActDef {
-  kind: string; weapon?: string; target?: Vec3; windup?: number;
+  kind: string; weapon?: string; target?: Vec3 | false; windup?: number;
+  /** actor model; default: mage for staff / weaponless casts, else knight */
+  char?: 'knight' | 'mage';
+  /** pose keys [t, POSES name | {clip,time}, 'snap'?] (default: from kind) */
+  keys?: Array<[number, string | { clip: string; time: number }, 'snap'?]>;
   hits?: Array<{ t: number; stop?: number; shake?: number; amp?: number; push?: number }>;
 }
 
@@ -157,14 +165,21 @@ export interface EffectDef {
 export class Fx extends THREE.Group {
   constructor(def?: EffectDef, opts?: FxOptions);
   parts: Part[];
-  body: {
+  body: THREE.Group & {
     set(params: Record<string, unknown>): void;
-    tip(len: number): Vec3;
-    position: THREE.Vector3;
-    armR: { hand: THREE.Object3D };
-    torso: THREE.Object3D;
-    headMesh: THREE.Object3D;
+    tip(len?: number, out?: THREE.Vector3): THREE.Vector3;
+    /** world position of a body anchor */
+    point(name: Exclude<AnchorName, `tgt${string}`>, out?: THREE.Vector3): THREE.Vector3;
+    setPose(p: Pose): void;
+    armR: { hand: THREE.Object3D }; armL: { hand: THREE.Object3D };
+    /** offset holders (Dummy frame) applied to spine / head / hips each frame */
+    torso: THREE.Object3D; neck: THREE.Object3D; pelvis: THREE.Object3D;
+    headMesh: THREE.Object3D; headR: number; weaponLen: number;
   };
+  /** Skeleton_Warrior target (act.target), same overlay API as body */
+  target?: THREE.Group & { set(params: Record<string, unknown>): void; point(name: 'chest' | 'head' | 'feet', out?: THREE.Vector3): THREE.Vector3; mat: THREE.MeshStandardMaterial; kick(s?: number): void };
+  /** fx-local [x,y,z] of a rig anchor at act time t (poses the body at t, then restores); off adds [dx,dy,dz] */
+  anchor(name: AnchorName, t?: number, off?: Vec3): Vec3;
   emitter(p: EmitterParams): Part;
   orb(p: OrbParams): Part;
   ring(p: RingParams): Part;

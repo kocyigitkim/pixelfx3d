@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { Dummy, POSES } from '../core/dummy.js';
 import { smooth as sm, clamp } from '../core/rng.js';
 import { burst, LCAP } from './_aaa.js'; import { ENV } from '../core/feel.js';
-import './moves.js'; // side effect: registers bowDraw, bowRelease, runA, runB, runAir, dashLow, slashBack, overhead2, vanish, behind in POSES
+import './moves.js';
 export { sm, clamp, POSES };
 export const TAU = Math.PI * 2;
 
@@ -53,7 +53,8 @@ export function kit(fx, o, ramp) {
     bolt: (p) => fx.bolt({ ramp: pr, ...p, width: S(p.width ?? 0.05, s), intensity: I(p, 2, b, 3) }),
     decal: (p) => { const q = { ramp: up(pr), ...p }; return fx.decal({ ...q, ramp: q.kind === 'scorch' ? lift(q.ramp) : q.ramp, r: S(p.r, s), intensity: I(p, 1.2, b, 1.2) }); },
     light: (p) => fx.light({ color: col(1), range: 9, norm: 40, ...p, intensity: Math.min(LCAP[G.g], I(p, 50, b) * (G.g === 3 ? 1.3 : 1)) }),
-    at: (side = 'armR') => (m) => { fx.body[side].hand.getWorldPosition(m.position); fx.worldToLocal(m.position); },
+    at: (n = 'handR') => { n = { armR: 'handR', armL: 'handL' }[n] || n; const tg = n.startsWith('tgt'), nm = tg ? n.slice(3).toLowerCase() || 'chest' : n; // follow: live anchor
+      return (m) => { (tg ? fx.target : fx.body).point(nm, m.position); fx.worldToLocal(m.position); }; },
     sparks: (pos, t, n = 40, p = {}) => k.em({ count: n, kind: 'spark', shape: 'point', pos, dir: [0, 1, 0], spread: 1.4, speed: [2, 7], life: [0.25, 0.7], gravity: [0, -9, 0], size: [0.07, 0.02], stretch: 1.5, intensity: 3, delay: t, t0: t - 0.02, emit: 0.001, ...p }),
     glint: (pos, t, size = 1) => k.em({ count: 1, kind: 'glint', shape: 'point', pos, size: [size, size * 0.3], life: [0.22, 0.22], intensity: 3, delay: t, t0: t - 0.02, emit: 0.001 }),
     gather: (pos, t0, dur, Rr = 1, n = 40, follow) => k.em({ count: n, kind: 'soft', shape: 'sphere', radius: Rr, radiusIn: Rr * 0.7, pos, radial: 1, speed: [-2.2 * Rr * s, -1.6 * Rr * s], life: [0.4, 0.45], size: [0.06, 0.02], intensity: 1.2, delay: t0, emit: dur, t0, t1: t0 + dur + 0.45, follow }),

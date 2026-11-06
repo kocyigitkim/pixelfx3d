@@ -30,8 +30,18 @@ export class Fx extends THREE.Group {
     return stops.map((s, i) => { const a = Array.isArray(s) ? s : [i / Math.max(1, stops.length - 1), s, 1]; return [a[0], '#' + at(1 - a[0]).getHexString(), a[2] ?? 1]; });
   }
   setupActor() {
-    const d = this.def, a = d.act; this.body = new Dummy({ weapon: a?.weapon }); this.add(this.body); this.actor = a || null;
+    const d = this.def, a = d.act, char = a?.char || (a ? (a.weapon === 'staff' || (/^cast(up)?$/.test(a.kind) && !a.weapon) ? 'mage' : 'knight') : /^(mage|priest|shaman|arcane|holy)$/.test(d.category) ? 'mage' : 'knight');
+    this.body = new Dummy({ weapon: a?.weapon, char }); this.add(this.body); this.actor = a || null;
     if (a) { this.lead = a.lead ?? a.windup ?? 0.45; this.keys = a.keys || actKeys(a.kind || 'slash', this.lead); if (a.target !== false) { this.target = new Target(); const t = a.target || [2.2, 0, 0]; this.target.position.set(t[0], t[1] || 0, t[2] || 0); this.add(this.target); } (a.hits || []).forEach((h) => this.hit(h.t, h)); }
+  }
+  /** fx-local [x,y,z] of a rig anchor at act time t; poses body at t then restores. off adds [dx,dy,dz].
+   *  body: handR handL tip chest head hips feet; target: tgt (= tgtChest) tgtChest tgtHead tgtFeet. Ignores fx.on()-driven body moves. */
+  anchor(name, t = 0, off) {
+    const tg = name.startsWith('tgt'), o = tg ? this.target : this.body; if (!o) throw new Error(`pixelfx3d: anchor '${name}' needs ${tg ? 'act.target' : 'act or body'}`);
+    const keep = !tg && this.keys ? o.pose : null; if (keep) o.setPose(evalKeys(this.keys, t));
+    this.updateMatrixWorld(true); const p = this.worldToLocal(o.point(tg ? name.slice(3).toLowerCase() || 'chest' : name, _va));
+    if (keep) { o.pose = keep; o.apply(); }
+    return [p.x + (off?.[0] ?? 0), p.y + (off?.[1] ?? 0), p.z + (off?.[2] ?? 0)];
   }
   /* ---------------------------------------------------------- builders */
   _add(p) { this.parts.push(p); return p; }
@@ -87,14 +97,14 @@ export class Fx extends THREE.Group {
       if (e.type === 'flash') { const u = (t - e.t0) / e.dur; if (u >= 0 && u <= 1) { this.flashAmt = Math.max(this.flashAmt, e.amt * (1 - u) * (1 - u)); this.flashColor.copy(e.color); } }
     }
     const tp = this.loop ? t : tAbs; // loops: parts see wrapped time, so frame(t) == frame(t + duration); identical inside the first period
-    for (const p of this.parts) p.update(tp, t); for (const f of this.onFrame) f(t, tAbs, this);
+    if (this.body) { this.body.u.uTime.value = tp; if (this.keys) this.body.setPose(evalKeys(this.keys, tAbs)); } // before parts: followers see this frame's pose
+    for (const p of this.parts) p.update(tp, t); for (const f of this.onFrame) f(t, tAbs, this); this.body?.apply();
     const pt = this._lastT ?? (this.loop ? t : -Infinity), wrapped = t < pt; this._lastT = t; if (wrapped) this._impacts.forEach((e) => (e.fired = false)); // loop wrap re-arms impacts
     for (const e of this._impacts) if (!e.fired && t >= e.t && (wrapped || pt < e.t)) { e.fired = true; this._emit('impact', e); }
-    if (this.body) { this.body.u.uTime.value = tp; if (this.keys) this.body.setPose(evalKeys(this.keys, tAbs)); }
   }
   dispose() { this.parts.forEach((p) => p.dispose?.()); this.removeFromParent(); }
 }
-const _vv = new THREE.Vector3(); const _v = (x, y, z) => _vv.set(x, y, z);
+const _vv = new THREE.Vector3(), _va = new THREE.Vector3(); const _v = (x, y, z) => _vv.set(x, y, z);
 
 /** Create an effect from a registered id or a definition object. */
 export function createFx(def, opts = {}) { if (typeof def === 'string') { const id = def; def = registry.get(id); if (!def) throw new Error('unknown effect ' + id); } return new Fx(def, opts); }

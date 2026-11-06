@@ -27,7 +27,7 @@ export default [
       const k = kit(fx, o, VOID), P = [2.1, 1.2, 0.1];
       // T-TEL: vanish at TS in place, reappear behind the target at Bx facing -X
       const TS = -0.2, Ax = 0, Bx = 2.6, ROT = Math.PI;
-      fx.on((t) => { const b = fx.body; if (t < TS) { b.position.x = Ax; const q = sm(TS - 0.35, TS, t); b.set({ dissolve: q < 0.002 ? -1 : q, dDir: -1, edge: k.col(1), edgeW: 0.09, edgeInt: 4 }); } else { b.position.x = Bx; b.rotation.y = ROT; const q = 1 - sm(TS, TS + 0.25, t); b.set({ dissolve: q < 0.002 ? -1 : q, dDir: 1, edge: k.col(1), edgeW: 0.09, edgeInt: 4 }); } });
+      fx.on((t) => { const b = fx.body; if (t < TS) { b.position.x = Ax; b.rotation.y = 0; const q = sm(TS - 0.35, TS, t); b.set({ dissolve: q < 0.002 ? -1 : q, dDir: -1, edge: k.col(1), edgeW: 0.09, edgeInt: 4 }); } else { b.position.x = Bx; b.rotation.y = ROT; const q = 1 - sm(TS, TS + 0.25, t); b.set({ dissolve: q < 0.002 ? -1 : q, dDir: 1, edge: k.col(1), edgeW: 0.09, edgeInt: 4 }); } });
       k.ring({ t0: TS - 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up', pos: [Ax, 0, 0] });
       k.ring({ t0: TS, dur: 0.6, r: [0.2, 1.6], normal: 'up', pos: [Bx, 0, 0] });
       k.smoke({ count: 40, shape: 'sphere', radius: 0.3, pos: [0, 1, 0], delay: -0.3, emit: 0.1, t0: -0.3 });
