@@ -7,7 +7,7 @@ import { burst } from './_aaa.js';
 const TAU = Math.PI * 2;
 const VIO = [[0, '#f0e8ff'], [0.25, '#e3c8ff'], [0.6, '#9a50ff'], [1, '#3a10a0']]; // bright -> dark
 const VIO_A = (a = 0) => [[0, '#f0e8ff', 1], [0.25, '#e0c0ff', 0.9], [0.6, '#8a40f0', 0.6], [1, '#2a0a80', a]];
-const handAt = (fx, pose) => { fx.body.setPose(pose); fx.updateMatrixWorld(true); const v = new THREE.Vector3(); fx.body.armR.hand.getWorldPosition(v); fx.worldToLocal(v); return v.toArray(); };
+const handAt = (fx, pose) => { fx.body.setPose(pose); return fx.anchor('handR'); }; // body-only: hand of a held pose
 const liveHand = (fx) => { const v = new THREE.Vector3(); return () => { fx.body.armR.hand.getWorldPosition(v); fx.worldToLocal(v); return [v.x, v.y, v.z]; }; };
 const bez = (a, b, c, u) => { const k = 1 - u; return [k * k * a[0] + 2 * k * u * b[0] + u * u * c[0], k * k * a[1] + 2 * k * u * b[1] + u * u * c[1], k * k * a[2] + 2 * k * u * b[2] + u * u * c[2]]; };
 
@@ -39,7 +39,7 @@ export default [
   /* ------------------------------------------------------------------ arcane beam */
   { id: 'arcane/arcane-beam', name: 'Arcane beam', category: 'arcane', loop: true, duration: 1.2, body: true, stage: { sky: 'night', view: { pos: [2.3, 1.5, 5.6], target: [2.3, 1.15, 0], fov: 42 }, bloom: 0.6 },
     build(fx) {
-      fx.body.setPose(POSES.castRelease); const H = handAt(fx, POSES.castRelease), E = [5.4, 1.12, 0];
+      fx.body.setPose(POSES.castRelease); const H = handAt(fx, POSES.castRelease), E = [5.4, H[1], 0];
       const heli = (ph, R) => (t) => { const pts = [], n = 40; for (let i = 0; i <= n; i++) { const u = i / n, a = u * TAU * 2.5 - (t / 1.2) * TAU * 2 + ph, rr = R * Math.sin(Math.PI * Math.min(1, u * 6)) * (0.6 + 0.4 * u); pts.push([lerp(H[0], E[0], u), lerp(H[1], E[1], u) + Math.cos(a) * rr, lerp(H[2], E[2], u) + Math.sin(a) * rr]); } return pts; };
       fx.beam({ from: H, to: E, r: [0.035, 0.07], intensity: 0.6, noise: 0.5, freq: 3, speed: 4, pulse: 0.15, ramp: [[0, '#8a40f0'], [0.5, '#d8b8ff'], [1, '#ffffff']] });
       fx.beam({ from: H, to: E, r: [0.015, 0.025], intensity: 1.5, noise: 0.2, speed: 6, ramp: [[0, '#f0e8ff'], [1, '#fff']] });
@@ -57,7 +57,7 @@ export default [
   { id: 'arcane/arcane-missiles', name: 'Arcane missiles', category: 'arcane', tier: 1, loop: false, duration: 1.75, stage: { sky: 'night', view: { pos: [2.2, 1.7, 6.2], target: [2.0, 1.1, 0], fov: 42 }, bloom: 0.6 },
     act: { kind: 'cast', target: [4.4, 0, 0], windup: 0.4 },
     build(fx) {
-      const H = handAt(fx, POSES.castRelease), E = [4.3, 1.1, 0]; const N = 5, hits = [];
+      const H = fx.anchor('handR', 0), E = fx.anchor('tgt', 0, [-0.1, 0, 0]); const N = 5, hits = []; // release hand -> target chest
       for (let i = 0; i < N; i++) {
         const t0 = 0.08 + i * 0.13, fl = 0.55, side = i % 2 ? 1 : -1, c1 = [1.5 + i * 0.1, 2.3 + (i % 3) * 0.45, side * (0.9 + 0.2 * i)];
         const path = (t) => { const u = clamp((t - t0) / fl); const e = u * u * (3 - 2 * u) * 0.5 + u * 0.5; const p = bez(H, c1, E, e); p[1] += Math.sin(u * Math.PI * 3) * 0.1 * side; p[2] += Math.cos(u * Math.PI * 3) * 0.1; return p; };
@@ -95,9 +95,9 @@ export default [
     build(fx) {
       fx.on((t) => { const d = 1 - sm(0.35, 1.0, t); fx.body.set({ dissolve: t < 0.1 ? 1 : d, dDir: -1, edge: '#d8b0ff', edgeW: 0.08, edgeInt: 1.5, tint: '#c090ff', tintAmt: (1 - sm(0.9, 1.3, t)) * 0.6, glow: Math.exp(-Math.max(0, t - 1.0) * 6) * sm(0.85, 1.0, t), rim: '#a060ff', rimAmt: 0.7 * (1 - sm(1.0, 1.4, t)) }); });
       for (let k = 0; k < 5; k++) { const a0 = k * TAU / 5; fx.ribbon({ points: (t) => { const pts = [], n = 32, pr = clamp(t / 0.95); for (let i = 0; i <= n; i++) { const u = i / n; const rr = (1.5 * (1 - u * u)) * (1 - 0.0 * pr), a = a0 + u * 6 - pr * 1; pts.push([Math.cos(a) * rr, 0.15 + u * 1.5 + Math.sin(u * 3 + a0) * 0.1, Math.sin(a) * rr]); } return pts; }, n: 32, width: 0.03, sweep: [0.0, 1.1], tail: 0.5, t0: 0, dur: 1.0, fade: [0.05, 0.25], intensity: 1.5, ramp: VIO }); }
-      fx.emitter({ count: 120, kind: 'soft', shape: 'sphere', radius: 1.7, pos: [0, 0.95, 0], radial: 1, speed: [-3.2, -1.6], life: [0.5, 0.8], size: [0.05, 0.012], ramp: [[0, '#f0e8ff'], [0.5, '#c090ff'], [1, '#60f', 0]], intensity: 1.5, emit: 0.6, swirl: 3 });
-      fx.emitter({ count: 50, kind: 'glint', shape: 'box', shapeSize: [0.2, 0.85, 0.15], pos: [0, 0.95, 0], size: [0.18, 0.04], life: [0.3, 0.6], ramp: [[0, '#fff'], [1, '#a8f', 0]], intensity: 3.5, delay: 0.7, emit: 0.5, speed: [0, 0.3] });
-      fx.emitter({ count: 40, kind: 'spark', shape: 'sphere', radius: 0.2, pos: [0, 0.95, 0], radial: 1, speed: [1.5, 4], life: [0.3, 0.7], size: [0.05, 0.015], stretch: 1.2, ramp: [[0, '#fff'], [0.4, '#c090ff'], [1, '#40c', 0]], intensity: 3, delay: 1.0, gravity: [0, -2, 0] });
+      fx.emitter({ count: 120, kind: 'soft', shape: 'sphere', radius: 1.7, pos: [0, 0.95, 0], radial: 1, speed: [-3.2, -1.6], life: [0.5, 0.8], size: [0.05, 0.012], ramp: [[0, '#f0e8ff'], [0.5, '#c090ff'], [1, '#60f', 0]], intensity: 1.5, emit: 0.6, swirl: 3 }); // anchor-ok
+      fx.emitter({ count: 50, kind: 'glint', shape: 'box', shapeSize: [0.2, 0.85, 0.15], pos: [0, 0.95, 0], size: [0.18, 0.04], life: [0.3, 0.6], ramp: [[0, '#fff'], [1, '#a8f', 0]], intensity: 3.5, delay: 0.7, emit: 0.5, speed: [0, 0.3] }); // anchor-ok
+      fx.emitter({ count: 40, kind: 'spark', shape: 'sphere', radius: 0.2, pos: [0, 0.95, 0], radial: 1, speed: [1.5, 4], life: [0.3, 0.7], size: [0.05, 0.015], stretch: 1.2, ramp: [[0, '#fff'], [0.4, '#c090ff'], [1, '#40c', 0]], intensity: 3, delay: 1.0, gravity: [0, -2, 0] }); // anchor-ok
       fx.ring({ t0: 0.95, dur: 0.45, r: [0.2, 1.8], width: [0.2, 0.03], normal: 'up', intensity: 1.2, ramp: [[0, '#f0e8ff'], [1, '#a060ff']] });
       fx.light({ color: '#a060ff', intensity: 21, pos: [0.5, 1.2, 0.5], range: 8, env: (t) => 0.4 + sm(0.6, 1.0, t) * 1.2 * Math.exp(-Math.max(0, t - 1.0) * 5), t0: 0, dur: 1.4, fade: [0.1, 0.3] });
       fx.decal({ kind: 'glow', r: [1.0, 1.0], t0: 0.1, dur: 1.2, fade: [0.3, 0.5], ramp: [[0, '#000'], [0.5, '#4a1a90'], [1, '#c090ff']], intensity: 0.8, alpha: 0.6 });
@@ -107,12 +107,12 @@ export default [
   { id: 'arcane/blink-out', name: 'Blink out', category: 'arcane', loop: false, duration: 1.6, body: true, stage: { sky: 'dark', view: { pos: [2.4, 1.4, 3.5], target: [0, 0.95, 0], fov: 40 }, bloom: 0.6 },
     build(fx) {
       fx.on((t) => { const d = sm(0.18, 0.7, t); fx.body.set({ dissolve: t < 0.15 ? -1 : d, dDir: 1, edge: '#e0c8ff', edgeW: 0.08, edgeInt: 1.5, tint: '#d0a8ff', tintAmt: Math.exp(-Math.max(0, t - 0.15) * 5) * sm(0.05, 0.15, t) * 0.9, rim: '#a060ff', rimAmt: 0.8 * (1 - d), glow: sm(0.0, 0.15, t) * (1 - d) }); });
-      fx.light({ color: '#b070ff', intensity: 19, pos: [0.4, 1.2, 0.5], range: 8, t0: 0.05, dur: 1.4, fade: [0.05, 0.6], env: (t) => 0.4 + 1.4 * Math.exp(-Math.max(0, t - 0.15) * 4) });
+      fx.light({ color: '#b070ff', intensity: 19, pos: [0.4, 1.2, 0.5], range: 8, t0: 0.05, dur: 1.4, fade: [0.05, 0.6], env: (t) => 0.4 + 1.4 * Math.exp(-Math.max(0, t - 0.15) * 4) }); // anchor-ok
       fx.ring({ t0: 0.15, dur: 0.5, r: [0.2, 2.4], width: [0.3, 0.04], normal: 'up', intensity: 1.2, ramp: [[0, '#f0e8ff'], [1, '#a060ff']] });
-      fx.ring({ t0: 0.17, dur: 0.4, r: [0.2, 1.5], width: [0.2, 0.03], normal: 'cam', pos: [0, 1, 0], intensity: 1.0, ramp: [[0, '#f0e8ff'], [1, '#c090ff']] });
-      fx.emitter({ count: 150, kind: 'spark', shape: 'box', shapeSize: [0.22, 0.85, 0.16], pos: [0, 0.95, 0], radial: 1, speed: [0.5, 3.4], life: [0.5, 1.2], size: [0.05, 0.015], stretch: 1.1, gravity: [0, 0.8, 0], drag: 1.2, ramp: [[0, '#fff'], [0.4, '#c090ff'], [1, '#40c', 0]], intensity: 1.5, delay: 0.17, emit: 0.4, turb: [0.5, 2] });
-      fx.emitter({ count: 70, kind: 'soft', shape: 'box', shapeSize: [0.22, 0.85, 0.16], pos: [0, 0.95, 0], radial: 1, speed: [0.2, 1], life: [0.8, 1.4], size: [0.04, 0.01], gravity: [0, 0.9, 0], ramp: [[0, '#f0e8ff'], [1, '#80f', 0]], intensity: 1.5, delay: 0.2, emit: 0.5, swirl: 4, drag: 0.8 });
-      fx.emitter({ count: 12, kind: 'glint', shape: 'box', shapeSize: [0.2, 0.8, 0.15], pos: [0, 0.95, 0], size: [0.3, 0.06], life: [0.3, 0.6], ramp: [[0, '#fff'], [1, '#a8f', 0]], intensity: 4, delay: 0.15, emit: 0.3, speed: [0, 0.2] });
+      fx.ring({ t0: 0.17, dur: 0.4, r: [0.2, 1.5], width: [0.2, 0.03], normal: 'cam', pos: [0, 1, 0], intensity: 1.0, ramp: [[0, '#f0e8ff'], [1, '#c090ff']] }); // anchor-ok
+      fx.emitter({ count: 150, kind: 'spark', shape: 'box', shapeSize: [0.22, 0.85, 0.16], pos: [0, 0.95, 0], radial: 1, speed: [0.5, 3.4], life: [0.5, 1.2], size: [0.05, 0.015], stretch: 1.1, gravity: [0, 0.8, 0], drag: 1.2, ramp: [[0, '#fff'], [0.4, '#c090ff'], [1, '#40c', 0]], intensity: 1.5, delay: 0.17, emit: 0.4, turb: [0.5, 2] }); // anchor-ok
+      fx.emitter({ count: 70, kind: 'soft', shape: 'box', shapeSize: [0.22, 0.85, 0.16], pos: [0, 0.95, 0], radial: 1, speed: [0.2, 1], life: [0.8, 1.4], size: [0.04, 0.01], gravity: [0, 0.9, 0], ramp: [[0, '#f0e8ff'], [1, '#80f', 0]], intensity: 1.5, delay: 0.2, emit: 0.5, swirl: 4, drag: 0.8 }); // anchor-ok
+      fx.emitter({ count: 12, kind: 'glint', shape: 'box', shapeSize: [0.2, 0.8, 0.15], pos: [0, 0.95, 0], size: [0.3, 0.06], life: [0.3, 0.6], ramp: [[0, '#fff'], [1, '#a8f', 0]], intensity: 4, delay: 0.15, emit: 0.3, speed: [0, 0.2] }); // anchor-ok
       fx.decal({ kind: 'glow', r: [1.1, 1.1], t0: 0.1, dur: 1.4, fade: [0.05, 0.9], ramp: [[0, '#000'], [0.5, '#4a1a90'], [1, '#c090ff']], intensity: 0.9, alpha: 0.7 });
     } },
 
@@ -251,7 +251,7 @@ export default [
       fx.emitter({ count: 120, kind: 'shard', blend: 'normal', lit: 1, shape: 'disc', radius: 1.0, pos: [0, 1.45, -1.0], rot3: [Math.PI / 2, 0, 0], dir: [0, 0, 1], spread: 1.1, radial: 0.6, speed: [0.6, 3.6], life: [1.0, 1.4], size: [0.16, 0.1], gravity: [0, -6, 0], bounce: 0.3, rot: 6, ramp: [[0, '#a8c4ff'], [1, '#7a9cd8', 1]], delay: TS });
       fx.emitter({ count: 70, kind: 'glint', shape: 'disc', radius: 1.0, pos: [0, 1.45, -1.0], rot3: [Math.PI / 2, 0, 0], size: [0.25, 0.05], life: [0.3, 0.9], ramp: [[0, '#fff'], [1, '#8ab0ff', 0]], intensity: 2.2, delay: TS, emit: 0.3, speed: [0, 0.4] });
       fx.emitter({ count: 120, kind: 'soft', shape: 'ring', radius: 1.0, radiusIn: 0.4, pos: [0, 1.45, -1.0], rot3: [Math.PI / 2, 0, 0], radial: 1, speed: [0.3, 1.2], life: [1.0, 1.8], size: [0.04, 0.01], ramp: [[0, '#fff'], [1, '#7aa0ff', 0]], intensity: 1.6, delay: TS, emit: 0.2, drag: 1, gravity: [0, -0.4, 0] });
-      fx.emitter({ count: 50, kind: 'soft', shape: 'sphere', radius: 0.8, pos: [0, 1.2, 0], speed: [0, 0.1], life: [1.2, 1.8], size: [0.03, 0.008], ramp: [[0, '#cfe0ff'], [1, '#7aa0ff', 0]], intensity: 2, delay: TF, emit: 1.2, turb: [0.1, 1], drag: 2 });
+      fx.emitter({ count: 50, kind: 'soft', shape: 'sphere', radius: 0.8, pos: [0, 1.2, 0], speed: [0, 0.1], life: [1.2, 1.8], size: [0.03, 0.008], ramp: [[0, '#cfe0ff'], [1, '#7aa0ff', 0]], intensity: 2, delay: TF, emit: 1.2, turb: [0.1, 1], drag: 2 }); // anchor-ok
       fx.light({ color: '#9fc0ff', intensity: 50, pos: [0.5, 1.4, 0.8], range: 9, env: (t) => (t > TF ? 1 : 0.2) * (t > TS ? 1.5 : 1), t0: 0.1, dur: 3.5, fade: [0.2, 0.6] });
     } },
 ];

@@ -118,8 +118,8 @@ export default [
       const pp = (t) => { const o = pos(t); return [o.x, o.y, o.z]; };
       fx.orb({ kind: 'fire', t0: -0.55, dur: T0 + 0.55, r: [0.04, 0.26], ease: 'out', intensity: 1.1, ramp: [[0, '#200'], [0.3, '#c21'], [0.6, '#f70'], [0.85, '#fc4'], [1, '#fff']], noise: 2.4, scroll: 3, disp: 0.5, follow: (o, ta, t) => { pos(t, o.position); const s = t > 0 ? 0.26 : 0.04 + 0.22 * (t + 0.55) / 0.55; o.scale.setScalar(s); } });
       fx.orb({ kind: 'plasma', t0: -0.4, dur: T0 + 0.4, r: [0.05, 0.12], intensity: 1.6, ramp: [[0, '#f84'], [1, '#fff']], noise: 3, scroll: 4, disp: 0.3, follow: (o, ta, t) => pos(t, o.position) });
-      fx.emitter({ count: 70, kind: 'flame', shape: 'sphere', radius: 0.12, pos: fx.anchor('hips', -0.6, [0, 0.08, 0]), dir: [-1, 0.2, 0], spread: 0.6, speed: [0.5, 1.5], life: [0.3, 0.55], size: [0.5, 0.15], aspect: 1.5, intensity: 0.55, ramp: FIRE, t0: -0.5, t1: T0, follow: (m, ta, t) => pos(t, m.position) });
-      fx.emitter({ count: 50, kind: 'spark', shape: 'sphere', radius: 0.15, pos: fx.anchor('hips', -0.6, [0, 0.08, 0]), dir: [-1, 0.2, 0], spread: 1.2, speed: [0.5, 2.5], life: [0.4, 0.7], gravity: [0, -1, 0], size: [0.05, 0.015], stretch: 0.8, intensity: 3, ramp: [[0, '#fff2dc'], [0.4, '#ffa030'], [1, '#a30', 0]], t0: -0.5, t1: T0, follow: (m, ta, t) => pos(t, m.position) });
+      fx.emitter({ count: 70, kind: 'flame', shape: 'sphere', radius: 0.12, pos: [0, 1, 0], dir: [-1, 0.2, 0], spread: 0.6, speed: [0.5, 1.5], life: [0.3, 0.55], size: [0.5, 0.15], aspect: 1.5, intensity: 0.55, ramp: FIRE, t0: -0.5, t1: T0, follow: (m, ta, t) => pos(t, m.position) }); // anchor-ok
+      fx.emitter({ count: 50, kind: 'spark', shape: 'sphere', radius: 0.15, pos: [0, 1, 0], dir: [-1, 0.2, 0], spread: 1.2, speed: [0.5, 2.5], life: [0.4, 0.7], gravity: [0, -1, 0], size: [0.05, 0.015], stretch: 0.8, intensity: 3, ramp: [[0, '#fff2dc'], [0.4, '#ffa030'], [1, '#a30', 0]], t0: -0.5, t1: T0, follow: (m, ta, t) => pos(t, m.position) }); // anchor-ok
       fx.trail({ path: pp, t0: 0, dur: T0, len: 0.35, width: 0.2, n: 40, intensity: 1.2, core: 3, ramp: [[0, '#fff2c0'], [0.3, '#ff9a30'], [0.7, '#c03000'], [1, '#300']], fade: [0, 0.05] });
       const lt = fx.light({ color: '#ff8a30', intensity: 35, pos: fx.anchor('head', 0, [-0.01, -0.18, 0.18]), range: 8, t0: -0.55, dur: T0 + 0.55, flicker: 0.2, norm: 30 }); fx.on((t) => { pos(t, lt.l.position); lt.l.position.z += 0.4; });
       // impact
@@ -141,7 +141,7 @@ export default [
     build(fx) {
       fx.ring({ t0: 0, dur: 1.0, r: [0.2, 8], width: [0.2, 0.05], normal: 'up', intensity: 0.3, fill: 0, ramp: [[0, '#fff2dc'], [0.4, '#ffd8a0'], [1, '#a06a30']] });
       fx.ring({ t0: 0.08, dur: 0.9, r: [0.2, 5.5], width: [0.25, 0.06], normal: 'up', y: 0.02, intensity: 0.6, ramp: [[0, '#fff2dc'], [1, '#c88a40']] });
-      fx.ring({ t0: 0.02, dur: 0.5, r: [0.3, 3.5], width: [0.3, 0.06], normal: 'cam', pos: fx.anchor('hips', -0.35, [0, -0.05, 0]), intensity: 1.0, ramp: [[0, '#fff2dc'], [1, '#fc8']] });
+      fx.ring({ t0: 0.02, dur: 0.5, r: [0.3, 3.5], width: [0.3, 0.06], normal: 'cam', pos: [0, 0.6, 0], intensity: 1.0, ramp: [[0, '#fff2dc'], [1, '#fc8']] }); // anchor-ok
       fx.shell({ t0: 0, dur: 0.5, r: [0.2, 3.4], ease: 'out', hemi: true, power: 2, noise: 0.4, intensity: 0.5, fade: [0, 0.35], ramp: [[0, '#321'], [0.5, '#fc8'], [1, '#fff']] });
       fx.decal({ kind: 'cracks', t0: 0, dur: 1.95, r: [4.2, 5.0], reveal: 0.3, heat: [1, 0.1], cells: 4.5, fade: [0.03, 1.1], ramp: [[0, '#200'], [0.5, '#d4501a'], [1, '#ffcc60']], intensity: 1.4 });
       fx.decal({ kind: 'scorch', t0: 0, dur: 1.95, r: [1.6, 2.2], fade: [0.1, 1.0], heat: [0.7, 0], ramp: [[0, '#1a1410'], [0.5, '#c4501a'], [1, '#fc8']] });
@@ -238,7 +238,7 @@ export default [
       // nova
       fx.flash(0.08, 0.25, '#cfeaff', 0.08);
       fx.ring({ t0: 0.08, dur: 0.9, r: [0.2, 6], width: [0.15, 0.04], normal: 'up', intensity: 0.3, fill: 0, ramp: [[0, '#e8f2ff'], [0.4, '#bfe8ff'], [1, '#2a7ae8']] });
-      fx.ring({ t0: 0.12, dur: 0.7, r: [0.2, 4], width: [0.3, 0.06], normal: 'cam', pos: fx.anchor('hips', -0.4, [0, 0.06, 0]), intensity: 1.2, ramp: [[0, '#e8f2ff'], [1, '#6ab8ff']] });
+      fx.ring({ t0: 0.12, dur: 0.7, r: [0.2, 4], width: [0.3, 0.06], normal: 'cam', pos: [0, 1, 0], intensity: 1.2, ramp: [[0, '#e8f2ff'], [1, '#6ab8ff']] }); // anchor-ok
       fx.shell({ t0: 0.08, dur: 0.9, r: [0.3, 3.2], ease: 'out', hemi: true, cells: 5, power: 2, noise: 0.3, intensity: 0.9, fade: [0, 0.6], ramp: [[0, '#014'], [0.5, '#5ab0ff'], [1, '#fff']] });
       fx.decal({ kind: 'frost', t0: 0.08, dur: 2.3, r: [0.5, 4.2], growSpeed: 2.5, reveal: 0.5, cells: 6, fade: [0.1, 1.0], intensity: 1.2, ramp: ICE });
       fx.decal({ kind: 'glow', t0: 0.1, dur: 2.2, r: [3.5, 3.5], ramp: [[0, '#000'], [0.5, '#1a50a0'], [1, '#8ad0ff']], intensity: 0.5, alpha: 0.5, fade: [0.2, 1.2], y: 0.012 });
@@ -311,7 +311,7 @@ export default [
     stage: { sky: 'dark', bloom: 0.55, view: { pos: [1.0, 1.5, 7.0], target: [1.4, 1.0, 0], fov: 40 } },
     act: { kind: 'slash', weapon: 'sword', target: [1.6, 0, 0], windup: 0.9, keys: [[-0.9, 'guard'], [-0.55, 'vanish'], [-0.25, 'vanish'], [-0.2, 'behind'], [0, 'behind'], [0.06, 'cut', 'snap'], [0.2, 'follow'], [0.9, 'guard']], hits: [{ t: 0.05, stop: 0.1, shake: 0.3, amp: 0.045, push: -2.0, flash: 0.2 }] },
     build(fx) {
-      const A = [0, 0, 0], B = [2.9, 0, 0.0], hy = fx.anchor('hips', -0.3)[1], cy = fx.anchor('chest', -0.3)[1];
+      const A = [0, 0, 0], B = [2.9, 0, 0.0], hy = 0.92, cy = fx.anchor('chest', -0.3)[1];
       const mir = (p) => [B[0] - p[0], p[1], -p[2]], ba = fx.bladeArc(0, 0.2), arcB = { center: mir(ba.center), radius: ba.radius, a0: PI - ba.a0, a1: PI - ba.a1, tilt: -ba.tilt }; // body at B faces -X (rotation.y = PI)
       // body: dissolve to smoke at A, reappear behind the target at B facing -X
       fx.on((t, ta) => { const b = fx.body; const phase = ta < -0.28 ? 0 : 1;
@@ -319,9 +319,9 @@ export default [
         else { b.position.x = B[0]; b.rotation.y = PI; const k = 1 - sstep(-0.28, -0.05, ta); b.set({ dissolve: k < 0.002 ? -1 : k, dDir: 1, edge: '#9a4aff', edgeW: 0.09, edgeInt: 4, tint: '#1a0830', tintAmt: 0.5 * k + 0.12 * (1 - sstep(0, 0.5, ta)), rim: '#a060ff', rimAmt: 0.9 * (1 - sstep(-0.1, 0.6, ta)) }); } void phase; });
       const SH = [[0, '#f0e8ff'], [0.2, '#d8a8ff'], [0.55, '#7a30e0'], [1, '#1a0540']];
       // departure
-      fx.orb({ kind: 'void', t0: -0.55, dur: 0.5, r: [0.1, 0.9], ease: 'out', pos: fx.anchor('hips', -0.9, [0.1, 0.08, 0]), fade: [0.05, 0.3], intensity: 1.2, power: 2, ramp: [[0, '#000'], [0.5, '#5a20c0'], [1, '#d8a8ff']], noise: 2, scroll: 1.5 }); // anchor-ok
-      fx.emitter({ count: 80, kind: 'smoke', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.35, pos: fx.anchor('hips', -0.9, [0, 0.08, 0]), dir: [0, 1, 0], spread: 1.0, speed: [0.3, 1.6], life: [0.8, 1.5], size: [0.5, 1.5], ramp: [[0, '#0a0412', 0], [0.2, '#1a0a30', 0.85], [1, '#05020a', 0]], drag: 1, gravity: [0, 0.4, 0], delay: -0.75, emit: 0.5, order: -1, t0: -0.8, t1: 1.0, turb: [0.4, 1] });
-      fx.emitter({ count: 60, kind: 'soft', shape: 'sphere', radius: 0.4, pos: fx.anchor('hips', -0.9, [0, 0.08, 0]), speed: [0.5, 2], radial: 1, dir: [0, 1, 0], spread: 3, life: [0.5, 1.2], size: [0.07, 0.015], intensity: 1.5, ramp: [[0, '#f0e8ff', 1], [0.4, '#b070ff', 0.9], [1, '#40108a', 0]], delay: -0.55, emit: 0.3, t0: -0.6, t1: 1 });
+      fx.orb({ kind: 'void', t0: -0.55, dur: 0.5, r: [0.1, 0.9], ease: 'out', pos: [0.1, 1, 0], fade: [0.05, 0.3], intensity: 1.2, power: 2, ramp: [[0, '#000'], [0.5, '#5a20c0'], [1, '#d8a8ff']], noise: 2, scroll: 1.5 }); // anchor-ok
+      fx.emitter({ count: 80, kind: 'smoke', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.35, pos: [0, 1, 0], dir: [0, 1, 0], spread: 1.0, speed: [0.3, 1.6], life: [0.8, 1.5], size: [0.5, 1.5], ramp: [[0, '#0a0412', 0], [0.2, '#1a0a30', 0.85], [1, '#05020a', 0]], drag: 1, gravity: [0, 0.4, 0], delay: -0.75, emit: 0.5, order: -1, t0: -0.8, t1: 1.0, turb: [0.4, 1] }); // anchor-ok
+      fx.emitter({ count: 60, kind: 'soft', shape: 'sphere', radius: 0.4, pos: [0, 1, 0], speed: [0.5, 2], radial: 1, dir: [0, 1, 0], spread: 3, life: [0.5, 1.2], size: [0.07, 0.015], intensity: 1.5, ramp: [[0, '#f0e8ff', 1], [0.4, '#b070ff', 0.9], [1, '#40108a', 0]], delay: -0.55, emit: 0.3, t0: -0.6, t1: 1 }); // anchor-ok
       fx.decal({ kind: 'rune', t0: -0.9, dur: 1.6, r: [1.0, 1.2], pos: [0, 0.006, 0], reveal: 0.35, glyphs: 12, poly: 4, spin: 1.2, ramp: [[0, '#2a0a60'], [0.5, '#8a40ff'], [1, '#e8c8ff']], intensity: 1.2, fade: [0.15, 0.7] });
       fx.decal({ kind: 'scorch', t0: -0.9, dur: 2.5, r: [1.2, 1.4], fade: [0.2, 1.0], heat: [0, 0], ramp: [[0, '#1a1410'], [1, '#2a0a60']] });
       // the dash between the two points: dark streak with violet edge

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { kit, SKILL, meta, sm, clamp, TAU, POSES, metal, DUST, STEEL, AIR, FROST, HOLY, FIRE } from './_skill.js';
 
 const m = meta('archer', 'class');
-const O = [0, 0, 0], A = [0.6, 1.38, 0.2]; // default cast point
+const O = [0, 0, 0], nock = (fx) => fx.anchor('handL', 0, [0.1, 0, 0]); // arrow leaves the bow hand at release (act t 0)
 const lerp3 = (p, q, u) => [p[0] + (q[0] - p[0]) * u, p[1] + (q[1] - p[1]) * u, p[2] + (q[2] - p[2]) * u];
 const X = new THREE.Vector3(1, 0, 0), D = new THREE.Vector3();
 const VAP = [[0, '#b7bcbf', 0], [0.15, '#b0b6b9', 0.55], [1, '#7a848b', 0]]; // VAPOR darkened to <= #b8c0c8 (V5)
@@ -24,10 +24,10 @@ export default [
     act: ACT_BOW(0.25),
     // P3=272
     build(fx, o) {
-      const k = kit(fx, o, STEEL), A1 = [0.75, 1.45, 0], T = 0.25;
+      const k = kit(fx, o, STEEL), A1 = nock(fx), Gt = fx.anchor('tgt'), T = 0.25;
       // one arrow aimed at fan angle a, launched at s: trail, then sparks and dust at its end
       const shot = (a, s) => {
-        const to = [4, 1.3, 3.25 * Math.tan(a)], path = (t) => lerp3(A1, to, clamp((t - s) / T));
+        const to = [Gt[0] - 0.2, Gt[1] + 0.1, 3.25 * Math.tan(a)], path = (t) => lerp3(A1, to, clamp((t - s) / T));
         fly(fx, path, s, T + 0.05);
         k.trail({ path, t0: s, dur: T + 0.05, len: 0.3, width: 0.03 });
         k.trail({ path, t0: s, dur: T + 0.05, len: 0.5, width: 0.07, intensity: 2.5 });
@@ -39,7 +39,7 @@ export default [
       shot(-0.12, 0); shot(0, 0.03); shot(0.12, 0.06);
       if (k.g >= 2) k.sparks(A1, 0, 30);
       if (k.g === 3) { shot(-0.24, 0.03); shot(0.24, 0.03); }
-      k.extras([4, 1.3, 0], T);
+      k.extras([Gt[0] - 0.2, Gt[1] + 0.1, 0], T);
     } }),
 
   // 2. arrow up, rain of arrows onto a rune circle
@@ -48,7 +48,7 @@ export default [
     act: { ...ACT_BOW(0.85), target: [3.2, 0, 0] },
     // P3=528
     build(fx, o) {
-      const k = kit(fx, o, STEEL), G = [3.2, 0, 0], T = 0.85, GS = [G[0], 0.05, 0];
+      const k = kit(fx, o, STEEL), A = nock(fx), G = fx.anchor('tgtFeet'), T = 0.85, GS = [G[0], 0.05, 0];
       // T-GND: rune circle, ring closes in, then the strike
       k.decal({ kind: 'rune', r: [1.6, 1.6], pos: G, t0: T - 0.4, dur: T + 0.6, reveal: 0.5, glyphs: 14, poly: 6, spin: 0.4 });
       k.ring({ r: [1.6, 0.3], normal: 'up', pos: G, t0: T - 0.3, dur: 0.3, decay: 0.2 });
@@ -78,25 +78,25 @@ export default [
     act: ACT_BOW(0.12, 1.0),
     // P3=192
     build(fx, o) {
-      const k = kit(fx, o, AIR), E = [6.5, 1.35, 0], HIT = [4.2, 1.3, 0], T = 0.12;
+      const k = kit(fx, o, AIR), A = nock(fx), Gt = fx.anchor('tgt'), y = Gt[1] + 0.1, E = [6.5, y + 0.05, 0], HIT = [Gt[0], y, 0], T = 0.12; // pierces the target chest
       const path = (t) => lerp3(A, E, clamp((t - T) / 0.2));
       // charge gathers at the hand, then the beam and the arrow leave
       k.gather(O, -0.8, 0.75, 0.6, 60, k.at());
       k.em({ count: 10, kind: 'soft', shape: 'point', size: [0.25, 0.1], follow: k.at(), delay: -0.8, emit: 0.8, t0: -0.82 });
-      k.beam({ from: A, to: [6, 1.4, 0], r: [0.04, 0.04], t0: 0, dur: 0.12 });
+      k.beam({ from: A, to: [6, y + 0.1, 0], r: [0.04, 0.04], t0: 0, dur: 0.12 });
       fly(fx, path, T, 0.25);
       k.trail({ path, t0: T, dur: 0.25, len: 0.6, width: 0.1 });
       k.ring({ r: [0.2, 1.2], normal: [1, 0, 0], pos: A, t0: 0, dur: 0.3 });
       k.ring({ r: [0.2, 1.2], normal: [1, 0, 0], pos: HIT, t0: T, dur: 0.3 });
       k.sparks(HIT, T, 50, { dir: [1, 0.2, 0] });
-      k.smoke({ count: 30, shape: 'line', shapeSize: [1.8, 0, 0], pos: [2.6, 1.4, 0], ramp: DUST, delay: T, emit: 0.001, t0: T });
+      k.smoke({ count: 30, shape: 'line', shapeSize: [1.8, 0, 0], pos: [2.6, y + 0.1, 0], ramp: DUST, delay: T, emit: 0.001, t0: T });
       if (k.g >= 2) for (let i = 0; i < 3; i++) {
         const pts = Array.from({ length: 24 }, (_, j) => { const u = j / 23, p = lerp3(A, E, u), a = 3 * TAU * u + (i * TAU) / 3; return [p[0], p[1] + 0.15 * Math.cos(a), p[2] + 0.15 * Math.sin(a)]; });
         k.ribbon({ points: pts, n: 23, width: 0.03, sweep: [0, 1.5], t0: 0.02, dur: 0.3 });
       }
       if (k.g === 3) {
         k.ring({ r: [0.2, 1.2], normal: [1, 0, 0], pos: HIT, t0: T + 0.1, dur: 0.4 });
-        k.beam({ from: A, to: [6, 1.4, 0], r: [0.04, 0.04], t0: T, dur: 0.6, intensity: 0.3 });
+        k.beam({ from: A, to: [6, y + 0.1, 0], r: [0.04, 0.04], t0: T, dur: 0.6, intensity: 0.3 });
       }
       k.extras(HIT, T);
     } }),
@@ -107,7 +107,7 @@ export default [
     act: ACT_BOW(0.3),
     // P3=228
     build(fx, o) {
-      const k = kit(fx, o, FROST), G = [3, 0, 0], T = 0.3;
+      const k = kit(fx, o, FROST), A = nock(fx), G = [3, 0, 0], T = 0.3;
       const P = (t) => { const u = clamp(t / T); return [A[0] + (G[0] - A[0]) * u, A[1] + (G[1] - A[1]) * u + 0.7 * Math.sin(Math.PI * u), A[2] * (1 - u)]; };
       fly(fx, P, 0, T + 0.05);
       k.decal({ kind: 'frost', r: [0.3, 1.8], pos: G, t0: T, reveal: 0.5, cells: 6 });
@@ -137,10 +137,10 @@ export default [
     body: true, view: 'body',
     // P3=171
     build(fx, o) {
-      const k = kit(fx, o, HOLY), E = [0.1, 1.55, 0.2], D0 = 2.6;
       fx.body.setPose(POSES.bowDraw);
+      const k = kit(fx, o, HOLY), A = fx.anchor('handL', 0, [0.1, 0, 0]), E = fx.anchor('head', 0, [0.12, 0.02, 0.1]), D0 = 2.6; // bow hand, eye
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(D0 - 0.6, D0, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u }); });
-      k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
+      k.gather([0, 1, 0], 0, 0.3, 1.2, 30); // anchor-ok
       const bow = bowOf(fx, k);
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up', intensity: 0.6 });
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: D0, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / D0), intensity: 20 });
@@ -155,7 +155,7 @@ export default [
       }
       if (k.g >= 2) { k.decal({ kind: 'rune', r: [0.4, 0.4], pos: [4, 0, 0], t0: 0.3 }); k.ring({ r: [0.2, 0.8], normal: 'cam', pos: [4, 1.2, 0], t0: 0.3, dur: 0.6 }); }
       if (k.g === 3) k.em({ count: 30, kind: 'petal', shape: 'ring', radius: 0.6, pos: E, swirl: 3, blend: 'normal', lit: 1, delay: 0.3, emit: 2.2 });
-      k.extras([0, 1.1, 0], 0.3, 'E');
+      k.extras(fx.anchor('chest', 0), 0.3, 'E');
     } }),
 
   // 6. flaming arrow that explodes on impact
@@ -164,7 +164,7 @@ export default [
     act: ACT_BOW(0.3),
     // P3=402
     build(fx, o) {
-      const k = kit(fx, o, FIRE), B = [4, 1.2, 0], T = 0.3;
+      const k = kit(fx, o, FIRE), A = nock(fx), B = fx.anchor('tgt', 0, [-0.2, 0.1, 0]), T = 0.3;
       const P = (t) => { const u = clamp(t / T); return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u + 0.2 * Math.sin(Math.PI * u), A[2] * (1 - u)]; };
       // flight: arrow mesh with a flame tail
       fly(fx, P, 0, T + 0.05);

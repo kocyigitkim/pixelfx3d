@@ -46,14 +46,14 @@ export default [
       kw.ring({ t0: 0.4, dur: 0.5, r: [1.2, 2.4], normal: 'up', pos: fx.anchor('chest', -0.175, [0, -0.1, 0]) });
       const circ = Array.from({ length: 24 }, (_, j) => { const a = (j / 23) * TAU; return [1.6 * Math.cos(a), 0.4 + (1.2 * j) / 23, 1.6 * Math.sin(a)]; });
       for (let i = 0; i < 6; i++) kw.ribbon({ points: circ, n: 23, width: 0.04, sweep: [0, 1.5], t0: 0.05 * i, dur: 0.35, intensity: 0.8 });
-      k.smoke({ count: 60, shape: 'ring', radius: 1.2, pos: fx.anchor('hips', -0.35, [0, 0.08, 0]), radial: 1, speed: [1, 3], ramp: DUST, delay: 0.05, emit: 0.5 });
-      kw.em({ count: 60, kind: 'streak', shape: 'ring', radius: 1.5, pos: fx.anchor('hips', -0.35, [0, 0.08, 0]), swirl: 4, life: [0.3, 0.6], delay: 0, emit: 0.6 });
+      k.smoke({ count: 60, shape: 'ring', radius: 1.2, pos: [0, 1, 0], radial: 1, speed: [1, 3], ramp: DUST, delay: 0.05, emit: 0.5 }); // anchor-ok
+      kw.em({ count: 60, kind: 'streak', shape: 'ring', radius: 1.5, pos: [0, 1, 0], swirl: 4, life: [0.3, 0.6], delay: 0, emit: 0.6 }); // anchor-ok
       ct(fx, k, fx.anchor('tgt', 0, [0, 0.1, 0.1]), 0.15, 14);
       ct(fx, k, fx.anchor('tgt', 0, [0, 0.1, 0.1]), 0.45, 14, { lightI: 0 });
-      if (k.g >= 2) k.smoke({ count: 40, shape: 'ring', radius: 1.8, pos: fx.anchor('hips', -0.35, [0, 0.08, 0]), ramp: DUST, delay: 0.45, emit: 0.2 });
+      if (k.g >= 2) k.smoke({ count: 40, shape: 'ring', radius: 1.8, pos: [0, 1, 0], ramp: DUST, delay: 0.45, emit: 0.2 }); // anchor-ok
       if (k.g === 3) {
-        kw.ring({ t0: 0.5, dur: 0.5, r: [0.5, 4], normal: 'up', pos: fx.anchor('hips', -0.35, [0, 0.08, 0]) });
-        kw.em({ count: 40, kind: 'petal', shape: 'ring', radius: 1, swirl: 3, pos: fx.anchor('hips', -0.35, [0, 0.08, 0]), blend: 'normal', lit: 1, delay: 0.6, emit: 0.6 });
+        kw.ring({ t0: 0.5, dur: 0.5, r: [0.5, 4], normal: 'up', pos: [0, 1, 0] }); // anchor-ok
+        kw.em({ count: 40, kind: 'petal', shape: 'ring', radius: 1, swirl: 3, pos: [0, 1, 0], blend: 'normal', lit: 1, delay: 0.6, emit: 0.6 }); // anchor-ok
       }
       k.extras(fx.anchor('tgt', 0, [0, 0.1, 0.1]), 0.45);
     } }),
@@ -95,17 +95,17 @@ export default [
       const k = kit(fx, o, STEEL);
       fx.body.setPose(POSES.guard);
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(2.3, 2.6, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u }); });
-      k.gather(fx.anchor('hips', 0, [0, 0.08, 0]), 0, 0.3, 1.2, 30);
+      k.gather([0, 1, 0], 0, 0.3, 1.2, 30); // anchor-ok
       // 6 light plates orbiting the body, facing outward
-      const plates = new THREE.Group(), pl = [], py = fx.anchor('hips', 0)[1] + 0.08, py2 = fx.anchor('head', 0)[1] - 0.02; // plate rings at hip / head height
+      const plates = new THREE.Group(), pl = [];
       for (let i = 0; i < 6; i++) { const p = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.5), addMat(k.col(1), 1.6, 0.7)); plates.add(p); pl.push(p); }
-      k.pop(plates, 0.2, 0.45, 2.0, 2.5, (t) => pl.forEach((p, i) => { const a = (i * TAU) / 6 + 0.4 * t; p.position.set(0.7 * Math.cos(a), py, 0.7 * Math.sin(a)); p.rotation.y = Math.PI / 2 - a; }));
+      k.pop(plates, 0.2, 0.45, 2.0, 2.5, (t) => pl.forEach((p, i) => { const a = (i * TAU) / 6 + 0.4 * t; p.position.set(0.7 * Math.cos(a), 1.0, 0.7 * Math.sin(a)); p.rotation.y = Math.PI / 2 - a; }));
       k.shell({ r: [0.9, 0.9], cells: 6, hemi: false, t0: 0.3, dur: 1.8, intensity: 0.6, alpha: 0.5 });
-      k.em({ count: 20, kind: 'glint', shape: 'ring', radius: 0.8, pos: fx.anchor('hips', 0, [0, 0.08, 0]), delay: 0.3, emit: 1.7, t0: 0.3, life: [0.2, 0.3] });
+      k.em({ count: 20, kind: 'glint', shape: 'ring', radius: 0.8, pos: [0, 1, 0], delay: 0.3, emit: 1.7, t0: 0.3, life: [0.2, 0.3] }); // anchor-ok
       if (k.g >= 2) {
         const inner = new THREE.Group(), ip = [];
         for (let i = 0; i < 4; i++) { const p = new THREE.Mesh(new THREE.PlaneGeometry(0.25, 0.35), addMat(k.col(1), 1.6, 0.7)); inner.add(p); ip.push(p); }
-        k.pop(inner, 0.3, 0.55, 2.2, 2.6, (t) => ip.forEach((p, i) => { const a = (i * TAU) / 4 + 0.4 * t; p.position.set(0.55 * Math.cos(a), py2, 0.55 * Math.sin(a)); p.rotation.y = Math.PI / 2 - a; }));
+        k.pop(inner, 0.3, 0.55, 2.2, 2.6, (t) => ip.forEach((p, i) => { const a = (i * TAU) / 4 + 0.4 * t; p.position.set(0.55 * Math.cos(a), 1.6, 0.55 * Math.sin(a)); p.rotation.y = Math.PI / 2 - a; }));
       }
       if (k.g === 3) {
         k.decal({ kind: 'rune', r: [1.4, 1.4], t0: 0.3, dur: 1.9 });
@@ -121,11 +121,11 @@ export default [
     // P3=252
     build(fx, o) {
       const k = kit(fx, o, BLOOD);
-      k.gather(fx.anchor('hips', -0.5, [0, 0.08, 0]), -0.45, 0.4, 1.4, 60);
+      k.gather([0, 1, 0], -0.45, 0.4, 1.4, 60); // anchor-ok
       k.ring({ t0: 0, dur: 0.7, r: [0.2, 4.5], normal: 'up', width: [0.4, 0.08], fill: 0.08 });
-      k.ring({ t0: 0.02, dur: 0.45, r: [0.2, 2.6], normal: 'cam', pos: fx.anchor('hips', -0.5, [0, 0.08, 0]) });
+      k.ring({ t0: 0.02, dur: 0.45, r: [0.2, 2.6], normal: 'cam', pos: [0, 1, 0] }); // anchor-ok
       k.shell({ r: [0.3, 2.4], hemi: true, power: 2, t0: 0, dur: 0.45, fade: [0, 0.35] });
-      k.em({ count: 120, kind: 'streak', shape: 'ring', radius: 0.5, pos: fx.anchor('hips', -0.25), radial: 1, speed: [4, 8], life: [0.4, 0.9], size: [0.5, 0.2], stretch: 2, delay: 0, emit: 0.001, t0: 0 });
+      k.em({ count: 120, kind: 'streak', shape: 'ring', radius: 0.5, pos: [0, 0.6, 0], radial: 1, speed: [4, 8], life: [0.4, 0.9], size: [0.5, 0.2], stretch: 2, delay: 0, emit: 0.001, t0: 0 }); // anchor-ok
       k.decal({ kind: 'glow', r: [1.5, 2.5], t0: 0, dur: 1.7, fade: [0.05, 1] });
       // speed lines radiating from chest height
       const cy = fx.anchor('chest', 0.05)[1];
@@ -193,8 +193,8 @@ export default [
       const k = kit(fx, o, BLOOD);
       fx.body.setPose(POSES.castCharge);
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(2.4, 2.8, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u }); });
-      k.gather(fx.anchor('hips', 0, [0, 0.06, 0]), 0, 0.3, 1.2, 30);
-      k.ring({ t0: 0.3, dur: 1.9, r: [0.5, 0.5], normal: 'up', pos: fx.anchor('hips', 0, [0, -0.04, 0]), width: [0.05, 0.05], decay: 0 });
+      k.gather([0, 1, 0], 0, 0.3, 1.2, 30); // anchor-ok
+      k.ring({ t0: 0.3, dur: 1.9, r: [0.5, 0.5], normal: 'up', pos: [0, 0.9, 0], width: [0.05, 0.05], decay: 0 }); // anchor-ok
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
       k.decal({ kind: 'glow', r: [1, 1] });
       k.em({ count: 60, kind: 'drop', shape: 'sphere', radius: 0.6, pos: fx.anchor('chest', 0, [-0.03, -0.14, 0]), gravity: [0, 1.2, 0], speed: [0.1, 0.3], life: [1, 1.6], delay: 0.3, emit: 1.9, t0: 0.3 });
@@ -243,7 +243,7 @@ export default [
       const k = kit(fx, o, FIRE);
       fx.body.setPose(POSES.roar);
       fx.on((t) => { const u = sm(0.3, 0.6, t) * (1 - sm(2.4, 3.0, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.5 * u }); });
-      k.gather(fx.anchor('hips', 0, [0, 0.1, 0]), 0, 0.3, 1.2, 30);
+      k.gather([0, 1, 0], 0, 0.3, 1.2, 30); // anchor-ok
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
       k.em({ count: 90, kind: 'flame', shape: 'disc', radius: 0.45, pos: [0, 0.05, 0], aspect: 1.8, speed: [0.5, 1.2], life: [0.6, 1], intensity: 0.5, delay: 0.3, emit: 2.1, t0: 0.3 });
       k.em({ count: 80, kind: 'soft', shape: 'disc', radius: 0.6, pos: [0, 0.05, 0], gravity: [0, 1, 0], intensity: 2, delay: 0.3, emit: 2.1, t0: 0.3 });

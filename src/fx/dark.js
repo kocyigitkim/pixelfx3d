@@ -3,7 +3,6 @@ import * as THREE from 'three';
 import { kit, SKILL, meta, act, sm, clamp, TAU, metal, addMat, VOID, BLOOD } from './_skill.js';
 
 const m = meta('dark', 'class');
-const A = [0.6, 1.38, 0.2]; // caster cast hand
 const lerp3 = (p, q, u) => [p[0] + (q[0] - p[0]) * u, p[1] + (q[1] - p[1]) * u, p[2] + (q[2] - p[2]) * u];
 const VDARK = [[0, '#2a1a40', 0], [0.15, '#140a22', 0.55], [1, '#05030a', 0]]; // normal-blend violet-black smoke
 const BLOODMIST = [[0, '#7a0010', 0], [0.15, '#4a0008', 0.55], [1, '#200004', 0]];
@@ -15,7 +14,7 @@ export default [
     // P3=202
     build(fx, o) {
       const k = kit(fx, o, VOID);
-      const T = [3.4, 1.2, 0];
+      const T = fx.anchor('tgt', 0, [0, 0.1, 0]), A = fx.anchor('handR', 0.3); // target chest -> casting hand
       k.beam({ from: T, to: A, r: [0.08, 0.08], noise: 1.2, intensity: 1.2, t0: 0.1, dur: 1.5 });
       const helix = (ph) => (t) => Array.from({ length: 21 }, (_, j) => { const u = j / 20, a = ph + TAU * (2 * u + t); return [T[0] + (A[0] - T[0]) * u, T[1] + (A[1] - T[1]) * u + 0.12 * Math.cos(a), T[2] + (A[2] - T[2]) * u + 0.12 * Math.sin(a)]; });
       k.ribbon({ points: helix(0), n: 20, width: 0.03, t0: 0.1, dur: 1.5 });
@@ -28,7 +27,7 @@ export default [
       k.light({ pos: [1.5, 1.4, 0.6], t0: 0, dur: 2.4, flicker: 0.2 });
       if (k.g >= 2) {
         const face = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12), addMat(k.col(1), 1.2, 0.5));
-        fx.mesh(face, (t) => { face.position.set(T[0], 1.6, 0); face.scale.setScalar(1 + 0.06 * Math.sin((TAU * 2 * t) / 2.4)); }, { t0: 0.1, dur: 1.6 });
+        fx.mesh(face, (t) => { face.position.set(...fx.anchor('tgtHead', 0, [0, -0.02, 0])); face.scale.setScalar(1 + 0.06 * Math.sin((TAU * 2 * t) / 2.4)); }, { t0: 0.1, dur: 1.6 });
       }
       if (k.g === 3) {
         k.em({ count: 40, kind: 'shard', shape: 'point', pos: T, delay: 1.6, t0: 1.58, speed: [2, 6], gravity: [0, -9, 0], bounce: 0.3 });
@@ -43,7 +42,7 @@ export default [
     // P3=206
     build(fx, o) {
       const k = kit(fx, o, VOID);
-      const T = [3.4, 1.2, 0];
+      const T = fx.anchor('tgt', 0, [0, 0.1, 0]); // anchor-ok
       const spearMat = new THREE.MeshStandardMaterial({ color: '#120818', emissive: '#5a20a0', emissiveIntensity: 0.6 });
       const geo = new THREE.ConeGeometry(0.1, 1.4, 4);
       for (let i = 0; i < 7; i++) {
@@ -59,10 +58,10 @@ export default [
       k.sparks(T, 0.45, 40);
       const L = k.light({ pos: [0.8, 1.2, 0.6], t0: 0, dur: 2.2, fade: [0.1, 0.5] });
       fx.on((t) => { L.l.position.x = 0.8 + 2.6 * sm(0, 1.2, t); });
-      if (k.g >= 2) k.em({ count: 40, kind: 'shard', shape: 'point', pos: [3.4, 1.4, 0], delay: 0.45, t0: 0.43, speed: [2, 6], gravity: [0, -9, 0], emit: 0.001 });
+      if (k.g >= 2) k.em({ count: 40, kind: 'shard', shape: 'point', pos: fx.anchor('tgt', 0, [0, 0.3, 0]), delay: 0.45, t0: 0.43, speed: [2, 6], gravity: [0, -9, 0], emit: 0.001 });
       if (k.g === 3) {
         const big = new THREE.Mesh(new THREE.ConeGeometry(0.12, 1.68, 4), spearMat);
-        big.position.set(3.4, 0.84, 0);
+        big.position.set(T[0], 0.84, 0);
         k.pop(big, 0.45, 0.6, 1.9, 2.2);
         k.ring({ t0: 0.45, dur: 0.5, r: [0.2, 2.4], normal: 'cam', pos: T });
       }
@@ -74,13 +73,13 @@ export default [
     act: act('none', null, 2.6, { keys: [[-0.5, 'guard'], [-0.25, 'crouch'], [0, 'roar', 'snap'], [0.8, 'roar'], [1.4, 'guard']], hits: [{ t: 0.1, stop: 0.06, shake: 0.2, amp: 0.03, push: 1.5 }] }),
     // P3=262
     build(fx, o) {
-      const k = kit(fx, o, VOID);
-      k.gather([0, 1, 0], -0.45, 0.4, 1.4, 60);
+      const k = kit(fx, o, VOID), Hp = [0, 0.98, 0], hy = fx.anchor('head', 0)[1]; // Hp: body-volume centre // anchor-ok
+      k.gather(Hp, -0.45, 0.4, 1.4, 60);
       k.ring({ t0: 0, dur: 0.7, r: [0.2, 4.5], normal: 'up', width: [0.4, 0.08], fill: 0.08 });
-      k.ring({ t0: 0.02, dur: 0.45, r: [0.2, 2.6], normal: 'cam', pos: [0, 1, 0] });
+      k.ring({ t0: 0.02, dur: 0.45, r: [0.2, 2.6], normal: 'cam', pos: Hp });
       k.shell({ r: [0.3, 2.4], hemi: true, power: 2, t0: 0, dur: 0.45, fade: [0, 0.35], ramp: [[0, '#0a0218', 1], [1, '#3a1080', 0.6]] });
-      k.smoke({ count: 80, shape: 'sphere', radius: 0.3, pos: [0, 1, 0], radial: 1, speed: [1.5, 3], ramp: VDARK, delay: 0, emit: 0.5 });
-      k.em({ count: 80, kind: 'soft', shape: 'sphere', radius: 0.3, pos: [0, 1, 0], radial: 1, speed: [2, 4], delay: 0, emit: 0.5 });
+      k.smoke({ count: 80, shape: 'sphere', radius: 0.3, pos: Hp, radial: 1, speed: [1.5, 3], ramp: VDARK, delay: 0, emit: 0.5 });
+      k.em({ count: 80, kind: 'soft', shape: 'sphere', radius: 0.3, pos: Hp, radial: 1, speed: [2, 4], delay: 0, emit: 0.5 });
       // 6 fear faces radiating out from head height and fading
       const FEAR = new THREE.MeshStandardMaterial({ color: '#15101c', roughness: 0.9 }), EYE = new THREE.MeshBasicMaterial({ color: '#000000' });
       for (let i = 0; i < 6; i++) {
@@ -89,10 +88,10 @@ export default [
         for (const x of [-0.09, 0.09]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), EYE); e.position.set(x, 0.05, 0.22); g.add(e); }
         const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.05, 0.03), EYE); mouth.position.set(0, -0.08, 0.23); g.add(mouth);
         g.rotation.y = Math.PI / 2 - a;
-        fx.mesh(g, (t) => { const r = 0.3 + 2.2 * sm(0, 0.8, t); g.position.set(r * Math.cos(a), 1.4, r * Math.sin(a)); g.scale.setScalar(Math.max(1e-3, 1 - sm(0.8, 1.6, t))); }, { t0: 0, dur: 1.6 });
+        fx.mesh(g, (t) => { const r = 0.3 + 2.2 * sm(0, 0.8, t); g.position.set(r * Math.cos(a), hy, r * Math.sin(a)); g.scale.setScalar(Math.max(1e-3, 1 - sm(0.8, 1.6, t))); }, { t0: 0, dur: 1.6 });
       }
-      k.extras([0, 1, 0], 0.1);
-      if (k.g >= 2) k.ring({ t0: 0.3, dur: 0.5, r: [0.2, 2.2], normal: 'cam', pos: [0, 1.2, 0] });
+      k.extras(Hp, 0.1);
+      if (k.g >= 2) k.ring({ t0: 0.3, dur: 0.5, r: [0.2, 2.2], normal: 'cam', pos: fx.anchor('chest', 0.3) });
       if (k.g === 3) {
         k.decal({ kind: 'cracks', r: [2.5, 2.5], t0: 0.1, dur: 1.9, reveal: 0.3, heat: [1, 0.1], cells: 4, y: 0.005 });
       }
@@ -104,7 +103,7 @@ export default [
     // P3=191
     build(fx, o) {
       const k = kit(fx, o, BLOOD);
-      const S = [3, 1.2, 0], CP = [1.5, 2.2, 0], E = [0.1, 1.3, 0];
+      const S = fx.anchor('tgt', 0, [0, 0.1, 0]), CP = [1.5, 2.2, 0], E = fx.anchor('chest', 1.0, [0.1, 0.05, 0]), Hp = [0, 1, 0]; // target chest -> caster chest; Hp: body-volume centre // anchor-ok
       const q = (u) => [0, 1, 2].map((j) => (1 - u) * (1 - u) * S[j] + 2 * (1 - u) * u * CP[j] + u * u * E[j]);
       k.ring({ t0: 0.2, dur: 0.6, r: [0.2, 1.2], normal: 'cam', pos: S });
       k.sparks(S, 0.2, 30);
@@ -121,10 +120,10 @@ export default [
       k.light({ pos: [0.5, 1.3, 0.6], t0: 0, dur: 2.4, fade: [0.1, 0.6] });
       if (k.g >= 2) k.smoke({ count: 30, shape: 'sphere', radius: 0.3, pos: S, ramp: BLOODMIST, delay: 0.2, emit: 0.6, t0: 0.2 });
       if (k.g === 3) {
-        k.em({ count: 60, kind: 'soft', shape: 'sphere', radius: 0.3, pos: [0, 1, 0], dir: [0, 1, 0], speed: [0.5, 1.2], life: [0.5, 0.9], delay: 1, emit: 1, t0: 1 });
-        k.ring({ t0: 1.0, dur: 0.5, r: [0.2, 1.6], normal: 'cam', pos: [0, 1.2, 0] });
+        k.em({ count: 60, kind: 'soft', shape: 'sphere', radius: 0.3, pos: Hp, dir: [0, 1, 0], speed: [0.5, 1.2], life: [0.5, 0.9], delay: 1, emit: 1, t0: 1 });
+        k.ring({ t0: 1.0, dur: 0.5, r: [0.2, 1.6], normal: 'cam', pos: E });
       }
-      k.extras([0, 1.2, 0], 1.0, 'E');
+      k.extras(E, 1.0, 'E');
     } }),
 
   SKILL('dark/void-chains', 'Void chains', m(['void'], 'bind', 0.4, 14, 6, 'point'), 2.6, {
@@ -133,10 +132,10 @@ export default [
     // P3=132
     build(fx, o) {
       const k = kit(fx, o, VOID);
-      const CH = [3, 1.2, 0];
+      const CH = fx.anchor('tgt', 0, [0, 0.1, 0]), X0 = CH[0]; // chains converge on the target chest
       const cm = metal('#2a2030', '#7a30d0', 0.6);
       // 3 rune points around the target; each chain runs from its rune to the chest
-      const RUNES = [0, 1, 2].map((i) => { const a = 0.5 + (i * TAU) / 3; return [3 + Math.cos(a), 0, Math.sin(a)]; });
+      const RUNES = [0, 1, 2].map((i) => { const a = 0.5 + (i * TAU) / 3; return [X0 + Math.cos(a), 0, Math.sin(a)]; });
       const chain = (from) => {
         for (let j = 0; j < 14; j++) {
           const L = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.015, 6, 10), cm);
@@ -151,14 +150,14 @@ export default [
         chain([R[0], 0.3, R[2]]);
       }
       const bind = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.02, 8, 24), addMat(k.col(0), 2, 0.9));
-      bind.position.set(3, 1.1, 0);
+      bind.position.set(...fx.anchor('tgt'));
       bind.rotation.x = Math.PI / 2;
       k.pop(bind, 0.45, 0.6, 2.2, 2.6);
-      k.smoke({ count: 30, shape: 'sphere', radius: 0.6, pos: [3, 0.4, 0], dir: [0, 1, 0], speed: [0.2, 0.6], delay: 0.35, emit: 1, t0: 0.35 });
+      k.smoke({ count: 30, shape: 'sphere', radius: 0.6, pos: [X0, 0.4, 0], dir: [0, 1, 0], speed: [0.2, 0.6], delay: 0.35, emit: 1, t0: 0.35 });
       k.sparks(CH, 0.35, 30);
       k.gather(CH, 0, 0.35, 1.2, 30);
-      k.light({ pos: [3, 1.4, 0.8], t0: 0.3, dur: 2.2, fade: [0.1, 0.6] });
-      if (k.g >= 2) chain([3, 3.2, 0]); // 4th chain from above (no particles)
+      k.light({ pos: [X0, 1.4, 0.8], t0: 0.3, dur: 2.2, fade: [0.1, 0.6] });
+      if (k.g >= 2) chain([X0, 3.2, 0]); // 4th chain from above (no particles)
       if (k.g === 3) {
         for (const R of RUNES) k.bolt({ from: [R[0], 0.3, R[2]], to: CH, t0: 0.5, dur: 0.7 });
       }
@@ -171,26 +170,26 @@ export default [
     // P3=310
     build(fx, o) {
       const k = kit(fx, o, VOID);
-      const G = [3, 0, 0];
-      const PENT = [0, 1, 2, 3, 4].map((i) => { const a = (i * TAU) / 5; return [3 + 1.8 * Math.cos(a), 0, 1.8 * Math.sin(a)]; });
+      const G = fx.anchor('tgtFeet'), X0 = G[0]; // sigil under the target
+      const PENT = [0, 1, 2, 3, 4].map((i) => { const a = (i * TAU) / 5; return [X0 + 1.8 * Math.cos(a), 0, 1.8 * Math.sin(a)]; });
       k.decal({ kind: 'rune', r: [1.8, 1.8], glyphs: 12, poly: 5, reveal: 0.6, t0: 0, dur: 1.5 });
-      for (const t0 of [1.0, 1.2, 1.35]) k.ring({ t0, dur: 0.4, r: [2, 0.2], normal: 'up', pos: [3, 0.02, 0] });
-      k.gather([3, 0.3, 0], 0, 1.5, 1.8, 80);
+      for (const t0 of [1.0, 1.2, 1.35]) k.ring({ t0, dur: 0.4, r: [2, 0.2], normal: 'up', pos: [X0, 0.02, 0] });
+      k.gather([X0, 0.3, 0], 0, 1.5, 1.8, 80);
       // blast at 1.5
       k.beam({ pos: G, height: 5, r: [1.2, 0.6], intensity: 0.5, t0: 1.5, dur: 1.3 });
-      k.orb({ kind: 'void', r: [0.3, 1.4], pos: [3, 1, 0], intensity: 0.5, t0: 1.5, dur: 1.3 });
-      k.ring({ t0: 1.5, dur: 0.8, r: [0.2, 5], normal: 'up', pos: [3, 0.02, 0] });
-      k.ring({ r: [0.3, 3.2], normal: 'cam', pos: [3, 1, 0], t0: 1.5, dur: 0.45, intensity: 1.8 });
-      k.sparks([3, 0.5, 0], 1.5, 60);
-      k.smoke({ count: 50, shape: 'disc', radius: 1, pos: [3, 0.05, 0], radial: 1, speed: [1, 3], delay: 1.5, emit: 0.001, t0: 1.5 });
+      k.orb({ kind: 'void', r: [0.3, 1.4], pos: [X0, 1, 0], intensity: 0.5, t0: 1.5, dur: 1.3 });
+      k.ring({ t0: 1.5, dur: 0.8, r: [0.2, 5], normal: 'up', pos: [X0, 0.02, 0] });
+      k.ring({ r: [0.3, 3.2], normal: 'cam', pos: [X0, 1, 0], t0: 1.5, dur: 0.45, intensity: 1.8 });
+      k.sparks([X0, 0.5, 0], 1.5, 60);
+      k.smoke({ count: 50, shape: 'disc', radius: 1, pos: [X0, 0.05, 0], radial: 1, speed: [1, 3], delay: 1.5, emit: 0.001, t0: 1.5 });
       k.decal({ kind: 'scorch', r: [1.2, 1.6], pos: G, t0: 1.5, dur: 1.3 });
       if (k.g >= 2) for (const p of PENT) k.beam({ pos: p, height: 1.5, r: [0.1, 0.1], t0: 1.3, dur: 1.5 });
       if (k.g === 3) {
         // second blast at 1.9 at 0.6 strength
-        k.sparks([3, 0.5, 0], 1.9, 48);
-        k.smoke({ count: 30, shape: 'disc', radius: 1, pos: [3, 0.05, 0], radial: 1, speed: [1, 3], delay: 1.9, emit: 0.001, t0: 1.9 });
-        k.ring({ t0: 1.9, dur: 0.5, r: [0.2, 3], normal: 'cam', pos: [3, 1, 0] });
+        k.sparks([X0, 0.5, 0], 1.9, 48);
+        k.smoke({ count: 30, shape: 'disc', radius: 1, pos: [X0, 0.05, 0], radial: 1, speed: [1, 3], delay: 1.9, emit: 0.001, t0: 1.9 });
+        k.ring({ t0: 1.9, dur: 0.5, r: [0.2, 3], normal: 'cam', pos: [X0, 1, 0] });
       }
-      k.extras([3, 1, 0], 1.5);
+      k.extras([X0, 1, 0], 1.5);
     } }),
 ];
