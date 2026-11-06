@@ -4,7 +4,6 @@ import { kit, SKILL, meta, act, sm, clamp, TAU, POSES, metal, addMat, PLASMA } f
 import { bladeTable, sweepSurface, contact } from './melee.js';
 
 const m = meta('plasma', 'tech');
-const C = [1.62, 1.2, 0.1], T = [3.8, 1.2, 0];
 /** T-MEL contact burst with n sparks (n + 2 particles) */
 const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n, ...o });
 const VAPOR = [[0, '#b7bcbf', 0], [0.15, '#b0b6b9', 0.55], [1, '#7a848b', 0]]; // kit VAPOR darkened to <= #b8c0c8 (V5 vapor exception)
@@ -19,10 +18,10 @@ const seg = (fx, k, y, dir) => {
 export default [
   SKILL('plasma/arc-torch', 'Arc torch', m(['fire', 'plasma'], 'melee-sweep', 0.3, 6, 2, 'arc'), 1.4, {
     view: 'side', sky: 'dark',
-    act: act('sideslash', 0.05, 1.85, { weapon: 'sword' }),
+    act: act('sideslash', 0.05, 1.28, { weapon: 'sword' }),
     // P3=156
     build(fx, o) {
-      const k = kit(fx, o, PLASMA), to = k.at('armR');
+      const k = kit(fx, o, PLASMA), to = k.at('armR'), C = fx.anchor('tip', 0.05); // blade tip at contact
       const A = bladeTable(fx, -0.05, 0.35, 1.0), B = bladeTable(fx, -0.05, 0.35, 1.7);
       sweepSurface(fx, A, B, { t0: -0.05, t1: 0.35, len: 0.3, n: 36, c0: k.col(0), c1: k.col(1), c2: k.col(2), intensity: 1.2 * k.b, edge: 3 });
       const hilt = new THREE.Group();
@@ -44,7 +43,7 @@ export default [
     act: act('cast', 0.2, 4, { hits: [0.2, 0.6, 1.0, 1.4].map((t) => ({ t, stop: 0.03, shake: 0.1, amp: 0.01, push: 0 })) }),
     // P3=262
     build(fx, o) {
-      const k = kit(fx, o, PLASMA), to = k.at('armR'), A = [0.6, 1.38, 0.2];
+      const k = kit(fx, o, PLASMA), to = k.at('armR'), A = fx.anchor('handR', 0.2); // cannon hand at the first hit
       const B = (t) => { const u = clamp(t / 1.4); return [3 + 0.6 * u, 0.02, -1 + 1.4 * u]; };
       const cannon = new THREE.Group();
       const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8), metal('#8a929c')); bar.rotation.z = Math.PI / 2; bar.position.x = 0.25; cannon.add(bar);
@@ -77,7 +76,7 @@ export default [
     act: act('throw', 0.7, 3.4),
     // P3=206
     build(fx, o) {
-      const k = kit(fx, o, PLASMA), A = [0.6, 1.38, 0.2], E = [3, 0.1, 0], BP = [3, 0.4, 0];
+      const k = kit(fx, o, PLASMA), A = fx.anchor('handR', 0), E = [3, 0.1, 0], BP = [3, 0.4, 0];
       const P = (t) => { const u = clamp(t / 0.6), h = 1.2 * Math.sin(Math.PI * u); return [A[0] + (E[0] - A[0]) * u, A[1] + (E[1] - A[1]) * u + h, A[2] + (E[2] - A[2]) * u]; };
       const gren = new THREE.Group();
       gren.add(new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8), metal('#5a626c')));
@@ -115,7 +114,7 @@ export default [
       for (let i = 0; i < 4; i++) { const sl = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.05, 0.7), addMat('#ff9a30', 2)); sl.position.set(0.52, 0.75 + 0.2 * i, 0); k.pop(sl, 0.05, 0.4, 2.6, 3.0, (t) => sl.material.color.copy(c0).lerp(c1, sm(0.5, 1.5, t)).multiplyScalar(2)); }
       for (let i = 0; i < 8; i++) { const sp = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 4), addMat(k.col(1), 2)); sp.position.set(0.56, 0.55 + 0.15 * i, i % 2 ? 0.46 : -0.46); k.pop(sp, 0.05 + 0.03 * i, 0.4 + 0.03 * i, 2.6, 3.0); }
       if (k.g >= 2) plate(P2);
-      k.shell({ r: [1.0, 1.0], cells: 6, pos: [0, 1.0, 0], t0: 0.2, dur: 2.6, fade: [0.2, 0.6], intensity: 0.5 });
+      k.shell({ r: [1.0, 1.0], cells: 6, pos: [0, 1, 0], t0: 0.2, dur: 2.6, fade: [0.2, 0.6], intensity: 0.5 }); // anchor-ok
       k.smoke({ ramp: VAPOR, count: 40, shape: 'point', pos: [0.55, 0.9, 0], dir: [1, 0.6, 0], spread: 0.8, speed: [0.3, 1], life: [1, 1.8], size: [0.3, 0.7], drag: 1.5, emit: 2.6 });
       k.em({ count: 30, kind: 'spark', shape: 'sphere', radius: 0.5, pos: P1, dir: [1, 0, 0], spread: 0.5, speed: [0.5, 2], life: [0.3, 0.6], size: [0.05, 0.02], stretch: 1.2, intensity: 2.5, emit: 2.8 });
       for (const t of [1.2, 2.0]) { k.sparks([0.55, 1.1, 0], t, 25); k.light({ pos: [0.6, 1.1, 0.4], t0: t, dur: 0.4, fade: [0.01, 0.3], flicker: 0, intensity: 50 }); fx.hit(t, { stop: 0.03, shake: 0.12, amp: 0.02, push: 0 }); }
@@ -123,7 +122,7 @@ export default [
         k.smoke({ ramp: VAPOR, count: 50, shape: 'point', pos: [0.55, 1.1, 0], dir: [1, 0.4, 0], speed: [1, 2], life: [1, 1.6], size: [0.3, 0.8], delay: 2.4, emit: 0.3 });
         k.ring({ t0: 2.4, dur: 0.5, r: [0.2, 1.4], normal: 'cam', pos: [0.55, 1.1, 0] });
       }
-      k.extras([0, 1.1, 0], 0.3);
+      k.extras(fx.anchor('chest', 0, [0.02, -0.12, 0]), 0.3);
     } }),
 
   SKILL('plasma/rail-sear', 'Rail sear', m(['fire', 'plasma'], 'line-shot', 0.5, 8, 12, 'line'), 1.6, {
@@ -131,7 +130,7 @@ export default [
     act: act('cast', 0.05, 4.2),
     // P3=193
     build(fx, o) {
-      const k = kit(fx, o, PLASMA), to = k.at('armR'), A = [0.6, 1.38, 0.2];
+      const k = kit(fx, o, PLASMA), to = k.at('armR'), A = fx.anchor('handR', 0.05), T = fx.anchor('tgt'), RE = [7, T[1], 0]; // rail hand -> through target chest
       const rails = new THREE.Group();
       for (const dz of [-0.06, 0.06]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.0, 6), metal('#8a929c', k.col(1), 1.5)); r.rotation.z = Math.PI / 2; r.position.set(0.5, 0, dz); rails.add(r); }
       fx.mesh(rails, (t) => { to(rails); rails.children.forEach((r) => { r.material.emissiveIntensity = 1.5 * (1 - sm(0, 1.6, t)); }); }, { t0: -0.05, dur: 1.7 });
@@ -139,9 +138,9 @@ export default [
         const a = -0.1 + i * 0.15, s = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 4), addMat(k.col(1), 2));
         fx.mesh(s, (t) => { to(s); s.position.x += 0.1 + 0.15 * i; s.scale.setScalar(0.01 + sm(a, a + 0.08, t)); }, { t0: -0.1, dur: 1.8 });
       }
-      k.beam({ from: A, to: [7, 1.3, 0], r: [0.03, 0.03], intensity: 2.5, t0: 0, dur: 0.12 });
-      k.beam({ from: A, to: [7, 1.3, 0], r: [0.1, 0.1], intensity: 1, t0: 0, dur: 0.12 });
-      for (const x of [1.5, 2.5, 3.5]) k.ring({ t0: 0.05, dur: 0.3, r: [0.1, 0.6], normal: [1, 0, 0], pos: [x, 1.3, 0] });
+      k.beam({ from: A, to: RE, r: [0.03, 0.03], intensity: 2.5, t0: 0, dur: 0.12 });
+      k.beam({ from: A, to: RE, r: [0.1, 0.1], intensity: 1, t0: 0, dur: 0.12 });
+      for (const x of [1.5, 2.5, 3.5]) k.ring({ t0: 0.05, dur: 0.3, r: [0.1, 0.6], normal: [1, 0, 0], pos: [x, A[1] + ((T[1] - A[1]) * (x - A[0])) / (T[0] - A[0]), 0] });
       k.sparks(T, 0.12, 60);
       k.glint(T, 0.12, 1.2);
       k.smoke({ ramp: VAPOR, count: 30, shape: 'line', shapeSize: [0.5, 0, 0], follow: to, dir: [0, 1, 0], spread: 0.8, speed: [0.3, 1], life: [1, 1.6], size: [0.3, 0.7], delay: 0.05, emit: 0.8 });
@@ -155,8 +154,8 @@ export default [
     act: act('cast', 0.9, 3.4, { hits: [0.9, 1.2, 1.5, 1.8].map((t) => ({ t, stop: 0.05, shake: 0.2, amp: 0.03, push: 1 })) }),
     // P3=283
     build(fx, o) {
-      const k = kit(fx, o, PLASMA), MUZZ = [0.6, 1.6, 0.2], M = [[2.8, 0, -0.5], [2.8, 0, 0.5], [3.4, 0, -0.5], [3.4, 0, 0.5]], ARR = [0.9, 1.2, 1.5, 1.8];
-      const torso = (obj) => { fx.body.torso.getWorldPosition(obj.position); fx.worldToLocal(obj.position); };
+      const k = kit(fx, o, PLASMA), MUZZ = fx.anchor('chest', 0.2, [0, 0, 0.3]), M = [[2.8, 0, -0.5], [2.8, 0, 0.5], [3.4, 0, -0.5], [3.4, 0, 0.5]], ARR = [0.9, 1.2, 1.5, 1.8];
+      const torso = (obj) => { fx.body.point('chest', obj.position); fx.worldToLocal(obj.position); };
       const launcher = new THREE.Group();
       const box = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.4), metal('#5a626c'));
       const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 8), metal('#8a929c')); tube.rotation.x = Math.PI / 2; tube.position.z = 0.3;
@@ -189,8 +188,8 @@ export default [
     body: true, view: 'body', sky: 'dark',
     // P3=131
     build(fx, o) {
-      const k = kit(fx, o, PLASMA), RC = [-0.15, 1.3, 0];
       fx.body.setPose(POSES.idle);
+      const k = kit(fx, o, PLASMA), RC = fx.anchor('chest', 0, [-0.15, 0.05, 0]), r = (x, y, z) => [x, y - 1.3 + RC[1], z]; // back reactor; r(): P5 points relative to it
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(2.6, 3.0, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, emit: 0.6 * u, scan: 0.2 + 1.6 * ((t * 2 / 3) % 1), scanCol: k.col(1) }); });
       const reactor = new THREE.Group();
       reactor.add(new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.04, 8, 24), metal('#8a929c', k.col(1), 0.6)));
@@ -198,10 +197,10 @@ export default [
       for (let i = 0; i < 4; i++) { const a = (i * Math.PI) / 2, f = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.04), metal('#5a626c')); f.position.set(0.22 * Math.cos(a), 0, 0.22 * Math.sin(a)); f.rotation.y = -a; reactor.add(f); }
       reactor.position.set(...RC);
       fx.mesh(reactor, (t) => { reactor.rotation.y = (TAU * t) / 1.5; }, { t0: -0.1, dur: 3.0 });
-      for (const z of [0.25, -0.25]) k.smoke({ ramp: VAPOR, count: 30, shape: 'point', pos: [-0.3, 1.1, z], dir: [-1, 0.5, 0], spread: 0.6, speed: [0.3, 1], life: [1, 1.6], size: [0.3, 0.6], drag: 1.5, emit: 2.8 });
+      for (const z of [0.25, -0.25]) k.smoke({ ramp: VAPOR, count: 30, shape: 'point', pos: r(-0.3, 1.1, z), dir: [-1, 0.5, 0], spread: 0.6, speed: [0.3, 1], life: [1, 1.6], size: [0.3, 0.6], drag: 1.5, emit: 2.8 });
       k.em({ count: 30, kind: 'spark', shape: 'sphere', radius: 0.2, pos: RC, dir: [-1, 0, 0], spread: 0.8, speed: [0.5, 1.5], life: [0.3, 0.6], size: [0.05, 0.02], stretch: 1.2, intensity: 2.5, emit: 2.8 });
-      k.bolt({ from: [-0.4, 1.25, 0.2], to: [-0.22, 1.42, 0.12], jag: 0.04, width: 0.015, rate: 10, t0: 0, dur: 3.0 });
-      k.bolt({ from: [-0.4, 1.35, -0.2], to: [-0.22, 1.2, -0.12], jag: 0.04, width: 0.015, rate: 10, t0: 0, dur: 3.0 });
+      k.bolt({ from: r(-0.4, 1.25, 0.2), to: r(-0.22, 1.42, 0.12), jag: 0.04, width: 0.015, rate: 10, t0: 0, dur: 3.0 });
+      k.bolt({ from: r(-0.4, 1.35, -0.2), to: r(-0.22, 1.2, -0.12), jag: 0.04, width: 0.015, rate: 10, t0: 0, dur: 3.0 });
       if (k.g >= 2) {
         for (let i = 0; i < 8; i++) { const a = (i * TAU) / 8, h = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 4), addMat(k.col(1), 2)); h.position.set(0.5 * Math.cos(a), 0.05, 0.5 * Math.sin(a)); fx.mesh(h, () => {}, { t0: 0, dur: 3.0 }); }
       }
@@ -217,7 +216,7 @@ export default [
     act: act('castup', 0.05, 2.6),
     // P3=202
     build(fx, o) {
-      const k = kit(fx, o, PLASMA), O1 = [0, 1, 0];
+      const k = kit(fx, o, PLASMA), O1 = [0, 1, 0]; // anchor-ok
       k.gather(O1, 0, 0.5, 1.2, 60);
       seg(fx, k, 1, 1);
       k.ring({ t0: 0, dur: 0.6, r: [0.2, 4], normal: 'up', pos: [0, 0.02, 0] });

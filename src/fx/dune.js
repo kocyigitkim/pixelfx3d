@@ -50,10 +50,10 @@ export default [
         k.ribbon({ points: (t) => Array.from({ length: 9 }, (_, j) => [0.6 + 0.08 * Math.sin((TAU * 1.5 * j) / 8 + 4 * t), 0.2 + (1.8 * j) / 8, z]), n: 8, width: 0.03, intensity: 0.4, t0: 0, dur: 2.6 });
       }
       k.smoke({ count: 40, ramp: SAND, shape: 'disc', radius: 1.2, pos: [0, 0.1, 0], dir: [0, 1, 0], radial: 1, speed: [0.2, 0.6], life: [1.5, 2.5], size: [0.6, 1.2], emit: 2.6 }); // 40
-      k.em({ count: 20, kind: 'glint', shape: 'sphere', radius: 1.2, pos: [0, 1, 0], dir: [0, 1, 0], spread: 1, speed: [0.1, 0.4], life: [0.3, 0.6], size: [0.1, 0.05], intensity: 2.5, emit: 2.6 }); // 20
+      k.em({ count: 20, kind: 'glint', shape: 'sphere', radius: 1.2, pos: [0, 1, 0], dir: [0, 1, 0], spread: 1, speed: [0.1, 0.4], life: [0.3, 0.6], size: [0.1, 0.05], intensity: 2.5, emit: 2.6 }); // 20 // anchor-ok
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: 2.6, fade: [0.1, 0.6], intensity: 30 });
       if (k.g === 3) fx.on((t) => { const b = fx.body; const q = t < 1.0 ? sm(0.6, 1.0, t) : 1 - sm(1.2, 1.6, t); b.position.z = t < 1.1 ? 0 : 1.6; b.set({ dissolve: q < 0.002 ? -1 : q, dDir: -1, edge: k.col(1), edgeW: 0.09, edgeInt: 4 }); });
-      k.extras([0, 1.1, 0], 0.3);
+      k.extras(fx.anchor('chest', 0, [-0.05, -0.09, 0]), 0.3);
     } }),
 
   SKILL('dune/dust-veil', 'Dust veil', m(['earth', 'air', 'dune'], 'cloud-block', 0.4, 18, 6, 'circle'), 3.2, {
@@ -62,16 +62,16 @@ export default [
     // P3=431
     build(fx, o) {
       const k = kit(fx, o, DUNE);
-      const A = [0.6, 1.38, 0.2], G = [3, 0, 0];
+      const A = fx.anchor('handR', 0), G = [3, 0, 0];
       const P = (t) => { const u = clamp(t / 0.4); return [A[0] + (G[0] - A[0]) * u, A[1] + (G[1] - A[1]) * u + 1.0 * Math.sin(Math.PI * u), A[2] * (1 - u)]; };
       k.trail({ path: P, t0: 0, dur: 0.45, len: 0.3, width: 0.14 });
-      k.smoke({ count: 200, ramp: SAND, shape: 'sphere', radius: 1.6, pos: [3, 1, 0], dir: [0, 1, 0], spread: 0.3, speed: [0.05, 0.2], life: [2, 3], size: [1, 3], emit: 1 }); // 200
+      k.smoke({ count: 200, ramp: SAND, shape: 'sphere', radius: 1.6, pos: [3, 1, 0], dir: [0, 1, 0], spread: 0.3, speed: [0.05, 0.2], life: [2, 3], size: [1, 3], emit: 1 }); // 200 // anchor-ok
       k.smoke({ count: 60, ramp: SAND, shape: 'ring', radius: 1, pos: [3, 0.05, 0], dir: [0, 1, 0], radial: 0.5, speed: [0.5, 1.5], life: [2, 3], size: [1, 2], emit: 1.5 }); // 60
-      k.em({ count: 40, kind: 'streak', shape: 'sphere', radius: 1.6, pos: [3, 1, 0], dir: [1, 0, 0], spread: 0.5, speed: [1, 2], life: [0.8, 1.4], size: [0.05, 0.02], stretch: 1.5, intensity: 0.8, emit: 1.2 }); // 40
+      k.em({ count: 40, kind: 'streak', shape: 'sphere', radius: 1.6, pos: [3, 1, 0], dir: [1, 0, 0], spread: 0.5, speed: [1, 2], life: [0.8, 1.4], size: [0.05, 0.02], stretch: 1.5, intensity: 0.8, emit: 1.2 }); // 40 // anchor-ok
       k.light({ pos: [3, 1.2, 0.8], t0: 0, dur: 3.2, fade: [0.1, 0.8], intensity: 30 });
-      if (k.g >= 2) k.em({ count: 60, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'sphere', radius: 1.4, pos: [3, 1, 0], dir: [0, 1, 0], swirl: 3, turb: [0.5, 0.5], speed: [0.3, 1], life: [1.5, 2.5], size: [0.2, 0.4], emit: 1.5 }); // 60
-      if (k.g === 3) k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 1.8, pos: [3, 1.2, 0], dir: [0, 1, 0], spread: 1, speed: [0.1, 0.6], life: [0.4, 0.8], size: [0.1, 0.05], intensity: 1.5, delay: 0.5, emit: 2 }); // 30
-      k.extras([3, 1, 0], 0.4);
+      if (k.g >= 2) k.em({ count: 60, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'sphere', radius: 1.4, pos: [3, 1, 0], dir: [0, 1, 0], swirl: 3, turb: [0.5, 0.5], speed: [0.3, 1], life: [1.5, 2.5], size: [0.2, 0.4], emit: 1.5 }); // 60 // anchor-ok
+      if (k.g === 3) k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 1.8, pos: [3, 1.2, 0], dir: [0, 1, 0], spread: 1, speed: [0.1, 0.6], life: [0.4, 0.8], size: [0.1, 0.05], intensity: 1.5, delay: 0.5, emit: 2 }); // 30 // anchor-ok
+      k.extras(fx.anchor('tgt', 0, [0, -0.1, 0]), 0.4);
     } }),
 
   SKILL('dune/glass-storm', 'Glass storm', m(['earth', 'air', 'dune'], 'transform-volley', 0.6, 14, 7, 'cone'), 2.8, {
@@ -80,7 +80,7 @@ export default [
     // P3=422
     build(fx, o) {
       const k = kit(fx, o, DUNE);
-      const TG = [3.6, 1.2, 0];
+      const TG = fx.anchor('tgt', 0, [0, 0.1, 0]);
       k.em({ count: 120, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'point', pos: [1, 1, 0], dir: [1, 0, 0], spread: 0.2, speed: [3, 5], life: [0.6, 1.2], size: [0.2, 0.4], emit: 1.2 }); // 120
       k.em({ count: 120, kind: 'shard', shape: 'point', pos: [1.5, 1.2, 0], dir: [1, 0, 0], spread: 0.2, speed: [3, 5], life: [0.5, 1], size: [0.08, 0.04], intensity: 1.5, delay: 0.4, emit: 0.8 }); // 120
       k.em({ count: 40, kind: 'glint', shape: 'sphere', radius: 0.4, pos: [2, 1.2, 0], dir: [1, 0, 0], speed: [1, 3], life: [0.3, 0.6], size: [0.1, 0.05], intensity: 2.5, delay: 0.2, emit: 1.2 }); // 40
@@ -111,12 +111,12 @@ export default [
       k.em({ count: 30, kind: 'rock', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.3, pos: [3, 0.2, 0], dir: [0, 1, 0], spread: 1, speed: [2, 4], life: [1, 1.6], gravity: [0, -10, 0], size: [0.15, 0.1], bounce: 0.3, rot: 4, delay: 0.3, emit: 0.8 }); // 30
       k.ribbon({ points: (t) => { const x = X(t); return [[x - 1, 0.2, 0], [x, 0.9, 0], [x + 0.4, 0.3, 0]]; }, n: 2, width: 0.12, head: () => 1.001, fade: [0.05, 0.3], t0: 0, dur: 1.4 });
       k.ring({ t0: 0.9, dur: 0.6, r: [0.2, 2.5], normal: 'up', pos: [4, 0.02, 0] });
-      ct(fx, k, [4, 1.2, 0], 1.0, 30, { lightI: 0 }); // 32
+      ct(fx, k, fx.anchor('tgt', 0, [0, 0.1, 0]), 1.0, 30, { lightI: 0 }); // 32
       k.light({ pos: [2.5, 1, 0.8], t0: 0, dur: 3, fade: [0.1, 0.6], intensity: 30 });
       if (k.g >= 2) k.em({ count: 100, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'line', shapeSize: [1.6, 0, 0], rot3: [0, Math.PI / 2, 0], pos: [0.5, 0.3, 0], dir: [0.5, 1, 0], speed: [1.5, 3], life: [1, 1.8], size: [0.3, 0.6], delay: 0.2, emit: 1.4, follow: (mm, ta, t) => mm.position.set(X(t) - 0.3, 0.3, 0) }); // 100
       if (k.g === 3) {
         k.em({ count: 60, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'sphere', radius: 0.6, pos: [4, 0.3, 0], dir: [1, 1, 0], speed: [2, 4], life: [1, 1.8], size: [0.4, 0.8], delay: 1.0, emit: 0.001 }); // 60
       }
-      k.extras([4, 1, 0], 1.0);
+      k.extras(fx.anchor('tgt', 0, [0, -0.1, 0]), 1.0);
     } }),
 ];

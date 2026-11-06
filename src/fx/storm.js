@@ -14,24 +14,24 @@ export default [
     act: { kind: 'none', target: [3.3, 0, 0], windup: 0.5, keys: [[-0.5, 'guard'], [-0.15, 'dashLow'], [0, 'lunge', 'snap'], [0.3, 'lunge'], [0.9, 'guard']], hits: hits([0.02]) },
     // P3=204
     build(fx, o) {
-      const k = kit(fx, o, STORM), T0 = -0.15, X0 = 0, X1 = 3.0;
+      const k = kit(fx, o, STORM), T0 = -0.15, X0 = 0, X1 = 3.0, C = fx.anchor('handR', 0.02); C[0] += X1; // lunge hand + dash offset
       const X = (t) => (t < T0 ? X0 : t < 0 ? X0 + (X1 - X0) * sm(T0, 0, t) : X1);
       fx.on((t) => { fx.body.position.x = X(t); });
       for (const y of [0.5, 0.8, 1.1, 1.4]) k.ribbon({ points: (t) => { const x = X(clamp(t, T0, 0)); return [[x - 1.4, y, 0], [x - 0.6, y, 0], [x, y, 0]]; }, n: 2, head: () => 1.001, width: 0.025, fade: [0.03, 0.12], t0: T0, dur: 1.3 });
       k.smoke({ kind: 'dust', ramp: DUST, count: 30, shape: 'line', shapeSize: [1.5, 0, 0], pos: [1.5, 0.05, 0], dir: [-1, 0.2, 0], spread: 0.6, speed: [0.5, 1.5], life: [0.5, 0.9], size: [0.15, 0.4], delay: T0, emit: 0.3 });
       k.ghost('dashLow', [1.0, 0, 0], -0.1, 0.45, 0.5);
       k.ghost('dashLow', [2.0, 0, 0], 0.0, 0.4, 0.4);
-      k.bolt({ t0: -0.05, dur: 0.4, from: [0, 1, 0], to: [3, 1, 0], jag: 0.15, branches: 4, branchLen: 0.3, width: 0.04, rate: 20, flicker: 0.4, intensity: 3 });
+      k.bolt({ t0: -0.05, dur: 0.4, from: [0, 1, 0], to: [3, 1, 0], jag: 0.15, branches: 4, branchLen: 0.3, width: 0.04, rate: 20, flicker: 0.4, intensity: 3 }); // anchor-ok
       k.em({ count: 50, kind: 'spark', shape: 'line', shapeSize: [1.5, 0, 0], pos: [1.5, 0.9, 0], dir: [0, 1, 0], spread: 1.2, speed: [1, 3], life: [0.2, 0.5], gravity: [0, -6, 0], size: [0.06, 0.02], stretch: 1.5, intensity: 3, delay: 0, emit: 0.4 });
       for (const x of [0.8, 1.6, 2.4]) k.decal({ kind: 'glow', r: [0.6, 0.6], pos: [x, 0, 0], t0: 0, dur: 1.2 });
-      ct(fx, k, [X1 + 0.4, 1.2, 0.1], 0.02, 40, { lightI: 0 });
-      k.ring({ t0: 0, dur: 0.5, r: [0.2, 2.2], normal: 'cam', pos: [X1 + 0.4, 1.2, 0] });
+      ct(fx, k, C, 0.02, 40, { lightI: 0 });
+      k.ring({ t0: 0, dur: 0.5, r: [0.2, 2.2], normal: 'cam', pos: C });
       if (k.g >= 2) k.bolt({ t0: 0, dur: 0.5, from: [0, 0.2, 0], to: [3, 0.2, 0], jag: 0.2, branches: 2, branchLen: 0.3, width: 0.035, rate: 20, flicker: 0.4, intensity: 2.5 });
       if (k.g === 3) {
         k.em({ count: 40, kind: 'spark', shape: 'line', shapeSize: [1.5, 0, 0], pos: [1.5, 0.2, 0], dir: [0, 1, 0], spread: 0.3, speed: [0.2, 1], life: [0.2, 0.4], size: [0.05, 0.02], stretch: 1.2, intensity: 3, delay: 0.1, emit: 0.3 });
         k.ring({ t0: 0.1, dur: 0.5, r: [0.2, 1.6], normal: 'up', pos: [1.5, 0.05, 0] });
       }
-      k.extras([X1, 1.2, 0], 0);
+      k.extras(C, 0);
     } }),
 
   SKILL('storm/static-field', 'Static field', m(['fire', 'air', 'storm'], 'ground-area', 0.6, 14, 6, 'circle'), 3.0, {
@@ -49,13 +49,13 @@ export default [
       k.em({ count: 40, kind: 'glint', shape: 'disc', radius: 1.2, pos: [0, 0.2, 0], size: [0.12, 0.04], life: [0.15, 0.3], intensity: 3, emit: 2.4 });
       k.light({ pos: [0, 1.4, 0.6], t0: 0, dur: 3, fade: [0.1, 0.6], flicker: 0.5, intensity: 60 });
       k.ring({ t0: 0, dur: 0.6, r: [0.2, 2], normal: 'up', pos: [0, 0.03, 0] });
-      k.gather([0, 1, 0], 0, 0.8, 1.4, 30);
-      if (k.g >= 2) for (let i = 0; i < 3; i++) k.bolt({ t0: 0.6 + 0.4 * i, dur: 1.8, from: [0.5 * i - 0.5, 0.25, 0.4 * (i - 1)], to: [3, 1, 0], jag: 0.2, branches: 1, branchLen: 0.25, width: 0.03, rate: 14, flicker: 0.5, intensity: 2.5 });
+      k.gather([0, 1, 0], 0, 0.8, 1.4, 30); // anchor-ok
+      if (k.g >= 2) for (let i = 0; i < 3; i++) k.bolt({ t0: 0.6 + 0.4 * i, dur: 1.8, from: [0.5 * i - 0.5, 0.25, 0.4 * (i - 1)], to: fx.anchor('tgt', 0, [0, -0.1, 0]), jag: 0.2, branches: 1, branchLen: 0.25, width: 0.03, rate: 14, flicker: 0.5, intensity: 2.5 });
       if (k.g === 3) {
         k.bolt({ t0: 2.6, dur: 0.4, from: [0, 8, 0], to: [0, 0.2, 0], jag: 0.25, branches: 3, branchLen: 0.5, width: 0.1, rate: 25, flicker: 0.3, intensity: 4 });
-        k.ring({ t0: 2.6, dur: 0.5, r: [0.2, 3], normal: 'cam', pos: [0, 1, 0] });
+        k.ring({ t0: 2.6, dur: 0.5, r: [0.2, 3], normal: 'cam', pos: [0, 1, 0] }); // anchor-ok
       }
-      k.extras([0, 1, 0], 0.5);
+      k.extras([0, 1, 0], 0.5); // anchor-ok
     } }),
 
   SKILL('storm/skybolt-call', 'Skybolt call', m(['fire', 'air', 'storm'], 'delayed-strikes', 0.6, 16, 8, 'circle'), 3.0, {
@@ -124,19 +124,19 @@ export default [
       const k = kit(fx, o, STORM), D = 3.0;
       fx.body.setPose(POSES.idle);
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(D - 0.6, D, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u }); });
-      k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
+      k.gather([0, 1, 0], 0, 0.3, 1.2, 30); // anchor-ok
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
       k.smoke({ count: 60, shape: 'ring', radius: 0.35, pos: [0, 2.15, 0], dir: [0, 1, 0], radial: 0.3, speed: [0.2, 0.6], swirl: 2, life: [1.5, 2.5], size: [0.5, 0.9], ramp: N('#7a8290', '#646c7a', '#2a2e36'), emit: 2.6 });
       for (let i = 0; i < 3; i++) { const a = (i * TAU) / 3 + 0.5; k.bolt({ t0: 0, dur: D, from: [0, 2.25, 0], to: [0.4 * Math.cos(a), 1.7, 0.4 * Math.sin(a)], jag: 0.15, branches: 1, branchLen: 0.2, width: 0.025, rate: 8, flicker: 0.5, intensity: 2.5 }); }
-      k.em({ count: 40, kind: 'spark', shape: 'ring', radius: 0.45, pos: [0, 1.9, 0], dir: [0, 1, 0], spread: 0.6, speed: [0.3, 1], life: [0.3, 0.6], size: [0.05, 0.02], stretch: 1.5, intensity: 3, emit: 2.6 });
+      k.em({ count: 40, kind: 'spark', shape: 'ring', radius: 0.45, pos: [0, 1.9, 0], dir: [0, 1, 0], spread: 0.6, speed: [0.3, 1], life: [0.3, 0.6], size: [0.05, 0.02], stretch: 1.5, intensity: 3, emit: 2.6 }); // anchor-ok
       k.ring({ t0: 0, dur: 1.4, r: [0.4, 1.2], normal: 'up', pos: [0, 2.1, 0] });
-      k.em({ count: 20, kind: 'glint', shape: 'ring', radius: 0.4, pos: [0, 2.0, 0], size: [0.12, 0.04], life: [0.15, 0.3], intensity: 3, emit: 2.6 });
+      k.em({ count: 20, kind: 'glint', shape: 'ring', radius: 0.4, pos: [0, 2.0, 0], size: [0.12, 0.04], life: [0.15, 0.3], intensity: 3, emit: 2.6 }); // anchor-ok
       k.light({ pos: [0, 2.1, 0.4], t0: 0, dur: D, fade: [0.1, 0.5], flicker: 0.3, intensity: 50 });
-      if (k.g >= 2) k.em({ count: 40, kind: 'drop', shape: 'disc', radius: 0.4, pos: [0, 2.0, 0], dir: [0, -1, 0], spread: 0.1, speed: [0.5, 1.2], gravity: [0, -6, 0], life: [0.6, 1], size: [0.05, 0.03], intensity: 1, emit: 2.6 });
+      if (k.g >= 2) k.em({ count: 40, kind: 'drop', shape: 'disc', radius: 0.4, pos: [0, 2.0, 0], dir: [0, -1, 0], spread: 0.1, speed: [0.5, 1.2], gravity: [0, -6, 0], life: [0.6, 1], size: [0.05, 0.03], intensity: 1, emit: 2.6 }); // anchor-ok
       if (k.g === 3) {
         k.bolt({ t0: 2.3, dur: 0.4, from: [0, 2.3, 0], to: [0, 0.1, 0], jag: 0.25, branches: 2, branchLen: 0.4, width: 0.08, rate: 20, flicker: 0.4, intensity: 4 });
         k.ring({ t0: 2.4, dur: 0.5, r: [0.2, 2.4], normal: 'up', pos: [0, 0.03, 0] });
       }
-      k.extras([0, 1.1, 0], 0.3);
+      k.extras(fx.anchor('chest', 0, [0, -0.15, 0]), 0.3);
     } }),
 ];

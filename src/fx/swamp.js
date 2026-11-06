@@ -5,7 +5,6 @@ import { bladeTable, contact } from './melee.js';
 
 const m = meta('swamp', 'derived');
 const G = [3, 0, 0];     // ground target
-const T = [2.2, 1.35, 0.1]; // whip tip
 /** T-MEL contact burst with n sparks (n + 2 particles) */
 const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(1), cold: k.col(2), light: k.col(1), glintCol: k.col(1), sparks: n, ...o });
 /** thin reed (cylinder) that pops up at (x, z) */
@@ -19,7 +18,7 @@ export default [
     // P3=340
     build(fx, o) {
       const k = kit(fx, o, SWAMP);
-      const A = [0.6, 1.38, 0.2];
+      const A = fx.anchor('handR', 0);
       const P = (t) => { const u = clamp(t / 0.6); return [A[0] + (G[0] - A[0]) * u, A[1] + (G[1] - A[1]) * u + 1.2 * Math.sin(Math.PI * u), A[2] * (1 - u)]; };
       const fol = (mm, ta, t) => mm.position.set(...P(t));
       k.trail({ path: P, t0: 0, dur: 0.65, len: 0.3, width: 0.12 });
@@ -46,7 +45,7 @@ export default [
     act: { kind: 'throw', weapon: 'whip', target: [2.5, 0, 0], windup: 0.45, hits: [{ t: 0, stop: 0.07, shake: 0.12, amp: 0.025, push: 1 }] },
     // P3=250
     build(fx, o) {
-      const k = kit(fx, o, SWAMP), N = 28;
+      const k = kit(fx, o, SWAMP), N = 28, T = fx.anchor('tgt', 0, [-0.3, 0, 0.1]); // whip tip lands on target chest
       const Hd = bladeTable(fx, -0.45, 0.6, 0.25);
       const pts = (t) => {
         const h = Hd(t), e = 0.3 + 0.7 * sm(-0.2, 0, t), ar = 1 - sm(-0.2, 0, t), after = sm(0.02, 0.4, t), out = [];
@@ -82,13 +81,13 @@ export default [
       k.smoke({ count: 80, ramp: MUD.map((s, i) => (i === 1 ? [s[0], s[1], 0.6] : s)), shape: 'disc', radius: 1.6, pos: [2.5, 0.3, 0], dir: [0, 1, 0], speed: [0.2, 0.6], life: [1.5, 2.5], size: [0.6, 1.4], emit: 3 }); // 80
       k.decal({ kind: 'scorch', r: [0.6, 1], pos: [2.5, 0, 0], t0: 0, dur: 3.2 });
       k.em({ count: 40, kind: 'drop', shape: 'sphere', radius: 0.3, pos: [4, 0.4, 0], dir: [1, 0.2, 0], spread: 0.6, speed: [1, 3], life: [0.4, 0.8], size: [0.1, 0.05], gravity: [0, -9, 0], delay: 1.2, emit: 0.001 }); // 40
-      ct(fx, k, [4, 1.2, 0], 1.4, 30, { lightI: 0 }); // 32
+      ct(fx, k, fx.anchor('tgt', 0, [0, 0.1, 0]), 1.4, 30, { lightI: 0 }); // 32
       k.ribbon({ points: (t) => { const x = CR(t)[0]; return [[x - 0.3, 0.15, 0], [x, 0.7, 0], [x + 0.3, 0.15, 0]]; }, n: 2, width: 0.35, intensity: 1.2, head: () => 1.001, fade: [0.05, 0.3], t0: 0, dur: 3.2 });
       k.em({ count: 50, kind: 'glint', shape: 'box', shapeSize: [0.4, 0.4, 2.2], dir: [0, 1, 0], speed: [0.3, 0.8], life: [0.6, 1.0], size: [0.08, 0.03], intensity: 1.5, delay: 0, emit: 1.6, t0: -0.02, follow: (m, a, t) => m.position.set(CR(t)[0], 0.4, 0) });
       k.light({ pos: [2.5, 1, 0.8], t0: 0, dur: 3.2, fade: [0.1, 0.6], intensity: 40 });
       if (k.g >= 2) { const m2 = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 2, 16, 1, false, 0, Math.PI), metal('#2c3016')); m2.rotation.x = Math.PI / 2; m2.material.roughness = 0.9; m2.material.metalness = 0; fx.mesh(m2, (t) => { const u = sm(0.8, 2.4, t); m2.position.set(0.4 + 3.6 * u, 0.4, -0.5); m2.visible = u > 0.01; }, { t0: 0.8, dur: 2.4 }); }
       if (k.g === 3) k.em({ count: 30, kind: 'glint', shape: 'disc', radius: 1.5, pos: [3, 0.5, 0], dir: [0, 1, 0], speed: [0.2, 0.8], life: [0.4, 0.8], size: [0.12, 0.04], intensity: 1.5, delay: 1.4, emit: 1.5 }); // 30
-      k.extras([4, 1.2, 0], 1.4);
+      k.extras(fx.anchor('tgt', 0, [0, 0.1, 0]), 1.4);
     } }),
 
   SKILL('swamp/reed-snare', 'Reed snare', m(['water', 'earth', 'swamp'], 'bind', 0.5, 12, 6, 'point'), 2.8, {
