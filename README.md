@@ -90,7 +90,7 @@ fire.forEach(register);
 Bundlers resolve `three` and `three/addons/*`. Only plain browsers need an import map. `three` (>= 0.160) is a peer dependency; `@types/three` is needed for the types.
 
 License: MIT, see NOTICE.md for the catalog credits (patch-gg/pixelfx, Hugo Duprez) and three.js.
-Character models: KayKit Adventurers / Skeletons by Kay Lousberg (CC0 1.0), see NOTICE.md.
+Character models: Quaternius Universal Base Characters, Modular Character Outfits – Fantasy and Universal Animation Library 1 & 2 (CC0 1.0), built by tools/build-chars.mjs, see NOTICE.md.
 
 ## layout
 ```

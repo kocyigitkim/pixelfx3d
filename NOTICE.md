@@ -10,12 +10,13 @@ No source, images or sprite sheets were copied from pixelfx.
 
 ## Character models
 
-`assets/models/` contains models by **Kay Lousberg** (https://kaylousberg.com), released under **CC0 1.0** (public domain):
+`assets/models/` contains characters and animations by **Quaternius** (https://quaternius.com), released under **CC0 1.0** (public domain):
 
-- Knight and Mage from **KayKit Adventurers 1.0** (https://kaylousberg.itch.io/kaykit-adventurers)
-- Skeleton_Warrior from **KayKit Skeletons 1.0** (https://kaylousberg.itch.io/kaykit-skeletons)
+- **Universal Base Characters** (heads, eyes, eyebrows, Hair_SimpleParted)
+- **Modular Character Outfits – Fantasy** (Male_Ranger, Female_Ranger, Male_Peasant)
+- **Universal Animation Library** 1 & 2 (animation clips)
 
-The files were stripped by `tools/strip-glb.mjs`: Knight keeps 25 animation clips (shared with the other two by bone name), Mage and Skeleton_Warrior keep none.
+The files are built by `tools/build-chars.mjs` (outfit + head cut from the base character, trimmed attributes, JPEG textures in `assets/models/tex/`).
 
 ## Runtime dependency
 
