@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { kit, SKILL, meta, act, sm, clamp, TAU, POSES, rock, addMat, DUST, FIRE, FROST, STORM, ARCANE, VOID } from './_skill.js';
 
 const m = meta('mage', 'class');
-const O = [0, 0, 0], A = [0.6, 1.38, 0.2]; // cast hand
+const O = [0, 0, 0];
 const lerp3 = (p, q, u) => p.map((v, i) => v + (q[i] - v) * u);
 const bez = (p, c, q, u) => { const k = 1 - u; return [0, 1, 2].map((i) => k * k * p[i] + 2 * k * u * c[i] + u * u * q[i]); };
 const place = (R, i, n) => { const a = (i * TAU) / n; return [R * Math.cos(a), R * Math.sin(a)]; };
@@ -17,7 +17,7 @@ export default [
     act: act('cast', 0.4, 4.4, { weapon: 'staff' }),
     // P3=433
     build(fx, o) {
-      const k = kit(fx, o, FIRE), T = 0.4, H = 0.15, B = [3.8, 1.2, 0];
+      const k = kit(fx, o, FIRE), T = 0.4, H = 0.15, A = fx.anchor('handR', 0), B = fx.anchor('tgt', 0, [-0.6, 0, 0]); // release hand -> in front of target chest
       const P = (t) => { const u = clamp(t / T); return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u + H * Math.sin(Math.PI * u), A[2] * (1 - u)]; };
       const fol = (mm, ta, t) => mm.position.set(...P(t));
       k.gather(O, -0.45, 0.4, 0.7, 40, k.at());
@@ -68,9 +68,9 @@ export default [
     act: act('cast', 1.8, 3.6, { weapon: 'staff' }),
     // P3=141
     build(fx, o) {
-      const k = kit(fx, o, STORM), E = [3.5, 1.2, 0];
+      const k = kit(fx, o, STORM), E = fx.anchor('tgt', 0, [-0.1, 0.1, 0]);
       const J = Array.from({ length: 64 }, () => [0, 1, 2].map(() => (fx.rng() - 0.5) * 1.2));
-      const ORB = (t, ph = 0) => { const a = (TAU * 2 * Math.min(t, 1.4)) / 1.4 + ph; return lerp3([0.6 + 0.9 * Math.cos(a), 1.3, 0.2 + 0.9 * Math.sin(a)], E, sm(1.4, 1.8, t)); };
+      const ORB = (t, ph = 0) => { const a = (TAU * 2 * Math.min(t, 1.4)) / 1.4 + ph; return lerp3([0.6 + 0.9 * Math.cos(a), 1.3, 0.2 + 0.9 * Math.sin(a)], E, sm(1.4, 1.8, t)); }; // anchor-ok
       const fol = (mm, ta, t) => mm.position.set(...ORB(t));
       k.orb({ kind: 'plasma', r: 0.22, pos: ORB(0), follow: fol, t0: 0, dur: 1.8 });
       k.orb({ kind: 'energy', r: 0.34, alpha: 0.7, pos: ORB(0), follow: fol, t0: 0, dur: 1.8 });
@@ -97,7 +97,7 @@ export default [
     act: act('cast', 0.5, 4, { weapon: 'staff', hits: hits([0.62, 0.74, 0.86, 0.98], 0.4) }),
     // P3=198
     build(fx, o) {
-      const k = kit(fx, o, ARCANE), B = [3.9, 1.2, 0];
+      const k = kit(fx, o, ARCANE), A = fx.anchor('handR', 0), B = fx.anchor('tgt', 0, [-0.1, 0.1, 0]);
       const ctrl = (i) => [1.8, 1.38 + 0.6 * (i % 2 ? -1 : 1), 0.8 * ((i % 3) - 1)];
       const missile = (i) => {
         const Pi = (t) => bez(A, ctrl(i), B, clamp((t - 0.12 * i) / 0.45));
@@ -160,13 +160,13 @@ export default [
       k.decal({ kind: 'frost', r: [2.2, 2.2], pos: O, t0: 0, dur: 2.6, cells: 6 });
       k.smoke({ count: 50, shape: 'ring', radius: 1.6, pos: [0, 0.1, 0], radial: 0.2, speed: [0.3, 1], ramp: VAP, delay: 0, emit: 1.2, t0: 0 });
       k.ring({ t0: 0, dur: 0.8, r: [0.2, 2], normal: 'up', pos: O });
-      k.em({ count: 40, kind: 'flake', shape: 'ring', radius: 1.6, pos: [0, 1, 0], speed: [0.1, 0.5], life: [1, 1.6], size: [0.1, 0.05], delay: 0.2, emit: 1.5, t0: 0.2 });
+      k.em({ count: 40, kind: 'flake', shape: 'ring', radius: 1.6, pos: [0, 1, 0], speed: [0.1, 0.5], life: [1, 1.6], size: [0.1, 0.05], delay: 0.2, emit: 1.5, t0: 0.2 }); // anchor-ok
       k.light({ pos: [0, 1.2, 0.8], t0: 0, dur: 2.6, fade: [0.1, 0.6], intensity: 70 });
       k.extras([0, 0.2, 0], 0);
       if (k.g >= 2) for (let i = 0; i < 6; i++) { const [x, z] = place(0.9, i, 6), p = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 1.6, 6), ice()); p.position.set(x, 0.8, z); k.pop(p, 0.25, 0.37, 2.0, 2.5); }
       if (k.g === 3) {
         for (let i = 0; i < 8; i++) { const [x, z] = place(1.6, i, 8); k.glint([x, 1.6, z], 0.3, 1); }
-        k.ring({ t0: 0.3, dur: 0.5, r: [0.2, 2.4], normal: 'cam', pos: [0, 1.2, 0] });
+        k.ring({ t0: 0.3, dur: 0.5, r: [0.2, 2.4], normal: 'cam', pos: [0, 1.2, 0] }); // anchor-ok
       }
     } }),
 
@@ -175,7 +175,7 @@ export default [
     act: act('cast', 0.1, 4, { weapon: 'staff' }),
     // P3=265
     build(fx, o) {
-      const k = kit(fx, o, STORM), S = [2.2, 1.4, 0], E = [[4, 1.2, 0], [3.6, 1.3, 1.2], [3.6, 1.3, -1.2]], br = k.g >= 2 ? 5 : 3;
+      const k = kit(fx, o, STORM), A = fx.anchor('handR', 0), S = [2.2, 1.4, 0], E = [fx.anchor('tgt', 0, [0, 0.1, 0]), [3.6, 1.3, 1.2], [3.6, 1.3, -1.2]], br = k.g >= 2 ? 5 : 3;
       k.bolt({ from: A, to: S, width: 0.06, rate: 24, t0: 0, dur: 0.35, branches: br });
       for (const p of E) {
         k.bolt({ from: S, to: p, width: 0.06, rate: 24, t0: 0, dur: 0.35, branches: br });
@@ -196,7 +196,7 @@ export default [
     act: act('cast', null, false, { weapon: 'staff', keys: [[-0.4, 'guard'], [-0.2, 'castRelease'], [1.8, 'guard']] }),
     // P3=100
     build(fx, o) {
-      const k = kit(fx, o, ARCANE), TS = -0.05, PA = [0.3, 1, 0], PB = [3.2, 1, 0];
+      const k = kit(fx, o, ARCANE), TS = -0.05, PA = [0.3, 1, 0], PB = [3.2, 1, 0]; // anchor-ok
       fx.on((t) => {
         const b = fx.body;
         if (t < TS) { b.position.x = 0; const q = sm(TS - 0.35, TS, t); b.set({ dissolve: q < 0.002 ? -1 : q, dDir: -1, edge: k.col(1), edgeW: 0.09, edgeInt: 4 }); }
@@ -224,10 +224,10 @@ export default [
     body: true, view: 'body', sky: 'night',
     // P3=230
     build(fx, o) {
-      const k = kit(fx, o, ARCANE), C = [0, 1.1, 0], IMP = [{ t: 0.8, dir: [1, 0.3, 0] }, { t: 1.3, dir: [0.5, 0.5, 0.6] }, { t: 1.8, dir: [1, 0, -0.5] }];
       fx.body.setPose(POSES.castCharge);
+      const k = kit(fx, o, ARCANE), C = [0, 1.1, 0], IMP = [{ t: 0.8, dir: [1, 0.3, 0] }, { t: 1.3, dir: [0.5, 0.5, 0.6] }, { t: 1.8, dir: [1, 0, -0.5] }]; // anchor-ok
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(2.3, 2.6, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u }); });
-      k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
+      k.gather([0, 1, 0], 0, 0.3, 1.2, 30); // anchor-ok
       k.shell({ r: [0.2, 1.15], cells: 6, pos: C, t0: 0.3, dur: 1.9, impacts: IMP });
       for (const { t, dir } of IMP) {
         const n = Math.hypot(...dir), u = dir.map((v) => v / n), P = u.map((v, i) => C[i] + v * 1.15), S = u.map((v, i) => C[i] + v * 2.6);
@@ -239,7 +239,7 @@ export default [
       k.em({ count: 40, kind: 'soft', shape: 'sphere', radius: 1.1, pos: C, swirl: 2, speed: [0.05, 0.2], life: [1, 1.5], size: [0.05, 0.02], delay: 0.3, emit: 1.9, t0: 0.3 });
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: 2.6, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / 2.6), intensity: 40 });
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
-      k.extras([0, 1.1, 0], 0.3);
+      k.extras(C, 0.3);
       if (k.g >= 2) k.shell({ r: [1, 1], power: 4, intensity: 0.4, pos: C, t0: 0.3, dur: 1.9 });
       if (k.g === 3) {
         k.decal({ kind: 'rune', r: [1.4, 1.4], t0: 0.3, dur: 2 });
@@ -278,7 +278,7 @@ export default [
     act: act('cast', null, 4, { weapon: 'staff', keys: [[-0.5, 'guard'], [-0.25, 'castCharge'], [0, 'castRelease', 'snap'], [2, 'castRelease'], [2.5, 'guard']], hits: hits([0.1, 0.5, 0.9, 1.3, 1.7], 0.5) }),
     // P3=302
     build(fx, o) {
-      const k = kit(fx, o, FIRE), D = 2, B = [4, 1.2, 0];
+      const k = kit(fx, o, FIRE), D = 2, A = fx.anchor('handR', 0), B = fx.anchor('tgt', 0, [0, 0.1, 0]);
       k.beam({ from: A, to: B, r: [0.12, 0.16], t0: 0, dur: D, fade: [0.03, 0.2], noise: 0.6, edge: 1.4 });
       k.beam({ from: A, to: B, r: [0.05, 0.05], intensity: 2.5, t0: 0, dur: D, fade: [0.03, 0.2] });
       k.em({ count: 30, kind: 'soft', shape: 'point', pos: A, speed: [0.2, 0.8], life: [0.3, 0.6], size: [0.1, 0.03], delay: 0, emit: D, t0: 0, t1: D });

@@ -28,10 +28,10 @@ export default [
       k.trail({ path: WP, len: 0.5, width: 0.05, t0: 0.3, dur: 0.8 });
       k.em({ count: 50, kind: 'soft', shape: 'sphere', radius: 0.2, pos: [0, 0.5, 0], follow: (mm, ta, t) => mm.position.set(...WP(t)), delay: 0.3, emit: 0.9, t0: 0.3 });
       // bite at 1.1: two crossing slashes and a contact burst
-      const BITE = [3.8, 1.3, 0];
+      const BITE = fx.anchor('tgt', 0, [-0.2, 0.2, 0]);
       k.slash({ center: BITE, radius: 0.5, a0: 1, a1: -1, width: 0.08, t0: 1.05, dur: 0.2 });
       k.slash({ center: BITE, radius: 0.5, a0: -1, a1: 1, width: 0.08, t0: 1.05, dur: 0.2 });
-      ct(fx, k, [3.8, 1.2, 0], 1.1, 40, { lightI: 0 });
+      ct(fx, k, fx.anchor('tgt', 0, [-0.2, 0.1, 0]), 1.1, 40, { lightI: 0 });
       // fade out with a soft burst
       k.em({ count: 40, kind: 'soft', shape: 'sphere', radius: 0.5, pos: [3.6, 0.9, 0], speed: [0.5, 1.2], radial: 1, delay: 1.2, emit: 0.4, t0: 1.2 });
       k.extras(BITE, 1.1);
@@ -45,7 +45,7 @@ export default [
     // P3=186
     build(fx, o) {
       const k = kit(fx, o, STORM);
-      const BASE = [1.2, 0, 0.4], CR = [1.2, 3.5, 0.4], TH = [3, 1.5, 0], GP = [3.4, 0.02, -0.6];
+      const BASE = [1.2, 0, 0.4], CR = [1.2, 3.5, 0.4], TH = fx.anchor('tgtHead', 0, [0, -0.12, 0]), GP = [3.4, 0.02, -0.6]; // anchor-ok
       const totem = new THREE.Group(); totem.position.set(...BASE);
       const wood = rock('#6a4a2a');
       for (let i = 0; i < 3; i++) { const seg = new THREE.Mesh(i % 2 ? new THREE.CylinderGeometry(0.12, 0.14, 0.6, 8) : new THREE.BoxGeometry(0.28, 0.6, 0.28), wood); seg.position.y = 0.3 + i * 0.6; totem.add(seg); }
@@ -94,7 +94,7 @@ export default [
       k.em({ count: 40, kind: 'soft', shape: 'disc', radius: 0.8, pos: [3, 0.5, 0], dir: [0, 1, 0], speed: [0.2, 0.6], delay: 0, emit: 2.5, t0: 0 });
       k.smoke({ count: 20, shape: 'disc', radius: 0.6, pos: [3, 0.05, 0], ramp: DUST, delay: 0.2, emit: 0.4, t0: 0.2 });
       k.light({ pos: [3, 1, 0.6], t0: 0, dur: 2.4, fade: [0.1, 0.6], intensity: 40 });
-      k.extras([3, 1, 0], 0.4);
+      k.extras(fx.anchor('tgt', 0, [0, -0.1, 0]), 0.4);
       if (k.g >= 2) {
         const thorn = rock('#4a6a2a');
         for (let i = 0; i < 12; i++) { const a = (i * TAU) / 12, th = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.08, 5), thorn); th.position.set(3 + 0.45 * Math.cos(a), 0.3, 0.45 * Math.sin(a)); k.pop(th, 0.3 + 0.02 * i, 0.5 + 0.02 * i, 2.2, 2.5); }
@@ -122,11 +122,11 @@ export default [
         fx.mesh(f, (t) => { const u = sm(t0, t0 + 0.5, t); f.position.set(0.4 + 2.8 * u, 1.6 - 0.2 * u, 0); f.visible = t >= t0 && t < t0 + 0.9; }, { t0: -5, dur: 99 });
       };
       for (let i = 0; i < (k.g === 3 ? 5 : 3); i++) face(0.2 + 0.15 * i);
-      k.em({ count: 40, kind: 'streak', shape: 'point', pos: [0.4, 1.4, 0], dir: [1, 0, 0], spread: 0.35, speed: [4, 6], life: [0.3, 0.5], delay: 0.1, emit: 0.6, t0: 0.1 });
+      k.em({ count: 40, kind: 'streak', shape: 'point', pos: fx.anchor('head', 0.1, [0.2, 0, 0]), dir: [1, 0, 0], spread: 0.35, speed: [4, 6], life: [0.3, 0.5], delay: 0.1, emit: 0.6, t0: 0.1 });
       k.smoke({ count: 30, shape: 'disc', radius: 0.6, pos: [3.2, 0.1, 0], ramp: DUST, delay: 0.2, emit: 0.3, t0: 0.2 });
-      k.gather([0.4, 1.2, 0], 0, 0.3, 0.8, 30);
+      k.gather(fx.anchor('chest', 0, [0.3, 0, 0]), 0, 0.3, 0.8, 30);
       k.light({ pos: [1.5, 1.4, 0.8], t0: 0, dur: 2, env: (t) => Math.exp(-2 * t), intensity: 80 });
-      k.extras([3.2, 1.2, 0], 0.2);
+      k.extras(fx.anchor('tgt', 0, [0, 0.1, 0]), 0.2);
       if (k.g === 3) k.ring({ t0: 0.6, dur: 0.6, r: [0.2, 1.6], normal: 'up', pos: [3.2, 0, 0] });
     } }),
 
@@ -135,12 +135,12 @@ export default [
     act: act('castup', 2.2, 3),
     // P3=234
     build(fx, o) {
-      const k = kit(fx, o, EARTH), G0 = [1.6, 0, 0], P = [2.8, 1.2, 0];
+      const k = kit(fx, o, EARTH), G0 = [1.6, 0, 0], P = fx.anchor('tgt', 0, [-0.2, 0.1, 0]);
       const bone = new THREE.MeshStandardMaterial({ color: '#d8d0c0', roughness: 0.9 });
       const golem = new THREE.Group(); golem.position.set(...G0);
       const add = (geo, p, parent = golem) => { const mm = new THREE.Mesh(geo, bone); mm.position.set(...p); parent.add(mm); return mm; };
-      add(new THREE.BoxGeometry(0.6, 0.7, 0.4), [0, 1.1, 0]);
-      add(new THREE.BoxGeometry(0.25, 0.25, 0.25), [0, 1.6, 0]);
+      add(new THREE.BoxGeometry(0.6, 0.7, 0.4), [0, 1.1, 0]); // golem part, not actor // anchor-ok
+      add(new THREE.BoxGeometry(0.25, 0.25, 0.25), [0, 1.6, 0]); // golem part, not actor // anchor-ok
       // arms pivot at the shoulder; the right arm swings forward (+x) for the punch
       const armR = new THREE.Group(), armL = new THREE.Group();
       armR.position.set(0.4, 1.4, 0); armL.position.set(-0.4, 1.4, 0); golem.add(armR, armL);
@@ -169,7 +169,7 @@ export default [
     act: act('cast', 1.6, 3.8, { hits: [1.6, 1.7, 1.8, 1.9].map((t) => ({ t, stop: 0.03, shake: 0.15, amp: 0.02, push: 0.4 })) }),
     // P3=478
     build(fx, o) {
-      const k = kit(fx, o, FIRE), TG = [3.8, 1.2, 0];
+      const k = kit(fx, o, FIRE), TG = fx.anchor('tgt', 0, [0, 0.1, 0]);
       // spirit i orbits the caster until its dart time T, then flies to the target over .25 s
       const SP = (i, t) => { const T = 1.4 + 0.06 * i, a = (i * TAU) / 8 + 6 * Math.min(t, T), s = [0.7 * Math.cos(a), 0.9 + 0.1 * i, 0.7 * Math.sin(a)]; return lerp3(s, TG, sm(T, T + 0.25, t)); };
       for (let i = 0; i < 8; i++) {

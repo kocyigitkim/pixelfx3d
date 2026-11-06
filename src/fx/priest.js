@@ -77,18 +77,18 @@ export default [
     build(fx, o) {
       const k = kit(fx, o, RAMP);
       // T-NOV base
-      k.gather([0, 1, 0], -0.45, 0.4, 1.4, 60);
+      k.gather([0, 1, 0], -0.45, 0.4, 1.4, 60); // anchor-ok
       k.ring({ t0: 0, dur: 0.7, r: [0.2, 4.5], normal: 'up', width: [0.4, 0.08], fill: 0.08 });
-      k.ring({ t0: 0.02, dur: 0.45, r: [0.2, 2.6], normal: 'cam', pos: [0, 1, 0] });
+      k.ring({ t0: 0.02, dur: 0.45, r: [0.2, 2.6], normal: 'cam', pos: [0, 1, 0] }); // anchor-ok
       k.shell({ r: [0.3, 2.4], hemi: true, power: 2, t0: 0, dur: 0.45, fade: [0, 0.35] });
       k.em({ count: 120, kind: 'soft', shape: 'ring', radius: 0.5, pos: [0, 0.6, 0], radial: 1, speed: [4, 8], life: [0.4, 0.9], delay: 0, emit: 0.001, t0: 0 });
       k.decal({ kind: 'glow', r: [1.5, 2.5], t0: 0, dur: 1.9, fade: [0.05, 1] });
       // row layers: radial petals and dark violet smoke at the target
-      k.em({ count: 50, kind: 'petal', shape: 'ring', radius: 0.5, pos: [0, 0.8, 0], radial: 1, speed: [2, 5], life: [0.6, 1.2], delay: 0, emit: 0.3, t0: 0 });
+      k.em({ count: 50, kind: 'petal', shape: 'ring', radius: 0.5, pos: [0, 0.8, 0], radial: 1, speed: [2, 5], life: [0.6, 1.2], delay: 0, emit: 0.3, t0: 0 }); // anchor-ok
       k.smoke({ count: 30, shape: 'disc', radius: 0.3, pos: [2.4, 0.3, 0], radial: 1, speed: [0.5, 1.5], ramp: [[0, '#3a1a4a', 0], [0.15, '#2a1038', 0.55], [1, '#0a040e', 0]], delay: 0.05, emit: 0.5, t0: 0.05 });
       if (k.g >= 2) k.ring({ t0: 0.2, dur: 0.7, r: [0.2, 6], normal: 'up', ramp: [[0, '#fff2dc', 1], [1, '#fff2dc', 0]] });
       if (k.g === 3) for (let i = 0; i < 8; i++) { const a = (i * TAU) / 8, c = Math.cos(a), s = Math.sin(a); k.beam({ from: [c * 0.5, 0.1, s * 0.5], to: [c * 3, 4, s * 3], r: [0.1, 0.4], intensity: 0.08, t0: 0, dur: 2.0 }); }
-      k.extras([0, 1, 0], 0.05);
+      k.extras([0, 1, 0], 0.05); // anchor-ok
     } }),
 
   SKILL('priest/guardian-wings', 'Guardian wings', m(['holy'], 'buff', 0.5, 30, 0, 'self'), 2.8, {
@@ -108,16 +108,16 @@ export default [
         const open = sm(0.2, 0.7, t) * (1 - sm(2.3, 2.8, t)) + flap(t);
         for (const { f, side, i } of feathers) { f.rotation.set(side * (0.2 + 0.4 * open), 0, -(0.25 + 0.2 * i) * open); }
       });
-      k.em({ count: 40, kind: 'petal', shape: 'sphere', radius: 0.8, pos: [0, 1.6, 0], dir: [0, -1, 0], speed: [0.2, 0.5], life: [1.5, 2.5], delay: 0.2, emit: 2.2, t0: 0.2 });
-      k.em({ count: 60, kind: 'soft', shape: 'ring', radius: 0.6, pos: [0, 1.2, 0], swirl: 1.5, delay: 0.2, emit: 2.2, t0: 0.2 });
+      k.em({ count: 40, kind: 'petal', shape: 'sphere', radius: 0.8, pos: fx.anchor('head', 0, [-0.08, -0.13, 0]), dir: [0, -1, 0], speed: [0.2, 0.5], life: [1.5, 2.5], delay: 0.2, emit: 2.2, t0: 0.2 });
+      k.em({ count: 60, kind: 'soft', shape: 'ring', radius: 0.6, pos: fx.anchor('chest', 0, [-0.03, -0.05, 0]), swirl: 1.5, delay: 0.2, emit: 2.2, t0: 0.2 });
       if (k.g >= 2) {
         k.glint([-0.3, 2.3, 0.3], 0.6, 1);
         k.glint([-0.3, 2.3, -0.3], 0.6, 1);
         k.em({ count: 30, kind: 'soft', shape: 'sphere', radius: 0.5, pos: [-0.15, 1.5, 0], delay: 0.3, emit: 2, t0: 0.3 });
       }
       if (k.g === 3) {
-        k.ring({ t0: 1.6, dur: 0.6, r: [0.2, 1.5], normal: 'cam', pos: [0, 1.4, 0] });
-        k.em({ count: 40, kind: 'petal', shape: 'sphere', radius: 0.9, pos: [0, 1.8, 0], dir: [0, -1, 0], speed: [0.1, 0.3], delay: 1.6, emit: 1, t0: 1.6 });
+        k.ring({ t0: 1.6, dur: 0.6, r: [0.2, 1.5], normal: 'cam', pos: fx.anchor('chest', 0, [-0.03, 0.15, 0]) });
+        k.em({ count: 40, kind: 'petal', shape: 'sphere', radius: 0.9, pos: fx.anchor('head', 0, [-0.08, 0.07, 0]), dir: [0, -1, 0], speed: [0.1, 0.3], delay: 1.6, emit: 1, t0: 1.6 });
       }
     } }),
 
@@ -154,7 +154,7 @@ export default [
     build(fx, o) {
       const k = kit(fx, o, RAMP);
       fx.body.setPose(POSES.castRelease);
-      const A = [0.6, 1.38, 0.2], C = [0, 1.2, 0], L1 = [2.2, 0, 1.2], L2 = [3.4, 0, -1];
+      const A = fx.anchor('handR', 0), C = fx.anchor('chest', 0), L1 = [2.2, 0, 1.2], L2 = [3.4, 0, -1];
       const chest1 = [L1[0], 1.2, L1[2]], chest2 = [L2[0], 1.2, L2[2]];
       for (const L of [L1, L2]) {
         const f = figure(); f.position.set(...L); fx.mesh(f, () => {}, { t0: 0, dur: 2.2 });
@@ -171,10 +171,10 @@ export default [
         k.ribbon({ points: arc(chest1, chest2), n: 11, width: 0.04, t0: 0.9, dur: 0.15 });
       }
       if (k.g === 3) {
-        k.ribbon({ points: arc(chest2, [C[0], 1.2, C[2]]), n: 11, width: 0.04, t0: 1.2, dur: 0.15 });
+        k.ribbon({ points: arc(chest2, C), n: 11, width: 0.04, t0: 1.2, dur: 0.15 });
         k.em({ count: 40, kind: 'soft', shape: 'disc', radius: 0.4, pos: [0, 0.05, 0], dir: [0, 1, 0], speed: [0.3, 0.8], delay: 1.2, emit: 0.6, t0: 1.2 });
       }
-      k.extras([0, 1.1, 0], 1.2);
+      k.extras(fx.anchor('chest', 0, [-0.05, -0.09, 0]), 1.2);
     } }),
 
   SKILL('priest/sun-lance', 'Sun lance', m(['holy'], 'projectile', 0.5, 6, 9, 'point'), 1.8, {
@@ -182,7 +182,7 @@ export default [
     act: act('throw', 0.35, 4),
     // P3=323
     build(fx, o) {
-      const k = kit(fx, o, RAMP), A = [0.6, 1.38, 0.2], B = [3.8, 1.2, 0], T = 0.35, H = 0.05;
+      const k = kit(fx, o, RAMP), A = fx.anchor('handR', 0), B = fx.anchor('tgt', 0, [-0.2, 0.1, 0]), T = 0.35, H = 0.05;
       // T-PRJ path: arc from A to B over [0, T]
       const P = (t) => { const u = clamp(t / T); return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u + H * Math.sin(Math.PI * u), A[2] * (1 - u)]; };
       const fol = (mm, ta, t) => mm.position.set(...P(t));
