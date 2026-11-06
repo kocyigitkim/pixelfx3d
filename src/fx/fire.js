@@ -61,7 +61,7 @@ export default [
 
   { id: 'fire/fire-breath', name: 'Fire breath', category: 'fire', loop: true, duration: 1.5, body: true, stage: { sky: 'dusk', view: { pos: [3.2, 1.6, 4.6], target: [2.2, 1.2, 0] } },
     build(fx) {
-      const o = [0.28, 1.55, 0];
+      const o = fx.anchor('head', 0, [0.85 * fx.body.headR, -0.45 * fx.body.headR, 0]); // mouth on the face (+X)
       fx.light({ color: '#ff8a30', intensity: 25, pos: [2.2, 1.5, 0.6], flicker: 0.35, range: 12 });
       fx.emitter({ count: 70, kind: 'smoke', shape: 'point', dir: [1, 0.05, 0], spread: 0.17, speed: [4.5, 7], life: [0.55, 0.9], size: [0.2, 1.3], aspect: 1.3, ramp: fx.pal([[0, '#fff0b0', 1], [0.2, '#ffa830', 0.9], [0.6, '#d03a08', 0.5], [1, '#200', 0]]), intensity: 0.5, drag: 0.5, gravity: [0, 1.4, 0], turb: [0.8, 1.5], pos: o });
       fx.emitter({ count: 40, kind: 'spark', shape: 'point', dir: [1, 0.15, 0], spread: 0.4, speed: [3, 7], life: [0.5, 0.7], gravity: [0, -1, 0], size: [0.05, 0.02], stretch: 0.8, ramp: [[0, '#fff'], [0.4, '#ffa030'], [1, '#600', 0]], intensity: 3, turb: [0.5, 2], pos: o });
@@ -127,7 +127,7 @@ export default [
 
   { id: 'fire/flamethrower', name: 'Flamethrower', category: 'fire', loop: true, duration: 1.6, body: true, stage: { sky: 'dusk', view: { pos: [3.4, 1.4, 4.8], target: [2.4, 1.0, 0] } },
     build(fx) {
-      const o = [0.62, 1.12, 0.12];
+      const o = fx.anchor('handR', 0, [0.2, 0.03, -0.11]); // nozzle just in front of the hand (P5 offset)
       fx.light({ color: '#ff8a30', intensity: 25, pos: [2.4, 1.3, 0.8], flicker: 0.4, range: 13, rate: 14 });
       fx.emitter({ count: 110, kind: 'smoke', shape: 'point', dir: [1, 0.02, 0], spread: 0.09, speed: [6, 9], life: [0.55, 0.85], size: [0.15, 1.0], aspect: 1.5, ramp: fx.pal([[0, '#fff4c0', 1], [0.2, '#ffb838', 0.9], [0.6, '#d83a08', 0.5], [1, '#200', 0]]), intensity: 0.45, drag: 0.3, gravity: [0, 0.8, 0], turb: [0.5, 2], pos: o });
       fx.emitter({ count: 50, kind: 'soft', shape: 'point', dir: [1, 0.1, 0], spread: 0.25, speed: [4, 8], life: [0.5, 1.2], gravity: [0, -4, 0], size: [0.07, 0.03], ramp: [[0, '#fff0b0'], [0.4, '#ff8a20'], [1, '#600', 0]], intensity: 1.5, bounce: 0.2, pos: o });

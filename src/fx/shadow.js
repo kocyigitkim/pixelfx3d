@@ -93,17 +93,18 @@ export default [
   /* ===================================================================== curse */
   { id: 'shadow/curse', name: 'Curse', category: 'shadow', loop: false, duration: 3.4, body: true, stage: { sky: 'dark', bloom: 0.5, view: { pos: [2.5, 1.7, 3.6], target: [0, 1.05, 0], fov: 40 } },
     build(fx) {
+      const HY = fx.anchor('head')[1] + 0.07; // skull lands on the head (P5 1.8 = head + .07)
       const sk = skull('#a45cff', 3.5); sk.scale.setScalar(0.5); const h = halo('#8a40ff', 2.2, 1.2);
-      fx.mesh(sk, (t, pr, f, w, o) => { const a = eob((t - 0.15) / 0.5); const hold = sm(1.5, 2.1, t); o.position.set(0.05, 2.9 - a * 1.1 + Math.sin(t * 6) * 0.01 * (1 - a), 0); const s = 0.5 * (1.6 - 0.6 * a) * (1 - hold * 0.5); o.scale.setScalar(Math.max(1e-3, s) * (t < 0.15 ? 0 : 1)); o.rotation.set(0, Math.PI / 2 + Math.sin(t * 3) * 0.05, 0); sk.userData.jaw.rotation.x = 0.35 * (1 - a) + Math.sin(t * 9) * 0.04 * a; sk.userData.bone.emissiveIntensity = 0.12 + 1.4 * sm(0.6, 0.75, t) * (1 - sm(0.75, 1.3, t)); o.visible = t < 2.2 && t > 0.15; }, { dur: 99 });
-      fx.mesh(h, (t, pr, f, w, o) => { o.position.set(0.1, 1.8, 0); o.scale.setScalar(1.2 + 1.5 * sm(0.5, 0.7, t) * (1 - sm(0.7, 1.4, t))); o.material.opacity = 0.35 + 0.5 * sm(0.55, 0.7, t) * (1 - sm(0.7, 1.8, t)); }, { dur: 99 });
+      fx.mesh(sk, (t, pr, f, w, o) => { const a = eob((t - 0.15) / 0.5); const hold = sm(1.5, 2.1, t); o.position.set(0.05, 2.9 - a * (2.9 - HY) + Math.sin(t * 6) * 0.01 * (1 - a), 0); const s = 0.5 * (1.6 - 0.6 * a) * (1 - hold * 0.5); o.scale.setScalar(Math.max(1e-3, s) * (t < 0.15 ? 0 : 1)); o.rotation.set(0, Math.PI / 2 + Math.sin(t * 3) * 0.05, 0); sk.userData.jaw.rotation.x = 0.35 * (1 - a) + Math.sin(t * 9) * 0.04 * a; sk.userData.bone.emissiveIntensity = 0.12 + 1.4 * sm(0.6, 0.75, t) * (1 - sm(0.75, 1.3, t)); o.visible = t < 2.2 && t > 0.15; }, { dur: 99 });
+      fx.mesh(h, (t, pr, f, w, o) => { o.position.set(0.1, HY, 0); o.scale.setScalar(1.2 + 1.5 * sm(0.5, 0.7, t) * (1 - sm(0.7, 1.4, t))); o.material.opacity = 0.35 + 0.5 * sm(0.55, 0.7, t) * (1 - sm(0.7, 1.8, t)); }, { dur: 99 });
       fx.ring({ t0: 0.62, dur: 0.8, r: [0.2, 2.6], width: [0.3, 0.05], normal: 'up', intensity: 1.0, fill: 0, ramp: [[0, '#f0e8ff'], [0.4, '#c090ff'], [1, '#4a1a90']] });
-      fx.ring({ t0: 0.62, dur: 0.45, r: [0.1, 1.3], width: [0.2, 0.03], normal: 'cam', pos: [0.1, 1.8, 0], intensity: 1.0, ramp: [[0, '#f0e8ff'], [1, '#9a5cff']] });
+      fx.ring({ t0: 0.62, dur: 0.45, r: [0.1, 1.3], width: [0.2, 0.03], normal: 'cam', pos: [0.1, HY, 0], intensity: 1.0, ramp: [[0, '#f0e8ff'], [1, '#9a5cff']] });
       fx.shake(0.62, 0.5, 0.05);
       fx.decal({ kind: 'rune', t0: 0.5, dur: 2.7, fade: [0.5, 0.7], r: [1.5, 1.5], reveal: 0.8, glyphs: 14, poly: 5, spin: 0.2, intensity: 1.2, ramp: [[0, '#10001a'], [0.5, '#7a30d8'], [1, '#e0c0ff']] });
       fx.emitter({ count: 70, kind: 'smoke', blend: 'normal', shape: 'disc', radius: 0.4, dir: [0, 1, 0], spread: 0.5, speed: [0.3, 0.9], life: [1.4, 2.4], size: [0.4, 1.2], ramp: SMOKE(0.6), lit: 1, turb: [0.3, 0.7], delay: 0.7, emit: 1.8, pos: [0, 0.2, 0], order: -1 });
-      fx.emitter({ count: 80, kind: 'soft', shape: 'sphere', radius: 0.35, dir: [0, 1, 0], spread: 1.2, speed: [0.2, 0.9], life: [1, 2], size: [0.05, 0.01], ramp: [[0, '#e0c0ff', 1], [1, '#5a20b0', 0]], intensity: 1.5, delay: 0.8, emit: 1.8, pos: [0, 1.0, 0], turb: [0.2, 1], gravity: [0, 0.3, 0] });
-      fx.emitter({ count: 60, kind: 'rock', blend: 'normal', shape: 'sphere', radius: 0.3, dir: [0, 0.3, 0], spread: 1.5, speed: [0.2, 1.2], life: [1, 1.4], gravity: [0, -7, 0], size: [0.07, 0.04], ramp: [[0, '#2a1a3a'], [1, '#2a1a3a', 1]], lit: 1, bounce: 0.2, rot: 5, delay: 2.35, emit: 0.6, pos: [0, 1.0, 0] });
-      fx.emitter({ count: 70, kind: 'smoke', blend: 'normal', shape: 'sphere', radius: 0.35, dir: [0, 0.4, 0], spread: 1.4, speed: [0.4, 1.4], life: [1.0, 1.5], size: [0.3, 0.9], ramp: SMOKE(0.7, '#0a0412'), lit: 1, delay: 2.3, emit: 0.8, pos: [0, 0.9, 0], drag: 1 });
+      fx.emitter({ count: 80, kind: 'soft', shape: 'sphere', radius: 0.35, dir: [0, 1, 0], spread: 1.2, speed: [0.2, 0.9], life: [1, 2], size: [0.05, 0.01], ramp: [[0, '#e0c0ff', 1], [1, '#5a20b0', 0]], intensity: 1.5, delay: 0.8, emit: 1.8, pos: [0, 1.0, 0], turb: [0.2, 1], gravity: [0, 0.3, 0] }); // anchor-ok
+      fx.emitter({ count: 60, kind: 'rock', blend: 'normal', shape: 'sphere', radius: 0.3, dir: [0, 0.3, 0], spread: 1.5, speed: [0.2, 1.2], life: [1, 1.4], gravity: [0, -7, 0], size: [0.07, 0.04], ramp: [[0, '#2a1a3a'], [1, '#2a1a3a', 1]], lit: 1, bounce: 0.2, rot: 5, delay: 2.35, emit: 0.6, pos: [0, 1.0, 0] }); // anchor-ok
+      fx.emitter({ count: 70, kind: 'smoke', blend: 'normal', shape: 'sphere', radius: 0.35, dir: [0, 0.4, 0], spread: 1.4, speed: [0.4, 1.4], life: [1.0, 1.5], size: [0.3, 0.9], ramp: SMOKE(0.7, '#0a0412'), lit: 1, delay: 2.3, emit: 0.8, pos: [0, 0.9, 0], drag: 1 }); // anchor-ok
       fx.light({ color: '#8a40ff', intensity: 35, pos: [0.8, 1.7, 1], range: 7, env: (t) => 0.3 + 0.7 * sm(0.55, 0.7, t) * (1 - 0.4 * sm(0.7, 2, t)) });
       fx.on((t) => {
         const tint = sm(0.6, 1.3, t) * (1 - sm(2.7, 3.2, t) * 0.0); const pulse = 0.5 + 0.5 * Math.sin(t * 7);
@@ -208,7 +209,7 @@ export default [
   { id: 'shadow/life-steal', name: 'Life steal', category: 'shadow', loop: false, duration: 2.2, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [1.2, 1.7, 5.8], target: [1.2, 1.1, 0], fov: 38 } },
     act: { kind: 'cast', target: [2.6, 0, 0], windup: 0.35 },
     build(fx) {
-      const src = [2.5, 1.25, 0], dst = [0.12, 1.25, 0.05];
+      const src = fx.anchor('tgt', 0, [-0.1, 0, 0]), dst = fx.anchor('chest', 0, [0.12, 0, 0.05]); // target chest -> caster chest
       fx.emitter({ count: 50, kind: 'drop', blend: 'add', shape: 'sphere', radius: 0.12, dir: [-1, 0.3, 0], spread: 1.1, speed: [0.6, 2], life: [0.4, 0.9], gravity: [0, -5, 0], size: [0.05, 0.03], ramp: [[0, '#ff6a70'], [1, '#800010', 0]], intensity: 1.5, emit: 0.9, delay: 0.25, pos: src });
       fx.ring({ t0: 0.25, dur: 0.5, r: [0.1, 0.5], width: [0.15, 0.03], normal: 'cam', pos: src, intensity: 1.0, ramp: [[0, '#fff2dc'], [0.4, '#ff5a60'], [1, '#900010']] });
       const NO = 9;
@@ -220,7 +221,7 @@ export default [
         fx.mesh(orb, (t, pr, f, w, o) => { const p = path(Math.min(t, t0 + 0.7)); o.position.set(p[0], p[1], p[2]); o.visible = t > t0 && t < t0 + 0.72; }, { dur: 99 });
         fx.emitter({ count: 14, kind: 'soft', shape: 'sphere', radius: 0.1, speed: [0.5, 1.6], life: [0.3, 0.5], size: [0.1, 0.01], ramp: [[0, '#fff2dc', 1], [0.3, '#ff6a70', 0.8], [1, '#600', 0]], intensity: 1.5, delay: t0 + 0.68, pos: dst });
       }
-      fx.ring({ t0: 0.9, dur: 1.0, r: [0.2, 0.5], width: [0.15, 0.03], normal: 'cam', pos: [0.1, 1.2, 0], intensity: 0.8, breakup: 0.1, ramp: [[0, '#fff2dc'], [0.3, '#ff6a70'], [1, '#800018']] });
+      fx.ring({ t0: 0.9, dur: 1.0, r: [0.2, 0.5], width: [0.15, 0.03], normal: 'cam', pos: fx.anchor('chest', 0, [0.1, -0.05, 0]), intensity: 0.8, breakup: 0.1, ramp: [[0, '#fff2dc'], [0.3, '#ff6a70'], [1, '#800018']] });
       fx.light({ color: '#ff3040', intensity: 35, pos: [0.5, 1.4, 1], range: 6, t0: 0.3, dur: 1.8, fade: [0.2, 0.7] });
       fx.on((t) => { const k = sm(0.7, 1.3, t) * (1 - sm(1.4, 2.1, t)); fx.body.set({ tint: '#ff2030', tintAmt: 0.4 * k, rim: '#ff5060', rimAmt: 1.2 * k, glow: 0.5 * k }); if (fx.target) fx.target.u && 0; });
     } },

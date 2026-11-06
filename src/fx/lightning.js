@@ -65,7 +65,7 @@ export default [
   /* ------------------------------------------------ charge up */
   { id: 'lightning/charge-up', name: 'Charge up', category: 'lightning', loop: false, duration: 2.7, body: true, stage: { sky: 'night', bloom: 0.55, view: { pos: [2.6, 1.6, 3.8], target: [0.3, 1.1, 0], fov: 42 } },
     build(fx) {
-      const C = [0.62, 1.22, 0.05], TB = 2.1;
+      const C = fx.anchor('handR', 0, [0.2, 0.13, -0.18]), TB = 2.1; // charge orb above the hand (P5 offset)
       const g = (t) => (t < TB ? sm(0, 2.0, t) : 0);
       fx.orb({ t0: 0.1, dur: TB - 0.1, kind: 'plasma', r: [0.03, 0.26], ease: 'in', pos: C, fade: [0.2, 0.0], intensity: 1.4, noise: 3, scroll: 3, disp: 0.4, ramp: [[0, '#2a1a9a'], [0.4, '#6a7cff'], [0.8, '#d0e0ff'], [1, '#fff']] });
       fx.orb({ t0: TB, dur: 0.5, kind: 'energy', r: [0.25, 1.0], ease: 'out', pos: C, fade: [0.0, 0.35], intensity: 1.0, noise: 2.5, scroll: 3, disp: 0.5, power: 1.6, ramp: [[0, '#2a2aaa'], [0.5, '#8aa0ff'], [1, '#ffffff']] });
@@ -96,8 +96,8 @@ export default [
       for (let k = 0; k < 2; k++) fx.bolt({ from: (s) => surf(k + 20, s), to: (s) => { const a = surf(k + 20, s + 1.5); a[0] *= 1.6; a[2] *= 1.6; return a; }, jag: 0.3, branches: 1, branchLen: 0.3, width: 0.02, rate: 10 + k * 3, flicker: 0.5, ramp: BOLT, intensity: 3 });
       fx.light({ color: '#8aa0ff', intensity: 12, pos: [0.5, 1.2, 0.8], range: 8, flicker: 0.6, rate: 33 });
       fx.decal({ kind: 'glow', r: [1.1, 1.1], ramp: [[0, '#000'], [0.4, '#101a70'], [1, '#6a86ff']], intensity: 0.7, alpha: 0.7, y: 0.01 });
-      fx.emitter({ count: 60, kind: 'spark', shape: 'box', shapeSize: [0.3, 0.9, 0.3], pos: [0, 0.95, 0], dir: [0, 1, 0], spread: 1.6, radial: 0.4, speed: [0.3, 1.6], life: [0.15, 0.45], gravity: [0, -3, 0], size: [0.05, 0.015], stretch: 1.1, ramp: sparkRamp, intensity: 3.5, bounce: 0.2 });
-      fx.emitter({ count: 14, kind: 'glint', shape: 'box', shapeSize: [0.25, 0.85, 0.25], pos: [0, 0.95, 0], dir: [0, 1, 0], spread: 1.6, speed: [0, 0.1], life: [0.12, 0.3], size: [0.3, 0.06], ramp: glintRamp, intensity: 3 });
+      fx.emitter({ count: 60, kind: 'spark', shape: 'box', shapeSize: [0.3, 0.9, 0.3], pos: [0, 0.95, 0], dir: [0, 1, 0], spread: 1.6, radial: 0.4, speed: [0.3, 1.6], life: [0.15, 0.45], gravity: [0, -3, 0], size: [0.05, 0.015], stretch: 1.1, ramp: sparkRamp, intensity: 3.5, bounce: 0.2 }); // anchor-ok
+      fx.emitter({ count: 14, kind: 'glint', shape: 'box', shapeSize: [0.25, 0.85, 0.25], pos: [0, 0.95, 0], dir: [0, 1, 0], spread: 1.6, speed: [0, 0.1], life: [0.12, 0.3], size: [0.3, 0.06], ramp: glintRamp, intensity: 3 }); // anchor-ok
       fx.on((t) => { const st = Math.floor(t * 24), f = 0.35 + 0.65 * hs(st * 1.7); fx.body.set({ rim: '#9db4ff', rimAmt: 0.5 + f * 1.0, tint: '#a0b4ff', tintAmt: 0.12 * f, emit: new THREE.Color(0.03, 0.05, 0.16).multiplyScalar(f) }); });
     } },
 
@@ -228,7 +228,7 @@ export default [
   /* ------------------------------------------------ zap hit */
   { id: 'lightning/zap-hit', name: 'Zap hit', category: 'lightning', tier: 1, loop: false, duration: 0.9, body: true, stage: { sky: 'night', bloom: 0.5, view: { pos: [1.8, 1.45, 3.0], target: [0.1, 1.15, 0], fov: 38 } },
     build(fx) {
-      const H = [0.17, 1.28, 0.2];
+      const H = fx.anchor('chest', 0, [0.17, 0.03, 0.2]); // hit point on the upper chest
       fx.bolt({ t0: 0, dur: 0.22, fade: [0, 0.12], from: [1.5, 1.9, 1.3], to: H, jag: 0.22, branches: 1, branchLen: 0.25, width: 0.035, rate: 36, flicker: 0.3, ramp: BOLT, intensity: 2.6 });
       for (let k = 0; k < 5; k++) { const a = (k / 5) * TAU + 0.5; fx.bolt({ t0: 0.02, dur: 0.3, fade: [0, 0.2], from: H, to: [H[0] + Math.cos(a) * 0.1 * 0 + Math.sin(a) * 0.1, H[1] + Math.cos(a) * 0.45, H[2] + 0.05], jag: 0.3, branches: 0, width: 0.016, rate: 26 + k * 2, flicker: 0.5, ramp: BOLT, intensity: 1.5 }); }
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: H, size: [0.6, 0.2], life: [0.2, 0.2], ramp: glintRamp, intensity: 2.2, delay: 0 });

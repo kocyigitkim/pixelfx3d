@@ -50,14 +50,14 @@ export default [
     build(fx) {
       const mat = iceMat(); const g = new THREE.Group();
       const seeds = []; for (let i = 0; i < 7; i++) { const a = (i / 7) * TAU + fx.rng() * 0.4, r = 0.4 + fx.rng() * 0.25, h = 0.6 + fx.rng() * 0.8; const c = new THREE.Mesh(crystalGeo(0.08 + fx.rng() * 0.05, h), mat); c.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); c.rotation.set(Math.sin(a) * 0.35, 0, -Math.cos(a) * 0.35); g.add(c); seeds.push(0.15 + fx.rng() * 0.5); }
-      for (let i = 0; i < 4; i++) { const a = fx.rng() * TAU; const c = new THREE.Mesh(crystalGeo(0.05, 0.4), mat); c.position.set(Math.cos(a) * 0.3, 1.2 + fx.rng() * 0.4, Math.sin(a) * 0.3); c.rotation.set(Math.sin(a) * 1.0, 0, -Math.cos(a) * 1.0); g.add(c); seeds.push(0.4 + fx.rng() * 0.4); }
+      for (let i = 0; i < 4; i++) { const a = fx.rng() * TAU; const c = new THREE.Mesh(crystalGeo(0.05, 0.4), mat); c.position.set(Math.cos(a) * 0.3, fx.anchor('chest')[1] - 0.05 + fx.rng() * 0.4, Math.sin(a) * 0.3); c.rotation.set(Math.sin(a) * 1.0, 0, -Math.cos(a) * 1.0); g.add(c); seeds.push(0.4 + fx.rng() * 0.4); }
       fx.mesh(g, (t, pr, f, w, obj) => { obj.children.forEach((c, i) => { const s = seeds[i]; const k = back((t - s) / 0.45) * (1 - sm(2.9 + (i % 4) * 0.1, 3.6, t)); c.scale.setScalar(Math.max(1e-3, k)); }); });
       fx.decal({ kind: 'frost', t0: 0.1, dur: 3.9, r: [1.8, 1.8], cells: 6, reveal: 0.9, fade: [0.2, 1.0], intensity: 1.1, alpha: 0.9 });
       fx.light({ color: '#7fc2ff', intensity: 30, pos: [0.6, 1.4, 1.0], range: 9, env: (t) => 0.4 + 0.6 * sm(0.1, 0.9, t) * (1 - 0.6 * sm(2.9, 3.8, t)) });
       fx.emitter({ count: 24, kind: 'smoke', blend: 'normal', shape: 'disc', radius: 0.6, dir: [0, 1, 0], spread: 0.7, radial: 0.7, speed: [0.3, 0.9], life: [1.2, 2], size: [0.6, 1.5], ramp: mistRamp, lit: 1, delay: 0.1, emit: 0.8, pos: [0, 0.1, 0], order: -1 });
-      fx.emitter({ count: 70, kind: 'shard', shape: 'sphere', radius: 0.35, dir: [0, 1, 0], spread: 1.6, radial: 0.8, speed: [1.2, 3.5], life: [0.6, 1.3], size: [0.07, 0.03], gravity: [0, -6, 0], ramp: iceBurstRamp, intensity: 1.2, delay: 0.8, pos: [0, 0.9, 0], rot: 6 });
-      fx.emitter({ count: 22, kind: 'glint', shape: 'sphere', radius: 0.5, dir: [0, 1, 0], spread: 1, speed: [0, 0.2], life: [0.4, 0.7], size: [0.22, 0.05], ramp: glintRamp, intensity: 3, delay: 0.9, emit: 1.9, pos: [0, 0.95, 0] });
-      fx.emitter({ count: 30, kind: 'drop', shape: 'sphere', radius: 0.3, dir: [0, -1, 0], spread: 0.6, speed: [0.2, 1], life: [0.5, 0.9], gravity: [0, -9.8, 0], size: [0.035, 0.02], ramp: [[0, '#cfeaff', 0.9], [1, '#7ab6ff', 0]], intensity: 1.2, delay: 2.9, emit: 0.8, pos: [0, 1.1, 0], bounce: 0.1 });
+      fx.emitter({ count: 70, kind: 'shard', shape: 'sphere', radius: 0.35, dir: [0, 1, 0], spread: 1.6, radial: 0.8, speed: [1.2, 3.5], life: [0.6, 1.3], size: [0.07, 0.03], gravity: [0, -6, 0], ramp: iceBurstRamp, intensity: 1.2, delay: 0.8, pos: [0, 0.9, 0], rot: 6 }); // anchor-ok
+      fx.emitter({ count: 22, kind: 'glint', shape: 'sphere', radius: 0.5, dir: [0, 1, 0], spread: 1, speed: [0, 0.2], life: [0.4, 0.7], size: [0.22, 0.05], ramp: glintRamp, intensity: 3, delay: 0.9, emit: 1.9, pos: [0, 0.95, 0] }); // anchor-ok
+      fx.emitter({ count: 30, kind: 'drop', shape: 'sphere', radius: 0.3, dir: [0, -1, 0], spread: 0.6, speed: [0.2, 1], life: [0.5, 0.9], gravity: [0, -9.8, 0], size: [0.035, 0.02], ramp: [[0, '#cfeaff', 0.9], [1, '#7ab6ff', 0]], intensity: 1.2, delay: 2.9, emit: 0.8, pos: [0, 1.1, 0], bounce: 0.1 }); // anchor-ok
       fx.emitter({ count: 14, kind: 'smoke', blend: 'normal', shape: 'disc', radius: 0.3, dir: [0, 1, 0], spread: 0.5, speed: [0.4, 0.9], life: [1, 1.6], size: [0.5, 1.2], ramp: mistRamp, lit: 1, delay: 2.9, emit: 0.7, pos: [0, 0.5, 0], order: -1 });
       fx.on((t) => {
         const fr = sm(0.05, 0.95, t) * (1 - sm(2.9, 3.8, t));
@@ -68,7 +68,7 @@ export default [
   /* ------------------------------------------------ frost breath */
   { id: 'ice/frost-breath', name: 'Frost breath', category: 'ice', loop: true, duration: 1.2, body: true, stage: { sky: 'night', bloom: 0.4, view: { pos: [1.6, 1.4, 3.6], target: [1.3, 1.2, 0], fov: 40 } },
     build(fx) {
-      const mouth = [0.14, 1.52, 0];
+      const mouth = fx.anchor('head', 0, [0.85 * fx.body.headR, -0.45 * fx.body.headR, 0]); // mouth on the face (+X)
       fx.light({ color: '#8fd0ff', intensity: 20, pos: [1.4, 1.3, 0.4], range: 8, flicker: 0.15 });
       fx.decal({ kind: 'frost', pos: [2.4, 0.004, 0], r: [1.4, 1.4], cells: 6, intensity: 0.9, alpha: 0.65 });
       fx.emitter({ count: 46, kind: 'smoke', blend: 'normal', shape: 'point', pos: mouth, dir: [1, -0.04, 0], spread: 0.2, speed: [1.8, 3.4], drag: 0.7, life: [0.8, 1.2], size: [0.2, 1.3], ramp: [[0, '#b7bfc4', 0], [0.12, '#a2b5c4', 0.4], [0.6, '#7895b1', 0.22], [1, '#526e8b', 0]], lit: 1, turb: [0.25, 1.4], gravity: [0, -0.15, 0], order: -1 });
