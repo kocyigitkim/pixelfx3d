@@ -8,5 +8,4 @@ globalThis.fetch = async (u, o) => {
   const b = await readFile(new URL(s));
   return new Response(b, { headers: { 'content-type': s.endsWith('.json') ? 'application/json' : 'application/octet-stream' } });
 };
-const warn = console.warn;
-console.warn = (...a) => { if (/Couldn't load texture/.test(String(a[0]))) return; warn(...a); };
+for (const k of ['warn', 'error']) { const f = console[k]; console[k] = (...a) => { if (/Couldn't load texture/.test(String(a[0]))) return; f(...a); }; }
