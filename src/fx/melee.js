@@ -59,9 +59,9 @@ const feet = (fx, F, t) => fx.emitter({ count: 8, kind: 'dust', blend: 'normal',
 
 export default [
   { id: 'melee/sword-slash', name: 'Sword slash', category: 'melee', loop: false, duration: 0.75, tier: 2, stage: { sky: 'night', view: VIEW },
-    act: { kind: 'slash', weapon: 'sword', target: [1.41, 0, 0], windup: 0.45, contact: 0.07, hits: [{ t: 0.07, stop: 0.09, shake: 0.2, amp: 0.03, push: 1.4 }] },
+    act: { kind: 'slash', weapon: 'sword', target: [2.02, 0, 0], windup: 0.45, contact: 0.07, hits: [{ t: 0.07, stop: 0.09, shake: 0.2, amp: 0.03, push: 1.4 }] },
     build(fx) {
-      const T = 0.07, C = fx.anchor('tip', T), H = fx.anchor('handR', T), F = fx.anchor('tgtFeet', 0, [0, 0.05, 0]); // T = hit (= act.contact), C = blade tip at contact, H = hand pivot, F = target feet
+      const T = 0.07, C = fx.anchor('tip', T), H = fx.anchor('handR', T), F = fx.anchor('tgtFeet', 0, [0, 0.05, 0]); // T = hit (= act.contact), C = blade tip at contact, H = hand pivot, F = target feet (offset) // anchor-ok
       const { B } = swing(fx, { t0: -0.07, t1: 0.2, len: 0.25, inner: 0.65, outer: 1.05, c0: '#ffffff', c1: '#a9d6ff', c2: '#1b3fa8', intensity: 1.2, edge: 3 }); // len .25: tail erodes to 1 in .25 s
       // anticipation: faint glint at the blade tip, 0.1 s before the hit
       fx.emitter({ count: 1, kind: 'glint', shape: 'point', pos: B(T - 0.1), size: [0.5, 0.3], life: [0.12, 0.12], ramp: [[0, '#fff'], [1, '#9cf', 0]], intensity: 1.5, delay: T - 0.1, t0: T - 0.12, emit: 0.001 });
@@ -76,7 +76,7 @@ export default [
     } },
 
   { id: 'melee/claw-swipe', name: 'Claw swipe', category: 'melee', loop: false, duration: 0.9, stage: { sky: 'dusk', view: VIEW },
-    act: { kind: 'sideslash', target: [1.4, 0, 0], windup: 0.4, contact: 0.05, hits: [{ t: 0.05, stop: 0.07, shake: 0.2, amp: 0.035, push: 1.6 }] },
+    act: { kind: 'sideslash', target: [1.6, 0, 0], windup: 0.4, contact: 0.05, hits: [{ t: 0.05, stop: 0.07, shake: 0.2, amp: 0.035, push: 1.6 }] },
     build(fx) {
       const hot = [[0, '#ffe0c0'], [0.3, '#ff8a40'], [1, '#a01008']], G = fx.anchor('tgt');
       for (let k = -1; k <= 1; k++) {
@@ -108,7 +108,7 @@ export default [
     } },
 
   { id: 'melee/double-slash', name: 'Double slash', category: 'melee', loop: false, duration: 0.8, stage: { sky: 'night', view: VIEW },
-    act: { weapon: 'sword', target: [1.43, 0, 0], windup: 0.4,
+    act: { weapon: 'sword', target: [1.77, 0, 0], windup: 0.4,
       keys: [[-0.4, 'guard'], [-0.15, 'windupHigh'], [0, 'cut', 'snap'], [0.1, 'upLow'], [0.22, 'upHigh', 'snap'], [0.4, 'follow'], [0.8, 'guard']],
       hits: [{ t: 0.04, stop: 0.05, shake: 0.12, amp: 0.02, push: 0.8 }, { t: 0.23, stop: 0.1, shake: 0.25, amp: 0.04, push: 1.6, flash: 0.25 }] },
     build(fx) {
@@ -154,7 +154,7 @@ export default [
     } },
 
   { id: 'melee/scythe-reap', name: 'Scythe reap', category: 'melee', loop: false, duration: 2.1, stage: { sky: 'dusk', bloom: 0.4, view: HIGH },
-    act: { weapon: 'scythe', target: [1.61, 0, 0], windup: 0.7,
+    act: { weapon: 'scythe', target: [2.4, 0, 0], windup: 0.7,
       keys: [[-0.7, 'guard'], [-0.35, 'sideBack'], [0.25, 'sideCut'], [0.9, 'sideCut'], [1.6, 'guard']],
       hits: [{ t: 0.16, stop: 0.12, shake: 0.3, amp: 0.04, push: 1.2 }] },
     build(fx) {
@@ -172,7 +172,7 @@ export default [
     } },
 
   { id: 'melee/spear-sweep', name: 'Spear sweep', category: 'melee', loop: false, duration: 1.5, stage: { sky: 'dusk', view: HIGH },
-    act: { weapon: 'spear', target: [2.06, 0, 0], windup: 0.5,
+    act: { weapon: 'spear', target: [2.49, 0, 0], windup: 0.5,
       keys: [[-0.5, 'guard'], [-0.2, 'sweepBack'], [-0.03, 'sweepCut', 'snap'], [0.4, 'sweepCut'], [1.1, 'guard']],
       hits: [{ t: -0.03, stop: 0.08, shake: 0.25, amp: 0.04, push: 1.3 }] },
     build(fx) {
@@ -184,7 +184,7 @@ export default [
     } },
 
   { id: 'melee/spin-slash', name: 'Spin slash', category: 'melee', loop: false, duration: 0.8, stage: { sky: 'night', view: HIGH },
-    act: { weapon: 'sword', target: [1.47, 0, 0], windup: 0.35,
+    act: { weapon: 'sword', target: [2.0, 0, 0], windup: 0.35,
       keys: [[-0.35, 'guard'], [-0.1, 'sideBack'], [0, 'sideCut', 'snap'], [0.45, 'sideCut'], [0.8, 'guard']],
       hits: [{ t: 0.3, stop: 0.08, shake: 0.3, amp: 0.05, push: 1.4 }] },
     build(fx) {
@@ -201,7 +201,7 @@ export default [
     } },
 
   { id: 'melee/thrust', name: 'Thrust', category: 'melee', loop: false, duration: 0.75, stage: { sky: 'night', view: { pos: [1.6, 1.7, 7.4], target: [1.5, 1.15, 0] } },
-    act: { weapon: 'spear', target: [2.51, 0, 0], windup: 0.4, keys: [[-0.4, 'guard'], [-0.14, 'thrustBack'], [0, 'lunge', 'snap'], [0.25, 'lunge'], [0.7, 'guard']], hits: [{ t: 0.04, stop: 0.1, shake: 0.22, amp: 0.035, push: 1.6 }] },
+    act: { weapon: 'spear', target: [2.65, 0, 0], windup: 0.4, keys: [[-0.4, 'guard'], [-0.14, 'thrustBack'], [0, 'lunge', 'snap'], [0.25, 'lunge'], [0.7, 'guard']], hits: [{ t: 0.04, stop: 0.1, shake: 0.22, amp: 0.035, push: 1.6 }] },
     build(fx) {
       const T = bladeTable(fx, -0.07, 0.1, 1.85), tip = T(0.04);
       sweepSurface(fx, bladeTable(fx, -0.07, 0.1, 1.2), T, { t0: -0.07, t1: 0.06, len: 0.14, n: 24, c0: '#e8f2ff', c1: '#bfe0ff', c2: '#2850a0', intensity: 1.0, edge: 3 });

@@ -20,7 +20,7 @@ const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(
 export default [
   SKILL('rogue/shadow-strike', 'Shadow strike', m(['void'], 'teleport-strike', 0.3, 12, 6, 'point'), 1.6, {
     view: 'side',
-    act: act('slash', 0.02, 1.9, { weapon: 'dagger', windup: 0.6, keys: [[-0.6, 'guard'], [-0.45, 'vanish'], [-0.1, 'behind'], [0, 'daggerB', 'snap'], [0.3, 'daggerA'], [1, 'guard']], hits: [{ t: 0.02, stop: 0.1, shake: 0.3, amp: 0.04, push: 1.8 }] }),
+    act: act('slash', 0.02, 1.65, { weapon: 'dagger', windup: 0.6, keys: [[-0.6, 'guard'], [-0.45, 'vanish'], [-0.1, 'behind'], [0, 'daggerB', 'snap'], [0.3, 'daggerA'], [1, 'guard']], hits: [{ t: 0.02, stop: 0.1, shake: 0.3, amp: 0.04, push: 1.8 }] }),
     // P3=175
     build(fx, o) {
       const k = kit(fx, o, VOID), P = fx.anchor('tgt', 0, [0.2, 0.1, 0.1]), hy = 1.0, cy = fx.anchor('chest', 0)[1]; // P: stab into the target's back // anchor-ok
@@ -84,7 +84,7 @@ export default [
 
   SKILL('rogue/bleed-flurry', 'Bleed flurry', m(['blood'], 'melee-combo', 0.2, 9, 2, 'point'), 1.5, {
     view: 'side',
-    act: { kind: 'slash', weapon: 'dagger', target: [1.13, 0, 0], windup: 0.3, keys: [[-0.2, 'guard'], ...[0, 0.18, 0.36, 0.54, 0.72].flatMap((h) => [[h - 0.1, 'daggerA'], [h, 'daggerB', 'snap']]), [1.1, 'guard']], // every hit on a stab-out frame
+    act: { kind: 'slash', weapon: 'dagger', target: [1.0, 0, 0], windup: 0.3, keys: [[-0.2, 'guard'], ...[0, 0.18, 0.36, 0.54, 0.72].flatMap((h) => [[h - 0.1, 'daggerA'], [h, 'daggerB', 'snap']]), [1.1, 'guard']], // every hit on a stab-out frame
       hits: [0, 0.18, 0.36, 0.54].map((t) => ({ t, stop: 0.03, shake: 0.1, amp: 0.015, push: 0.4 })).concat([{ t: 0.72, stop: 0.1, shake: 0.3, amp: 0.04, push: 1.6 }]) },
     // P3=172
     build(fx, o) {
@@ -157,7 +157,7 @@ export default [
 
   SKILL('rogue/death-mark', 'Death mark', m(['void'], 'debuff-execute', 0.4, 20, 3, 'point'), 2.6, {
     view: 'side',
-    act: act('slash', 1.52, 0.84, { weapon: 'dagger', windup: 0.4, keys: [[-0.4, 'guard'], [-0.2, 'castCharge'], [0, 'castRelease', 'snap'], [0.8, 'guard'], [1.3, 'windupHigh'], [1.5, 'cut', 'snap'], [1.7, 'follow'], [2.4, 'guard']], hits: [{ t: 1.52, stop: 0.12, shake: 0.3, amp: 0.05, push: 2 }] }),
+    act: act('slash', 1.52, 1.34, { weapon: 'dagger', windup: 0.4, keys: [[-0.4, 'guard'], [-0.2, 'castCharge'], [0, 'castRelease', 'snap'], [0.8, 'guard'], [1.3, 'windupHigh'], [1.5, 'cut', 'snap'], [1.7, 'follow'], [2.4, 'guard']], hits: [{ t: 1.52, stop: 0.12, shake: 0.3, amp: 0.05, push: 2 }] }),
     // P3=184
     build(fx, o) {
       const k = kit(fx, o, VOID), Hd = fx.anchor('tgtHead'), M = fx.anchor('tgtHead', 0, [0, 0.43, 0]), C = fx.anchor('tip', 1.52); // mark above the head, finisher at the blade tip
@@ -218,7 +218,7 @@ export default [
 
   SKILL('rogue/night-ambush', 'Night ambush', m(['void'], 'critical-strike', 0.6, 15, 2, 'point'), 1.6, {
     view: 'side', sky: 'night',
-    act: act('slash', 0.07, 0.83, { weapon: 'dagger', windup: 0.6, contact: 0.07, hits: [{ t: 0.07, stop: 0.16, shake: 0.45, amp: 0.07, push: 2.4 }] }),
+    act: act('slash', 0.07, 1.38, { weapon: 'dagger', windup: 0.6, contact: 0.07, hits: [{ t: 0.07, stop: 0.16, shake: 0.45, amp: 0.07, push: 2.4 }] }),
     // P3=175
     build(fx, o) {
       const k = kit(fx, o, VOID), C = fx.anchor('tip', 0.07);

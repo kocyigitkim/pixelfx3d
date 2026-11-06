@@ -66,7 +66,7 @@ export default [
   /* =============================================================== DASH STRIKE */
   { id: 'moves/dash-strike', name: 'Dash strike', category: 'moves', loop: false, duration: 1.3,
     stage: { sky: 'night', bloom: 0.5, view: { pos: [1.2, 1.5, 7.2], target: [0.7, 1.05, 0], fov: 40 } },
-    act: { kind: 'thrust', weapon: 'sword', target: [2.27, 0, 0], windup: 0.5, keys: [[-0.5, 'guard'], [-0.3, 'pullback'], [-0.05, 'dashLow'], [0, 'lunge', 'snap'], [0.25, 'lunge'], [0.9, 'guard']], hits: [{ t: 0.02, stop: 0.11, shake: 0.25, amp: 0.035, push: 1.8, flash: 0.15 }] },
+    act: { kind: 'thrust', weapon: 'sword', target: [2.42, 0, 0], windup: 0.5, keys: [[-0.5, 'guard'], [-0.3, 'pullback'], [-0.05, 'dashLow'], [0, 'lunge', 'snap'], [0.25, 'lunge'], [0.9, 'guard']], hits: [{ t: 0.02, stop: 0.11, shake: 0.25, amp: 0.035, push: 1.8, flash: 0.15 }] },
     build(fx) {
       const X = (t) => (t < -0.3 ? -1.5 : t < 0 ? -1.5 + 1.95 * eo((t + 0.3) / 0.3) : 0.45 + 0.25 * eo(t / 0.5) - 0.0);
       fx.on((t, ta) => { fx.body.position.x = X(clamp(ta, -0.5, 1.5)) - 0.0; });
@@ -186,7 +186,7 @@ export default [
   /* =============================================================== SWORD COMBO */
   { id: 'moves/sword-combo', name: 'Sword combo', category: 'moves', loop: false, duration: 2.0,
     stage: { sky: 'night', bloom: 0.5, view: { pos: [1.3, 1.6, 6.2], target: [1.2, 1.15, 0], fov: 38 } },
-    act: { kind: 'slash', weapon: 'sword', target: [1.49, 0, 0], windup: 0.45,
+    act: { kind: 'slash', weapon: 'sword', target: [1.94, 0, 0], windup: 0.45,
       keys: [[-0.45, 'guard'], [-0.2, 'windupHigh'], [0, 'cut', 'snap'], [0.14, 'follow'], [0.34, 'sideBack'], [0.47, 'sideCut', 'snap'], [0.62, 'follow'], [0.84, 'overheadUp'], [0.98, 'smashDown', 'snap'], [1.5, 'smashDown'], [2.0, 'guard']],
       hits: [{ t: 0.02, stop: 0.06, shake: 0.15, amp: 0.025, push: 0.9 }, { t: 0.49, stop: 0.07, shake: 0.2, amp: 0.03, push: 1.2 }, { t: 1.0, stop: 0.13, shake: 0.5, amp: 0.07, push: 2.4, flash: 0.25 }] },
     build(fx) {
@@ -210,7 +210,7 @@ export default [
   /* =============================================================== HAMMER SMASH */
   { id: 'moves/hammer-smash', name: 'Hammer smash', category: 'moves', loop: false, duration: 1.9, tier: 3,
     stage: { sky: 'dusk', bloom: 0.45, view: { pos: [1.6, 1.5, 6.6], target: [1.3, 0.8, 0], fov: 40 } },
-    act: { kind: 'smash', weapon: 'hammer', target: [1.33, 0, 0], windup: 0.6, hits: [{ t: 0.0, stop: 0.13, shake: 0.6, amp: 0.09, push: 2.8, flash: 0.3 }] },
+    act: { kind: 'smash', weapon: 'hammer', target: [1.85, 0, 0], windup: 0.6, hits: [{ t: 0.0, stop: 0.13, shake: 0.6, amp: 0.09, push: 2.8, flash: 0.3 }] },
     build(fx) {
       const Tp = fx.anchor('tip', 0), I = [Tp[0], 0, Tp[2]]; // hammer head hits the floor in front of the actor
       fx.slash({ ...fx.bladeArc(-0.25, 0.02), width: 0.3, t0: -0.1, dur: 0.22, tail: 0.9, sweep: [0, 1.4], intensity: 2.6, ramp: [[0, '#fff2dc'], [0.3, '#ffd8a0'], [1, '#8a3a10']] });
@@ -309,7 +309,7 @@ export default [
   /* =============================================================== SHADOW STEP */
   { id: 'moves/shadow-step', name: 'Shadow step', category: 'moves', loop: false, duration: 1.8,
     stage: { sky: 'dark', bloom: 0.55, view: { pos: [1.0, 1.5, 7.0], target: [1.4, 1.0, 0], fov: 40 } },
-    act: { kind: 'slash', weapon: 'sword', target: [1.6, 0, 0], windup: 0.9, keys: [[-0.9, 'guard'], [-0.55, 'vanish'], [-0.25, 'vanish'], [-0.2, 'behind'], [0, 'behind'], [0.06, 'cut', 'snap'], [0.2, 'follow'], [0.9, 'guard']], hits: [{ t: 0.05, stop: 0.1, shake: 0.3, amp: 0.045, push: -2.0, flash: 0.2 }] },
+    act: { kind: 'slash', weapon: 'sword', target: [1.05, 0, 0], windup: 0.9, keys: [[-0.9, 'guard'], [-0.55, 'vanish'], [-0.25, 'vanish'], [-0.2, 'behind'], [0, 'behind'], [0.06, 'cut', 'snap'], [0.2, 'follow'], [0.9, 'guard']], hits: [{ t: 0.05, stop: 0.1, shake: 0.3, amp: 0.045, push: -2.0, flash: 0.2 }] },
     build(fx) {
       const A = [0, 0, 0], B = [2.9, 0, 0.0], hy = 0.92, cy = fx.anchor('chest', -0.3)[1];
       const mir = (p) => [B[0] - p[0], p[1], -p[2]], ba = fx.bladeArc(0, 0.2), arcB = { center: mir(ba.center), radius: ba.radius, a0: PI - ba.a0, a1: PI - ba.a1, tilt: -ba.tilt }; // body at B faces -X (rotation.y = PI)

@@ -15,7 +15,7 @@ const ct = (fx, k, p, h, n, o) => contact(fx, p, h, { hot: k.col(0), mid: k.col(
 export default [
   SKILL('warrior/crescent-chain', 'Crescent chain', m(['steel'], 'melee-combo', 0.4, 6, 2.5, 'arc'), 1.9, {
     view: 'side',
-    act: { kind: 'slash', weapon: 'sword', target: [1.49, 0, 0], windup: 0.45, keys: COMBO3, hits: [{ t: 0.02, stop: 0.06, shake: 0.15, amp: 0.025, push: 0.9 }, { t: 0.49, stop: 0.07, shake: 0.2, amp: 0.03, push: 1.2 }, { t: 1.0, stop: 0.13, shake: 0.5, amp: 0.07, push: 2.4, flash: 0.25 }] },
+    act: { kind: 'slash', weapon: 'sword', target: [1.94, 0, 0], windup: 0.45, keys: COMBO3, hits: [{ t: 0.02, stop: 0.06, shake: 0.15, amp: 0.025, push: 0.9 }, { t: 0.49, stop: 0.07, shake: 0.2, amp: 0.03, push: 1.2 }, { t: 1.0, stop: 0.13, shake: 0.5, amp: 0.07, push: 2.4, flash: 0.25 }] },
     // P3=234
     build(fx, o) {
       const k = kit(fx, o, STEEL), C = fx.anchor('tip', 1.0), G = [C[0], 0, C[2]]; // finisher blade tip / ground under it
@@ -32,7 +32,7 @@ export default [
 
   SKILL('warrior/tempest-spin', 'Tempest spin', m(['steel', 'air'], 'spin', 0.3, 8, 2, 'ring'), 1.4, {
     view: 'high',
-    act: { kind: 'slash', weapon: 'sword', target: [1.47, 0, 0], windup: 0.35, keys: [[-0.35, 'guard'], [-0.1, 'sideBack'], [0, 'sideCut', 'snap'], [0.7, 'sideCut'], [1.1, 'guard']], hits: [{ t: 0.15, stop: 0.05, shake: 0.2, amp: 0.03, push: 1.0 }, { t: 0.45, stop: 0.05, shake: 0.2, amp: 0.03, push: 1.0 }] },
+    act: { kind: 'slash', weapon: 'sword', target: [2.0, 0, 0], windup: 0.35, keys: [[-0.35, 'guard'], [-0.1, 'sideBack'], [0, 'sideCut', 'snap'], [0.7, 'sideCut'], [1.1, 'guard']], hits: [{ t: 0.15, stop: 0.05, shake: 0.2, amp: 0.03, push: 1.0 }, { t: 0.45, stop: 0.05, shake: 0.2, amp: 0.03, push: 1.0 }] },
     // P3=274
     build(fx, o) {
       const k = kit(fx, o, STEEL), kw = kit(fx, o, AIR);
