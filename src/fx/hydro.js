@@ -29,7 +29,7 @@ export default [
     // P3=204
     build(fx, o) {
       const k = kit(fx, o, WATER);
-      const Hd = bladeTable(fx, -0.45, 0.6, 0.25), T = [2.2, 1.35, 0.1], N = 28;
+      const Hd = bladeTable(fx, -0.45, 0.6, 0.25), T = fx.anchor('tgt', 0, [-0.25, 0, 0.1]), N = 28; // whip tip lands on target chest
       const ss = (a, b, x) => { const q = Math.min(1, Math.max(0, (x - a) / (b - a))); return q * q * (3 - 2 * q); };
       const pts = (t) => {
         const h = Hd(t), e = 0.3 + 0.7 * ss(-0.2, 0.0, t), ar = 1 - ss(-0.2, 0.0, t), after = ss(0.02, 0.4, t), out = [];
@@ -59,7 +59,7 @@ export default [
       const DIR = [[0.9, 0.4, 0.35], [-0.8, 0.4, 0.4], [0.1, -0.5, -1.0]], HIT = DIR.map((d) => [d[0], 1.2 + d[1], d[2]]);
       const SRC = [[1.8, 1.6, 0.4], [-1.6, 2.0, 0.6], [0.2, 0.2, -1.9]], TI = [1.0, 1.6, 2.2];
       k.shell({ r: [1.1, 1.1], power: 3, t0: 0.3, dur: 2.2, impacts: TI.map((t, i) => ({ t, dir: DIR[i] })) });
-      k.em({ count: 150, kind: 'bubble', shape: 'sphere', radius: 1.0, radiusIn: 0.95, pos: [0, 1.2, 0], speed: [0.05, 0.2], life: [1.5, 2.5], size: [0.03, 0.06], delay: 0.3, emit: 2.1, t0: 0.3, t1: 2.6 });
+      k.em({ count: 150, kind: 'bubble', shape: 'sphere', radius: 1.0, radiusIn: 0.95, pos: [0, 1.2, 0], speed: [0.05, 0.2], life: [1.5, 2.5], size: [0.03, 0.06], delay: 0.3, emit: 2.1, t0: 0.3, t1: 2.6 }); // anchor-ok
       TI.forEach((ti, i) => {
         k.trail({ path: (t) => lerp3(SRC[i], HIT[i], sm(ti - 0.4, ti, t)), len: 0.3, width: 0.04, t0: ti - 0.4, dur: 0.45 });
         k.em({ count: 20, kind: 'drop', shape: 'sphere', radius: 0.05, pos: HIT[i], dir: DIR[i], spread: 1, speed: [0.8, 2.4], gravity: [0, -9, 0], life: [0.3, 0.6], size: [0.03, 0.015], delay: ti, emit: 0.001, t0: ti - 0.02 });
@@ -67,8 +67,8 @@ export default [
       });
       if (k.g >= 2) fx.water({ r: 1.2, y: 0.015, ripples: [{ t: 1.0, x: 0, z: 0, amp: 0.05 }, { t: 1.6, x: 0, z: 0, amp: 0.05 }, { t: 2.2, x: 0, z: 0, amp: 0.05 }], deep: '#0b4f9c', shallow: '#4fb3ff' });
       if (k.g === 3) {
-        k.em({ count: 60, kind: 'drop', shape: 'sphere', radius: 0.9, pos: [0, 1.2, 0], dir: [0, 1, 0], spread: 3, speed: [1.5, 3.5], gravity: [0, -9, 0], life: [0.5, 0.9], size: [0.03, 0.015], delay: 2.6, emit: 0.001, t0: 2.58 });
-        k.smoke({ count: 30, shape: 'sphere', radius: 0.6, pos: [0, 1.2, 0], radial: 1, speed: [0.6, 1.6], life: [0.8, 1.4], size: [0.3, 0.7], ramp: VAPOR, delay: 2.6, emit: 0.001, t0: 2.58 });
+        k.em({ count: 60, kind: 'drop', shape: 'sphere', radius: 0.9, pos: [0, 1.2, 0], dir: [0, 1, 0], spread: 3, speed: [1.5, 3.5], gravity: [0, -9, 0], life: [0.5, 0.9], size: [0.03, 0.015], delay: 2.6, emit: 0.001, t0: 2.58 }); // anchor-ok
+        k.smoke({ count: 30, shape: 'sphere', radius: 0.6, pos: [0, 1.2, 0], radial: 1, speed: [0.6, 1.6], life: [0.8, 1.4], size: [0.3, 0.7], ramp: VAPOR, delay: 2.6, emit: 0.001, t0: 2.58 }); // anchor-ok
         fx.flash(2.6, 0.1, k.col(0), 0.08);
       }
     } }),
@@ -107,8 +107,8 @@ export default [
       const k = kit(fx, o, WATER);
       buffBase(fx, k, 3.0, POSES.idle);
       fx.on((t) => { const u = sm(0.2, 0.6, t) * (1 - sm(2.6, 3.0, t)); fx.body.set({ alpha: 1 - 0.55 * u }); });
-      k.smoke({ count: 90, shape: 'ring', radius: 0.6, pos: [0, 1.0, 0], swirl: 1, ramp: MIST, speed: [0.1, 0.4], life: [1, 1.8], size: [0.3, 0.8], delay: 0.3, emit: 2.1, t0: 0.3 });
-      k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 0.7, pos: [0, 1.1, 0], size: [0.05, 0.015], life: [0.3, 0.6], intensity: 1.5, delay: 0.3, emit: 2.1, t0: 0.3 });
+      k.smoke({ count: 90, shape: 'ring', radius: 0.6, pos: [0, 1, 0], swirl: 1, ramp: MIST, speed: [0.1, 0.4], life: [1, 1.8], size: [0.3, 0.8], delay: 0.3, emit: 2.1, t0: 0.3 }); // anchor-ok
+      k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 0.7, pos: [0, 1.1, 0], size: [0.05, 0.015], life: [0.3, 0.6], intensity: 1.5, delay: 0.3, emit: 2.1, t0: 0.3 }); // anchor-ok
       if (k.g >= 2) k.smoke({ count: 50, shape: 'disc', radius: 0.8, pos: [0, 0.05, 0], ramp: MIST, speed: [0.2, 0.5], delay: 0.3, emit: 2.1, t0: 0.3 });
       if (k.g === 3) { k.ghost('idle', [0, 0, 0.8], 0.3, 2.1, 0.35); k.ghost('idle', [0, 0, -0.8], 0.3, 2.1, 0.35); }
     } }),
@@ -144,7 +144,7 @@ export default [
       buffBase(fx, k, 3.0, POSES.idle);
       k.smoke({ count: 40, shape: 'disc', radius: 0.7, pos: [0, 2.8, 0], ramp: VAPOR, speed: [0.1, 0.3], life: [1.5, 2.5], delay: 0, emit: 2.4 });
       k.em({ count: 120, kind: 'drop', shape: 'disc', radius: 0.6, pos: [0, 2.6, 0], dir: [0, -1, 0], spread: 0.1, speed: [3, 4], life: [0.5, 0.7], size: [0.03, 0.015], delay: 0.3, emit: 2.1, t0: 0.3 });
-      k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 0.9, pos: [0, 1.2, 0], size: [0.05, 0.015], life: [0.25, 0.4], delay: 0.3, emit: 2.1, t0: 0.3 });
+      k.em({ count: 30, kind: 'glint', shape: 'sphere', radius: 0.9, pos: [0, 1.2, 0], size: [0.05, 0.015], life: [0.25, 0.4], delay: 0.3, emit: 2.1, t0: 0.3 }); // anchor-ok
       fx.water({ r: 0.9, y: 0.015, ripples: [0.6, 1.1, 1.6, 2.1].map((t, i) => ({ t, x: 0.2 * Math.cos(i * 2), z: 0.2 * Math.sin(i * 2), amp: 0.05 })), waves: 0.2, speed: 1, decay: 1.2, k: 16, deep: '#0b4f9c', shallow: '#4fb3ff' });
       k.em({ count: 60, kind: 'soft', shape: 'disc', radius: 0.7, pos: [0, 0.2, 0], dir: [0, 1, 0], speed: [0.5, 1.0], life: [1.2, 1.8], delay: 0.3, emit: 2.1, t0: 0.3 });
       k.ring({ t0: 1.5, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
@@ -158,7 +158,7 @@ export default [
     // P3=274
     build(fx, o) {
       const k = kit(fx, o, WATER);
-      const TGT = [3.8, 1.2, 0];
+      const TGT = fx.anchor('tgt', 0, [-0.2, 0.1, 0]);
       // orb i orbits the caster until Tf, then flies to the target; splash on arrival
       const shot = (i) => {
         const Tf = 1.2 + 0.15 * i, a0 = i * 1.3;
@@ -170,8 +170,8 @@ export default [
         k.smoke({ count: 6, shape: 'sphere', radius: 0.2, pos: TGT, ramp: VAPOR, speed: [0.3, 0.8], life: [0.5, 0.9], size: [0.2, 0.5], delay: Tf + 0.3, emit: 0.001, t0: Tf + 0.28 });
       };
       for (let i = 0; i < 5; i++) shot(i);
-      k.em({ count: 20, kind: 'drop', shape: 'ring', radius: 0.8, pos: [0, 1.3, 0], dir: [0, -1, 0], speed: [0.2, 0.5], gravity: [0, -9, 0], life: [0.3, 0.5], size: [0.03, 0.015], delay: 0.2, emit: 1.5, t0: 0.2 });
-      k.gather([0, 1.1, 0], 0.6, 0.6, 0.7, 30);
+      k.em({ count: 20, kind: 'drop', shape: 'ring', radius: 0.8, pos: [0, 1.3, 0], dir: [0, -1, 0], speed: [0.2, 0.5], gravity: [0, -9, 0], life: [0.3, 0.5], size: [0.03, 0.015], delay: 0.2, emit: 1.5, t0: 0.2 }); // anchor-ok
+      k.gather([0, 1.1, 0], 0.6, 0.6, 0.7, 30); // anchor-ok
       if (k.g >= 2) for (let i = 5; i < 7; i++) shot(i);
       if (k.g === 3) {
         k.ring({ t0: 1.6, dur: 0.5, r: [0.2, 2.2], normal: 'cam', pos: TGT });

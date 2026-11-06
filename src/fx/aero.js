@@ -19,8 +19,8 @@ export default [
       const k = kit(fx, o, AIR);
       const crest = (d) => (t) => vArc(0.8 + 3 * clamp((t - d) / 0.3), 1.2, 0.8, -1, 1, 12);
       k.ribbon({ points: crest(0), n: 12, width: 0.12, intensity: 0.8, head: () => 1.001, t0: 0, dur: 0.5 });
-      k.em({ count: 60, kind: 'streak', shape: 'point', pos: [0.8, 1.2, 0], follow: (mm, a, t) => mm.position.set(0.8 + 3 * clamp(t / 0.3), 1.2, 0), dir: [1, 0, 0], spread: 0.3, speed: [1, 2], life: [0.15, 0.3], size: [0.15, 0.03], stretch: 2, intensity: 0.8, delay: 0, emit: 0.3, t0: 0 });
-      k.em({ count: 20, kind: 'petal', shape: 'sphere', radius: 0.6, pos: [1.6, 1.2, 0], dir: [1, 0, 0], speed: [1, 2], life: [0.6, 1], size: [0.1, 0.06], blend: 'normal', lit: 1, intensity: 0.4, delay: 0, emit: 0.5, t0: 0 });
+      k.em({ count: 60, kind: 'streak', shape: 'point', pos: [0.8, 1.2, 0], follow: (mm, a, t) => mm.position.set(0.8 + 3 * clamp(t / 0.3), 1.2, 0), dir: [1, 0, 0], spread: 0.3, speed: [1, 2], life: [0.15, 0.3], size: [0.15, 0.03], stretch: 2, intensity: 0.8, delay: 0, emit: 0.3, t0: 0 }); // anchor-ok
+      k.em({ count: 20, kind: 'petal', shape: 'sphere', radius: 0.6, pos: [1.6, 1.2, 0], dir: [1, 0, 0], speed: [1, 2], life: [0.6, 1], size: [0.1, 0.06], blend: 'normal', lit: 1, intensity: 0.4, delay: 0, emit: 0.5, t0: 0 }); // anchor-ok
       k.smoke({ count: 30, shape: 'line', shapeSize: [1.6, 0, 0], pos: [2.4, 0.05, 0], ramp: DUST, delay: 0, emit: 0.4, t0: 0 });
       k.impact([3.8, 1.2, 0], 0.25, 40);
       fx.flash(0.25, 0.1, k.col(1), 0.08);
@@ -40,21 +40,21 @@ export default [
     // P3=234
     build(fx, o) {
       const k = kit(fx, o, AIR);
-      const x0 = 0, x1 = 2.6, t0 = -0.25;
+      const x0 = 0, x1 = 1.3, t0 = -0.25, C = fx.anchor('tip', 0.02); C[0] += x1; // dash shortened so the lunge tip (body x1 + tip) lands on the target chest
       const X = (t) => (t < t0 ? x0 : t < 0 ? x0 + (x1 - x0) * sm(t0, 0, t) : x1);
       fx.on((t) => { fx.body.position.x = X(t); });
       // 3 helix ribbons wound around the dash path
       for (let i = 0; i < 3; i++) {
         k.ribbon({ points: (t) => { const xc = X(clamp(t, t0, 0)); return Array.from({ length: 12 }, (_, j) => { const u = j / 11, a = TAU * 3 * u + (i * TAU) / 3; return [x0 + (xc - x0) * u, 1 + 0.4 * Math.cos(a), 0.4 * Math.sin(a)]; }); }, n: 11, width: 0.03, intensity: 0.8, head: () => 1.001, fade: [0.03, 0.12], t0, dur: 0.55 });
       }
-      k.em({ count: 60, kind: 'streak', shape: 'line', shapeSize: [1.3, 0, 0], pos: [1.3, 1, 0], swirl: 4, dir: [1, 0, 0], speed: [0.5, 1.5], life: [0.3, 0.6], size: [0.2, 0.03], stretch: 2, intensity: 0.8, delay: t0, emit: 0.55, t0 });
-      k.em({ count: 30, kind: 'dust', blend: 'normal', lit: 1, ramp: DUST, shape: 'line', shapeSize: [1.3, 0, 0], pos: [1.3, 0.05, 0], dir: [-1, 0.2, 0], speed: [0.5, 1.5], life: [0.6, 1], size: [0.3, 0.2], intensity: 0.5, delay: t0, emit: 0.3, t0 });
+      k.em({ count: 60, kind: 'streak', shape: 'line', shapeSize: [x1, 0, 0], pos: [x1 / 2, 1, 0], swirl: 4, dir: [1, 0, 0], speed: [0.5, 1.5], life: [0.3, 0.6], size: [0.2, 0.03], stretch: 2, intensity: 0.8, delay: t0, emit: 0.55, t0 });
+      k.em({ count: 30, kind: 'dust', blend: 'normal', lit: 1, ramp: DUST, shape: 'line', shapeSize: [x1, 0, 0], pos: [x1 / 2, 0.05, 0], dir: [-1, 0.2, 0], speed: [0.5, 1.5], life: [0.6, 1], size: [0.3, 0.2], intensity: 0.5, delay: t0, emit: 0.3, t0 });
       k.smoke({ count: 15, shape: 'point', pos: [x0, 0.05, 0], ramp: DUST, delay: t0, emit: 0.1, t0 });
       k.smoke({ count: 15, shape: 'point', pos: [x1, 0.05, 0], ramp: DUST, delay: 0, emit: 0.2, t0: 0 });
       k.ring({ t0: 0, dur: 0.5, r: [0.2, 1.8], normal: 'up', pos: [x1, 0.05, 0] });
-      ct(fx, k, [x1 + 0.4, 1.2, 0.1], 0.02, 40, { lightI: 0 });
-      k.light({ pos: [1.3, 1.6, 0.8], t0, dur: 1.4, fade: [0.1, 0.5], intensity: 30 });
-      if (k.g >= 2) k.em({ count: 30, kind: 'petal', shape: 'ring', radius: 0.5, pos: [1.3, 1, 0], swirl: 3, blend: 'normal', lit: 1, speed: [0.3, 0.8], life: [0.6, 1], size: [0.1, 0.06], intensity: 0.4, delay: t0, emit: 0.6, t0 });
+      ct(fx, k, C, 0.02, 40, { lightI: 0 });
+      k.light({ pos: [x1 / 2, 1.6, 0.8], t0, dur: 1.4, fade: [0.1, 0.5], intensity: 30 });
+      if (k.g >= 2) k.em({ count: 30, kind: 'petal', shape: 'ring', radius: 0.5, pos: [x1 / 2, 1, 0], swirl: 3, blend: 'normal', lit: 1, speed: [0.3, 0.8], life: [0.6, 1], size: [0.1, 0.06], intensity: 0.4, delay: t0, emit: 0.6, t0 });
       if (k.g === 3) {
         k.ring({ t0: 0, dur: 0.4, r: [0.2, 2], normal: [1, 0, 0], pos: [x1, 1, 0], intensity: 0.8 });
         k.ring({ t0: 0.05, dur: 0.4, r: [0.1, 1.4], normal: [1, 0, 0], pos: [x1, 1, 0], width: [0.1, 0.02], intensity: 0.6 });
@@ -81,7 +81,7 @@ export default [
         k.ring({ t0: 0.8, dur: 0.6, r: [0.3, 2.2], normal: 'cam', pos: [2.8, 3, 0], intensity: 0.8 });
         k.em({ count: 30, kind: 'petal', shape: 'disc', radius: 1, pos: [2.8, 0.5, 0], dir: [0, 1, 0], speed: [1, 2], life: [1, 1.5], blend: 'normal', lit: 1, size: [0.1, 0.06], intensity: 0.4, delay: 0.5, emit: 1.2, t0: 0.5, swirl: 2 });
       }
-      k.extras([2.8, 1.2, 0], 0.3);
+      k.extras(fx.anchor('tgt', 0, [0, 0.1, 0]), 0.3);
     } }),
 
   SKILL('aero/zephyr-guard', 'Zephyr guard', m(['air'], 'buff-rings', 0.3, 20, 0, 'self'), 3.0, {
@@ -91,18 +91,18 @@ export default [
       const k = kit(fx, o, AIR), D = 3.0;
       fx.body.setPose(POSES.idle);
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(D - 0.6, D, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u }); });
-      k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
+      k.gather([0, 1, 0], 0, 0.3, 1.2, 30); // anchor-ok
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
-      for (const n of [[0.3, 1, 0], [-0.3, 1, 0.3], [0, 1, -0.3]]) k.ring({ t0: 0, dur: D, r: [0.8, 0.8], normal: n, pos: [0, 1, 0], width: [0.03, 0.03], intensity: 0.5, breakup: 0.7, decay: 0 });
+      for (const n of [[0.3, 1, 0], [-0.3, 1, 0.3], [0, 1, -0.3]]) k.ring({ t0: 0, dur: D, r: [0.8, 0.8], normal: n, pos: [0, 1, 0], width: [0.03, 0.03], intensity: 0.5, breakup: 0.7, decay: 0 }); // anchor-ok
       for (const y of [0.6, 1.1, 1.6]) k.em({ count: 40, kind: 'streak', shape: 'ring', radius: 0.8, pos: [0, y, 0], swirl: 6, speed: [0.1, 0.3], life: [0.5, 0.8], size: [0.12, 0.03], stretch: 2, intensity: 0.8, delay: 0, emit: D, t0: 0 });
-      k.em({ count: 30, kind: 'petal', shape: 'sphere', radius: 0.9, pos: [0, 1.1, 0], speed: [0.2, 0.5], life: [1, 1.8], size: [0.1, 0.06], blend: 'normal', lit: 1, intensity: 0.4, delay: 0, emit: D, t0: 0 });
+      k.em({ count: 30, kind: 'petal', shape: 'sphere', radius: 0.9, pos: [0, 1.1, 0], speed: [0.2, 0.5], life: [1, 1.8], size: [0.1, 0.06], blend: 'normal', lit: 1, intensity: 0.4, delay: 0, emit: D, t0: 0 }); // anchor-ok
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: D, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / D), intensity: 40 });
-      if (k.g >= 2) k.ring({ t0: 0.4, dur: 2.4, r: [0.6, 1.2], normal: [1, 0, 0], pos: [0, 1, 0], width: [0.03, 0.03], intensity: 0.5, breakup: 0.7, decay: 0 });
+      if (k.g >= 2) k.ring({ t0: 0.4, dur: 2.4, r: [0.6, 1.2], normal: [1, 0, 0], pos: [0, 1, 0], width: [0.03, 0.03], intensity: 0.5, breakup: 0.7, decay: 0 }); // anchor-ok
       if (k.g === 3) {
         k.ring({ t0: 2.6, dur: 0.5, r: [0.3, 3], normal: 'up', pos: [0, 0.05, 0] });
         k.smoke({ count: 30, shape: 'ring', radius: 0.8, pos: [0, 0.1, 0], radial: 1, speed: [1, 2.5], ramp: DUST, delay: 2.6, emit: 0.3, t0: 2.6 });
       }
-      k.extras([0, 1.1, 0], 0.3);
+      k.extras(fx.anchor('chest', 0, [0, -0.15, 0]), 0.3);
     } }),
 
   SKILL('aero/vacuum-snap', 'Vacuum snap', m(['air'], 'implode-burst', 0.4, 12, 5, 'circle'), 2.0, {
@@ -110,7 +110,7 @@ export default [
     act: act('cast', 0.9, 3),
     // P3=322
     build(fx, o) {
-      const k = kit(fx, o, AIR), C = [0, 1.1, 0], T = 0.9;
+      const k = kit(fx, o, AIR), C = [0, 1.1, 0], T = 0.9; // anchor-ok
       k.em({ count: 120, kind: 'streak', shape: 'sphere', radius: 2.2, pos: C, radial: 1, speed: [-5, -4], life: [0.3, 0.6], size: [0.12, 0.03], stretch: 2, intensity: 0.8, delay: 0, emit: 0.8, t0: 0 });
       k.smoke({ count: 40, shape: 'sphere', radius: 2, pos: C, radial: 1, speed: [-3, -2], ramp: DUST, delay: 0, emit: 0.8, t0: 0 });
       k.ring({ t0: 0.5, dur: 0.4, r: [2.4, 0.1], normal: 'cam', pos: C });
@@ -133,7 +133,7 @@ export default [
     act: act('throw', 0.35, 4, { hits: [HIT(0.35), HIT(0.45), HIT(0.55)] }),
     // P3=110
     build(fx, o) {
-      const k = kit(fx, o, AIR), A = [0.6, 1.38, 0.2], B0 = [3.8, 1.2, 0];
+      const k = kit(fx, o, AIR), A = fx.anchor('handR', 0), B0 = fx.anchor('tgt', 0, [-0.2, 0.1, 0]);
       const nb = k.g >= 2 ? 18 : 14;
       for (let i = 0; i < nb; i++) {
         const b = new THREE.Mesh(new THREE.SphereGeometry(1, 6, 4), addMat(k.col(1), 0.48));
@@ -163,7 +163,7 @@ export default [
         k.ribbon({ points: (t) => Array.from({ length: 21 }, (_, j) => { const u = j / 20, a = TAU * 3 * u + (i * TAU) / 3 + TAU * t; return [3 + 0.8 * Math.cos(a), 5 * u, 0.8 * Math.sin(a)]; }), n: 20, width: 0.05, intensity: 0.8, t0: 0, dur: 3 });
       }
       k.beam({ from: [3, 0, 0], to: [3, 5, 0], r: [0.4, 1.4], intensity: 0.1, t0: 0, dur: 3, fade: [0.1, 0.5], noise: 0.6, edge: 1.4 });
-      k.em({ count: 40, kind: 'petal', shape: 'ring', radius: 1.2, pos: [3, 1.5, 0], swirl: 3, speed: [0.2, 0.6], life: [1, 1.6], size: [0.1, 0.06], blend: 'normal', lit: 1, intensity: 0.4, delay: 0, emit: 2.4, t0: 0 });
+      k.em({ count: 40, kind: 'petal', shape: 'ring', radius: 1.2, pos: [3, 1.5, 0], swirl: 3, speed: [0.2, 0.6], life: [1, 1.6], size: [0.1, 0.06], blend: 'normal', lit: 1, intensity: 0.4, delay: 0, emit: 2.4, t0: 0 }); // anchor-ok
       k.light({ pos: [3, 1.5, 0.8], t0: 0, dur: 3, fade: [0.1, 0.5], intensity: 40 });
       for (const t of [0.5, 1, 1.5]) fx.flash(t, 0.1, k.col(1), 0.08);
       if (k.g >= 2) k.em({ count: 20, kind: 'rock', blend: 'normal', lit: 1, shape: 'ring', radius: 1.4, pos: [3, 0.3, 0], swirl: 4, speed: [0.5, 1.5], size: [0.12, 0.06], ramp: [[0, '#6c5a48'], [1, '#6c5a48', 1]], delay: 0.5, emit: 2, t0: 0.5 });
@@ -171,7 +171,7 @@ export default [
         k.ring({ t0: 0.2, dur: 1.5, r: [0.3, 3], normal: 'up', pos: [3, 5, 0] });
         k.ring({ t0: 0.5, dur: 1, r: [0.4, 2.2], normal: 'cam', pos: [3, 2.5, 0] });
       }
-      k.extras([3, 1, 0], 2);
+      k.extras(fx.anchor('tgt', 0, [0, -0.1, 0]), 2);
     } }),
 
   SKILL('aero/whisper-step', 'Whisper step', m(['air'], 'teleport-wind', 0.2, 10, 6, 'point'), 1.8, {

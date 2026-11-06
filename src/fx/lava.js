@@ -84,10 +84,10 @@ export default [
 
   SKILL('lava/molten-fist', 'Molten fist', m(ELEM, 'melee-strike', 0.3, 6, 2, 'point'), 1.8, {
     view: 'side',
-    act: act('thrust', 0.04, 1.7, { windup: 0.45, hits: [{ t: 0.04, stop: 0.12, shake: 0.35, amp: 0.05, push: 1.8 }] }),
+    act: act('thrust', 0.04, 1.72, { windup: 0.45, hits: [{ t: 0.04, stop: 0.12, shake: 0.35, amp: 0.05, push: 1.8 }] }),
     // P3=335
     build(fx, o) {
-      const k = kit(fx, o, LAVA), C = [1.62, 1.2, 0.1], A = [0.6, 1.38, 0.2];
+      const k = kit(fx, o, LAVA), C = fx.anchor('tgt', 0, [-0.08, 0.1, 0.1]), A = fx.anchor('handR', 0.04); // fist at contact
       k.em({ count: 1, kind: 'soft', shape: 'point', size: [0.5, 0.5], life: [0.6, 0.6], intensity: 1.6, delay: -0.3, t0: -0.3, emit: 0.001, follow: k.at() });
       k.em({ count: 20, kind: 'soft', shape: 'sphere', radius: 0.2, dir: [1, 0, 0], speed: [0.5, 1], life: [0.4, 0.7], size: [0.3, 0.15], intensity: 1, delay: -0.4, emit: 0.7, follow: k.at() });
       k.em({ count: 30, kind: 'flame', shape: 'sphere', radius: 0.15, dir: [1, 0, 0], speed: [0.3, 0.8], life: [0.3, 0.5], size: [0.3, 0.12], aspect: 1.6, intensity: 0.4, delay: -0.4, emit: 0.7, follow: k.at() });
@@ -137,7 +137,7 @@ export default [
     act: act('smash', 1.0, 3, { hits: [1.0, 1.8, 2.6].map((t) => ({ t, stop: 0.06, shake: 0.3, amp: 0.04, push: 1.6 })) }),
     // P3=486
     build(fx, o) {
-      const k = kit(fx, o, LAVA), B = [1.2, 0, 0.4], TG = [3, 1.2, 0], TOP = [1.2, 1.71, 0.4];
+      const k = kit(fx, o, LAVA), B = [1.2, 0, 0.4], TG = fx.anchor('tgt', 0, [0, 0.1, 0]), TOP = [1.2, 1.71, 0.4]; // anchor-ok
       const core = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.3), lavaMat(fx));
       core.position.set(1.2, 0.855, 0.4); core.scale.setScalar(1.9);
       const anvil = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.12, 0.46), metal('#4a4f57'));

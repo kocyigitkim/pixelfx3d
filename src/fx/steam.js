@@ -18,7 +18,7 @@ export default [
       const k = kit(fx, o, STEAM), kf = kit(fx, o, FIRE), C = [0, 0.3, 0];
       k.smoke({ ramp: VAPOR, count: 120, shape: 'sphere', radius: 0.3, pos: C, radial: 1, speed: [3, 6], drag: 1.5, life: [1.5, 2.5], size: [0.6, 2], delay: 0.05, emit: 0.001 });
       kf.em({ count: 40, kind: 'soft', shape: 'point', pos: C, radial: 1, speed: [0.5, 1.5], life: [0.4, 0.7], size: [0.5, 0.3], intensity: 0.6, delay: 0.05, emit: 0.001 });
-      k.ring({ t0: 0.05, dur: 0.35, r: [0.2, 2.2], normal: 'cam', pos: [0, 1, 0] });
+      k.ring({ t0: 0.05, dur: 0.35, r: [0.2, 2.2], normal: 'cam', pos: [0, 1, 0] }); // anchor-ok
       kf.decal({ kind: 'glow', r: [1.5, 1.5], pos: [0, 0.02, 0], t0: 0, dur: 1.7, intensity: 0.5 });
       k.em({ count: 40, kind: 'drop', shape: 'sphere', radius: 0.2, pos: C, radial: 1, speed: [2, 4], gravity: [0, -9, 0], life: [0.6, 1], size: [0.06, 0.03], intensity: 1.5, delay: 0.05, emit: 0.001 });
       k.gather(C, 0, 0.3, 1, 30);
@@ -59,15 +59,15 @@ export default [
     // P3=242
     build(fx, o) {
       const k = kit(fx, o, STEAM), kf = kit(fx, o, FIRE);
-      const A = [0.6, 1.38, 0.2], CH = [3, 1.2, 0];
+      const A = fx.anchor('handR', 0), CH = fx.anchor('tgt', 0, [0, 0.1, 0]);
       const P = (t) => { const u = clamp(t / 0.3); return [A[0] + (CH[0] - A[0]) * u, A[1] + (CH[1] - A[1]) * u, A[2] + (CH[2] - A[2]) * u]; };
       k.trail({ path: P, t0: 0, dur: 0.3, len: 0.3, width: 0.05 });
       k.em({ count: 20, kind: 'soft', shape: 'point', dir: [1, 0, 0], spread: 0.2, speed: [0.5, 1], life: [0.3, 0.5], size: [0.2, 0.1], intensity: 0.6, emit: 0.3, follow: (mm, ta, t) => mm.position.set(...P(t)) });
       k.ring({ t0: 0.3, dur: 0.4, r: [0.2, 1.2], normal: 'cam', pos: CH });
       k.sparks(CH, 0.3, 20);
-      kf.decal({ kind: 'rune', r: [0.25, 0.25], pos: [3, 1.2, 0.25], t0: 0.3, dur: 2.5, intensity: 2, glyphs: 6, poly: 6 });
-      k.smoke({ ramp: VAPOR, count: 60, shape: 'sphere', radius: 0.6, pos: [3, 1.0, 0], dir: [0, 1, 0], speed: [0.2, 0.6], life: [1.2, 2], size: [0.5, 1], delay: 0.3, emit: 2.4 });
-      kf.em({ count: 30, kind: 'soft', shape: 'sphere', radius: 0.5, pos: [3, 1.0, 0], dir: [0, 1, 0], speed: [0.3, 0.8], life: [0.8, 1.4], size: [0.15, 0.06], intensity: 0.8, delay: 0.3, emit: 2.4 });
+      kf.decal({ kind: 'rune', r: [0.25, 0.25], pos: fx.anchor('tgt', 0, [0, 0.1, 0.25]), t0: 0.3, dur: 2.5, intensity: 2, glyphs: 6, poly: 6 });
+      k.smoke({ ramp: VAPOR, count: 60, shape: 'sphere', radius: 0.6, pos: fx.anchor('tgt', 0, [0, -0.1, 0]), dir: [0, 1, 0], speed: [0.2, 0.6], life: [1.2, 2], size: [0.5, 1], delay: 0.3, emit: 2.4 });
+      kf.em({ count: 30, kind: 'soft', shape: 'sphere', radius: 0.5, pos: fx.anchor('tgt', 0, [0, -0.1, 0]), dir: [0, 1, 0], speed: [0.3, 0.8], life: [0.8, 1.4], size: [0.15, 0.06], intensity: 0.8, delay: 0.3, emit: 2.4 });
       k.light({ color: '#ff9a30', pos: [3, 1.2, 0.8], t0: 0.3, dur: 2.4, fade: [0.05, 0.5], intensity: 30 });
       if (k.g >= 2) k.smoke({ ramp: VAPOR, count: 40, shape: 'ring', radius: 0.5, pos: [3, 0.05, 0], dir: [0, 1, 0], speed: [0.3, 0.6], life: [1, 1.6], size: [0.4, 0.8], delay: 0.6, emit: 2.0 });
       if (k.g === 3) {
@@ -88,12 +88,12 @@ export default [
       k.smoke({ ramp: VAPOR, count: 100, shape: 'sphere', radius: 0.2, dir: [-1, 0.2, 0], spread: 0.6, speed: [0.5, 1.5], life: [0.8, 1.4], size: [0.4, 0.9], delay: t0, emit: 0.5, follow: (mm, ta, t) => mm.position.set(X(t), 0.9, 0) });
       kf.em({ count: 30, kind: 'soft', shape: 'point', dir: [-1, 0, 0], speed: [0.5, 1], life: [0.3, 0.5], size: [0.5, 0.2], intensity: 0.8, delay: t0, emit: 0.3, follow: (mm, ta, t) => mm.position.set(X(t), 1.0, 0) });
       k.em({ count: 20, kind: 'dust', blend: 'normal', lit: 1, ramp: DUST, shape: 'line', shapeSize: [1.9, 0, 0], pos: [0.7, 0.05, 0], dir: [-1, 0.2, 0], speed: [0.5, 1.2], life: [0.6, 1], size: [0.2, 0.5], delay: t0, emit: 0.3 });
-      ct(fx, k, [3, 1.1, 0], 0.02, 40, { lightI: 0 });
-      k.ring({ t0: 0, dur: 0.4, r: [0.2, 1.4], normal: 'cam', pos: [3, 1.1, 0] });
+      ct(fx, k, fx.anchor('tgt', 0), 0.02, 40, { lightI: 0 });
+      k.ring({ t0: 0, dur: 0.4, r: [0.2, 1.4], normal: 'cam', pos: fx.anchor('tgt', 0) });
       k.light({ color: '#ff9a30', pos: [1, 1.2, 0.8], t0: t0, dur: 1.6, fade: [0.05, 0.5], intensity: 90 });
-      if (k.g >= 2) k.em({ count: 40, kind: 'streak', shape: 'point', pos: [3, 1.1, 0], dir: [1, 0, 0], spread: 0.2, speed: [3, 6], life: [0.2, 0.35], size: [0.04, 0.02], stretch: 2, intensity: 1.2, delay: 0.02, emit: 0.001 });
-      if (k.g === 3) k.smoke({ ramp: VAPOR, count: 60, shape: 'sphere', radius: 0.3, pos: [3, 1.1, 0], radial: 1, speed: [2, 4], life: [0.6, 1], size: [0.4, 0.8], delay: 0.02, emit: 0.001 });
-      k.extras([3, 1.1, 0], 0);
+      if (k.g >= 2) k.em({ count: 40, kind: 'streak', shape: 'point', pos: fx.anchor('tgt', 0), dir: [1, 0, 0], spread: 0.2, speed: [3, 6], life: [0.2, 0.35], size: [0.04, 0.02], stretch: 2, intensity: 1.2, delay: 0.02, emit: 0.001 });
+      if (k.g === 3) k.smoke({ ramp: VAPOR, count: 60, shape: 'sphere', radius: 0.3, pos: fx.anchor('tgt', 0), radial: 1, speed: [2, 4], life: [0.6, 1], size: [0.4, 0.8], delay: 0.02, emit: 0.001 });
+      k.extras(fx.anchor('tgt', 0), 0);
     } }),
 
   SKILL('steam/cloud-hammer', 'Cloud hammer', m(ELEM, 'overhead-slam', 0.5, 10, 3, 'circle'), 2.0, {

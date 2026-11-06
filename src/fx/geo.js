@@ -31,7 +31,7 @@ export default [
       k.pop(fist, 0, 0.3, 1.6, 2.1, (t) => { fist.position.x = 1.6 + 1.4 * sm(0.35, 0.5, t); });
       dustBurst(k, [1.6, 0.05, 0], 40, 0);
       rockBurst(k, [1.6, 0.2, 0], 20, 0);
-      ct(fx, k, [3.2, 1.2, 0], 0.5, 50, { lightI: 0 });
+      ct(fx, k, fx.anchor('tgt', 0, [-0.2, 0.1, 0]), 0.5, 50, { lightI: 0 });
       dustBurst(k, [3.4, 0.1, 0], 40, 0.5);
       rockBurst(k, [3.4, 0.2, 0], 20, 0.5);
       rockBurst(k, [3.4, 0.2, 0], 40, 0.5);
@@ -40,10 +40,10 @@ export default [
       k.light({ pos: [2.6, 1.2, 0.8], t0: 0, dur: 2.4, fade: [0.05, 0.6], intensity: 60 });
       if (k.g >= 2) k.em({ count: 20, kind: 'rock', blend: 'normal', lit: 1, shape: 'ring', radius: 0.5, pos: [3.0, 0.4, 0], swirl: 3, speed: [0.2, 0.6], life: [0.6, 1], size: [0.1, 0.06], ramp: ROCK, delay: 0.5, t0: 0.5, emit: 1.0 });
       if (k.g === 3) {
-        k.ring({ t0: 0.5, dur: 0.45, r: [0.2, 2.4], normal: 'cam', pos: [3.4, 1, 0] });
+        k.ring({ t0: 0.5, dur: 0.45, r: [0.2, 2.4], normal: 'cam', pos: fx.anchor('tgt', 0, [0, -0.1, 0]) });
         k.ring({ t0: 0.5, dur: 0.6, r: [0.2, 3], normal: 'up', pos: [3.4, 0, 0] });
       }
-      k.extras([3.4, 1.2, 0], 0.5);
+      k.extras(fx.anchor('tgt', 0, [0, 0.1, 0]), 0.5);
     } }),
 
   SKILL('geo/rubble-orbit', 'Rubble orbit', m(['earth'], 'orbit-release', 0.6, 12, 7, 'ring'), 2.6, {
@@ -51,7 +51,7 @@ export default [
     act: act('cast', 1.7, 4),
     // P3=282
     build(fx, o) {
-      const k = kit(fx, o, EARTH), rm = rock(), TF = 1.4, TGT = [4, 1, 0];
+      const k = kit(fx, o, EARTH), rm = rock(), TF = 1.4, TGT = fx.anchor('tgt', 0, [0, -0.1, 0]);
       // rise from the ground at the caster, orbit at radius 1 (angular speed 4), then fly to the target
       const orbit = (a0, t) => {
         const tt = Math.min(t, TF), u = sm(0, 0.6, tt), a = a0 + 4 * tt;
@@ -65,7 +65,7 @@ export default [
         dustBurst(k, TGT, 15, TF + 0.3);
       }
       k.light({ pos: [2, 1.4, 0.8], t0: 0, dur: 2.6, fade: [0.1, 0.6], intensity: 50 });
-      if (k.g >= 2) k.em({ count: 40, kind: 'rock', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.5, pos: [0, 0.9, 0], swirl: 2, speed: [0.1, 0.3], life: [0.8, 1.2], size: [0.06, 0.03], ramp: ROCK, delay: 0.3, t0: 0.3, emit: 1.3 });
+      if (k.g >= 2) k.em({ count: 40, kind: 'rock', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.5, pos: [0, 0.92, 0], swirl: 2, speed: [0.1, 0.3], life: [0.8, 1.2], size: [0.06, 0.03], ramp: ROCK, delay: 0.3, t0: 0.3, emit: 1.3 }); // anchor-ok
       if (k.g === 3) {
         k.ring({ t0: TF + 0.3, dur: 0.6, r: [0.2, 2.6], normal: 'up', pos: TGT });
         k.decal({ kind: 'cracks', r: [1.2, 1.6], pos: [0, 0, 0], t0: 0.3, dur: 2.2, reveal: 0.4, cells: 4 });
@@ -102,24 +102,24 @@ export default [
       const k = kit(fx, o, EARTH), rm = rock(), D = 2.8;
       fx.body.setPose(POSES.guard);
       fx.on((t) => { const u = sm(0.15, 0.45, t) * (1 - sm(D - 0.6, D, t)); fx.body.set({ rim: k.col(1), rimAmt: 1.1 * u * k.b, tint: k.col(1), tintAmt: 0.12 * u, glow: 0.25 * u, stone: 0.8 * sm(0.2, 1, t) * (1 - sm(2.3, 2.8, t)) }); });
-      k.gather([0, 1, 0], 0, 0.3, 1.2, 30);
+      k.gather([0, 1, 0], 0, 0.3, 1.2, 30); // anchor-ok
       k.ring({ t0: 0.3, dur: 0.6, r: [0.2, 1.6], normal: 'up' });
       k.light({ pos: [0, 1.2, 0.6], t0: 0, dur: D, fade: [0.1, 0.6], env: (t) => 0.7 + 0.3 * Math.sin((TAU * 3 * t) / D), intensity: 40 });
       // 8 plates fly from the ground onto the torso, then fall off after 2.3 s
-      const plateG = new THREE.BoxGeometry(0.16, 0.22, 0.06);
+      const plateG = new THREE.BoxGeometry(0.16, 0.22, 0.06), CY = fx.anchor('chest')[1]; // plates land on the torso
       for (let i = 0; i < 8; i++) {
-        const a = (i * TAU) / 8, S0 = [1.2 * Math.cos(a), 0.1, 1.2 * Math.sin(a)], E = [0.22 * Math.cos(a), 0.9 + 0.2 * (i % 4), 0.22 * Math.sin(a)], pl = new THREE.Mesh(plateG, rm);
+        const a = (i * TAU) / 8, S0 = [1.2 * Math.cos(a), 0.1, 1.2 * Math.sin(a)], E = [0.22 * Math.cos(a), CY - 0.3 + 0.2 * (i % 4), 0.22 * Math.sin(a)], pl = new THREE.Mesh(plateG, rm);
         pl.rotation.y = -a;
         fx.mesh(pl, (t) => { const p = lerp3(S0, E, sm(0.1, 0.6, t)), f = Math.max(0, t - 2.3); pl.position.set(p[0], Math.max(0.05, p[1] - 4 * f * f), p[2]); }, { t0: 0, dur: D });
       }
       k.smoke({ count: 40, shape: 'ring', radius: 0.5, pos: [0, 0.1, 0], radial: 0.6, speed: [0.5, 1.5], ramp: DUST, delay: 0.1, emit: 0.5, t0: 0.1 });
       k.em({ count: 20, kind: 'rock', blend: 'normal', lit: 1, shape: 'disc', radius: 0.4, pos: [0, 0.1, 0], dir: [0, 1, 0], spread: 0.3, speed: [0.5, 1.5], life: [0.8, 1.4], size: [0.1, 0.06], ramp: ROCK, delay: 0.1, t0: 0.1, emit: 0.8 });
-      if (k.g >= 2) k.em({ count: 20, kind: 'glint', shape: 'sphere', radius: 0.7, pos: [0, 1.1, 0], delay: 0.3, t0: 0.3, emit: 1.9, size: [0.1, 0.03], life: [0.2, 0.3] });
+      if (k.g >= 2) k.em({ count: 20, kind: 'glint', shape: 'sphere', radius: 0.7, pos: fx.anchor('chest', 0, [0.02, -0.12, 0]), delay: 0.3, t0: 0.3, emit: 1.9, size: [0.1, 0.03], life: [0.2, 0.3] });
       if (k.g === 3) {
         k.decal({ kind: 'cracks', r: [1.4, 1.4], pos: [0, 0, 0], t0: 0.1, dur: 2.7, reveal: 0.4, cells: 4 });
-        k.ring({ t0: 0.2, dur: 0.5, r: [0.2, 1.6], normal: 'cam', pos: [0, 1.1, 0] });
+        k.ring({ t0: 0.2, dur: 0.5, r: [0.2, 1.6], normal: 'cam', pos: fx.anchor('chest', 0, [0.02, -0.12, 0]) });
       }
-      k.extras([0, 1.1, 0], 0.3);
+      k.extras(fx.anchor('chest', 0, [0.02, -0.12, 0]), 0.3);
     } }),
 
   SKILL('geo/quake-ring', 'Quake ring', m(['earth'], 'pulse', 0.4, 14, 0, 'ring'), 2.8, {
@@ -140,7 +140,7 @@ export default [
       k.light({ pos: [0, 1, 0.8], t0: 0, dur: 2.4, env: (t) => Math.exp(-2 * t), intensity: 40 });
       if (k.g >= 2) { pulse(1.8); fx.shake(1.8, 0.4, 0.03); }
       if (k.g === 3) { const sp = new THREE.Mesh(new THREE.ConeGeometry(0.25, 1.2, 6), rm); sp.position.y = 0.6; k.pop(sp, 0.2, 0.5, 2.0, 2.5); fx.flash(0.6, 0.12, k.col(0), 0.15); }
-      k.extras([0, 0.5, 0], 1.2);
+      k.extras([0, 0.52, 0], 1.2); // anchor-ok
     } }),
 
   SKILL('geo/boulder-roll', 'Boulder roll', m(['earth'], 'rolling-projectile', 0.6, 12, 6, 'line'), 2.8, {
@@ -177,7 +177,7 @@ export default [
         k.ring({ t0: p, dur: 0.6, r: [0.2, 2.4], normal: 'up', pos: P });
         k.glint([P[0], 1.5, 0], p, 1.2);
         if (p !== 2.3) k.light({ pos: [P[0], 1.5, 0.6], t0: p - 0.05, dur: 0.5, fade: [0.01, 0.4], intensity: 50 }); // K2: extras owns the 2.3 light
-        k.beam({ from: [P[0], 1.5, 0], to: [3, 1, 0], r: [0.15, 0.04], t0: p, dur: 0.25, fade: [0.03, 0.15] });
+        k.beam({ from: [P[0], 1.5, 0], to: fx.anchor('tgt', 0, [0, -0.1, 0]), r: [0.15, 0.04], t0: p, dur: 0.25, fade: [0.03, 0.15] });
       }
       k.decal({ kind: 'cracks', r: [1, 1], pos: P, t0: 0, dur: 3.0, reveal: 0.4, cells: 4 });
       dustBurst(k, [P[0], 0.05, 0], 30, 0.1);
