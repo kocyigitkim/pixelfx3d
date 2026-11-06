@@ -27,7 +27,7 @@ export const ENV = {
 Skills use `grade(o).g` as the tier; other effects pass `tier` (1–3) explicitly. Bursts use `sizePow` 0.4–0.6; alpha fades over the last 40% of life.
 
 
-World: **meters, +Y up, characters face +X, feet on y = 0, ~1.8 m tall (chibi: big head, short body; see "Actor, target and anchors").** Default camera sits at +Z/+X looking at (0,1,0)
+World: **meters, +Y up, characters face +X, feet on y = 0, ~1.85 m tall realistic humans (see "Actor, target and anchors").** Default camera sits at +Z/+X looking at (0,1,0)
 (override per effect with `stage.view`). Origin of an effect = the spot on the ground in front of/under the action.
 
 ## An effect file
@@ -49,29 +49,39 @@ export default [{
 Acts run the actor from `-windup` s before t=0 (wind-up) to the recovery; hit-stop / camera shake / target kick are `hits`.
 
 ## Actor, target and anchors
-* **Models.** The actor and the target are rigged KayKit characters (`assets/models/*.glb`, CC0, see NOTICE.md): `knight`, `mage` (actor) and `skeleton` (target, `act.target`). One scale `S` for all (~1.8 m), chibi proportions: idle hips y ≈ .29, chest ≈ .62, head centre ≈ 1.31 (head radius `fx.body.headR` ≈ .40 knight), right hand ≈ [.08, .48, .37]. Target chest ≈ (x, .60), head ≈ 1.29. Never assume the old 1.25 m chest / 1.73 m head.
+* **Models.** The actor and the target are rigged Quaternius humans (`assets/models/*.glb` + shared `tex/*.jpg`, CC0, see NOTICE.md; built by `tools/build-chars.mjs`). One UE-style 65-joint rig, metric (`S = 1`), faces +X, feet on y = 0:
+
+  | char | model | role |
+  |---|---|---|
+  | `knight` | Male_Ranger outfit (hood) + Superhero male head, eyes, brows; 1.85 m | default actor, holds the procedural weapons |
+  | `mage` | Female_Ranger outfit + Superhero female head; ~1.79 m | caster |
+  | `skeleton` | Male_Peasant outfit + male head + hair | target (`act.target`), faces −X |
+
+  Idle anchors (knight, fx-local): hips ≈ .93, chest ≈ (−.07, 1.23), head centre ≈ 1.64 (`fx.body.headR` .125 knight / .115 mage; the head box includes the neck, the face front is ~.105 (mouth) to .13 (nose) ahead of the head centre), right hand ≈ [−.16, .99, .28], sword tip ≈ [.92, 1.11, .21]. Target at x 2.2: chest ≈ (2.28, 1.22), head ≈ 1.64. Weapons are procedural (`WLEN`: sword 1.06, staff 1.28, hammer 1.0, spear 1.8, dagger .42, scythe 1.4, whip .3); without a weapon `tip` is a virtual 1 m blade.
 * **Loading.** Models load once: `await loadModels()` (with `loadTextures()`, both idempotent) before creating any effect with `act` or `body`; otherwise the constructor throws `pixelfx3d: await loadModels() before creating effects with an actor`.
 * **Char.** `act.char: 'knight' | 'mage'` overrides the default: `mage` for `weapon: 'staff'` or `cast`/`castup` without a weapon (and for body-only effects in mage/priest/shaman/arcane/holy), else `knight`.
-* **Poses.** Every pose is a frame of a KayKit clip: `POSES.<name>` = `{clip, time}` (idle, guard, windupHigh, cut, lunge, castRelease, throwFwd …, `src/core/dummy.js`). `fx.body.setPose(p)` takes a `POSES` entry, any `{clip, time}` (e.g. `{clip: 'Running_A', time: ((t / 0.6) % 1) * 0.8}`) or a blend `{a, b, f}`. `act.keys: [[t, 'poseName', 'snap'?], …]` replaces the kind's timeline; same-clip neighbours play the clip, others crossfade. Old joint-angle objects (`aR`, `lean`, `py` …) do nothing any more. Offset holders `fx.body.torso / neck / pelvis` still add rotation/position/scale on top of the clip (spine / head / hips bones).
-* **Contact.** `act.kind` picks the clip; its contact frame lands on act time `act.contact` (default 0):
+* **Poses.** Every pose is a frame of a Quaternius Universal Animation Library clip (24 clips, all stored in knight.glb and shared): `POSES.<name>` = `{clip, time}` (`src/core/dummy.js`, checked by `node tools/rig-info.mjs --poses`). `fx.body.setPose(p)` takes a `POSES` entry, any `{clip, time}` (e.g. `{clip: 'Sprint_Loop', time: ((t / 0.6) % 1) * 0.667}`) or a blend `{a, b, f}`. `act.keys: [[t, 'poseName', 'snap'?], …]` replaces the kind's timeline; same-clip neighbours play the clip, others crossfade. Offset holders `fx.body.torso / neck / pelvis` add rotation/position/scale on top of the clip (spine_01 / Head / pelvis bones).
+  POSES: idle, guard `Idle_Loop@0`; windupHigh/cut/follow `Sword_Attack@.333/.433/.5`; sideBack/sideCut `Sword_Regular_C@.6/.687`; overhead2/overheadUp/smashDown/smashGround `Sword_Heavy_Combo@2.5/2.533/2.6/2.65`; pullback, thrustBack/lunge/behind `Sword_Dash@.2/.321/.5`; castCharge `Spell_Simple_Enter_R@.3`; castRelease `Spell_Simple_Shoot_R@.133`; castUp `Pistol_Aim_Up@0`; crouch/leap `Jump_Start@0/.57`; roar/land `Jump_Land@0/.2`; throwBack/throwFwd `OverhandThrow@.27/.4`; upLow/upHigh/slashBack `Sword_Regular_A@.2/.3/.433`; daggerA/daggerB `Punch_Cross@.15/.3`; sweepBack/sweepCut `Sword_Regular_B@.183/.25`; armsWide `A_TPose@0`; hurt `Hit_Chest@.15`; bowDraw `Pistol_Aim_Neutral@0`; bowRelease `Pistol_Shoot@.1`; runA/runB `Sprint_Loop@0/.33`; runAir `Jog_Fwd_Loop@.3`; dashLow `Shield_Dash@0`; vanish `Roll@.2`. Other clips: `LayToIdle` (lying → standing, 1.533 s), `Hit_Head`.
+  Mirrored spells: every UAL spell clip is left-handed, so the build stores right-handed `_R` copies only (`Spell_Simple_Enter_R`, `Spell_Simple_Shoot_R`; mirror `t' = (−x, y, z)`, `q' = (x, −y, −z, w)`, `_l ↔ _r`, build self-check 0 mm). Casts therefore leave from the right hand.
+* **Contact.** `act.kind` picks the clip; its contact frame `c` lands on act time `act.contact` (default 0). The clip plays to `E` (clip s), holds that frame `hold` s, then blends back to guard in .25 s (`ACTS = [clip, D, c, E, hold]`, measured at 240 Hz):
 
-  | kind | clip | contact (clip s) |
-  |---|---|---|
-  | slash | 1H_Melee_Attack_Slice_Diagonal | .396 (blade crosses the front) |
-  | sideslash | 1H_Melee_Attack_Slice_Horizontal | .258 |
-  | smash | 2H_Melee_Attack_Chop | .867 (tip lands low in front) |
-  | thrust | 1H_Melee_Attack_Stab | .433 (full reach) |
-  | cast | Spellcast_Shoot | .3 (release) |
-  | castup | Spellcast_Raise | .667 |
-  | stomp | Jump_Full_Short | .7 (landing) |
-  | throw | Throw | .733 (release) |
+  | kind | clip | D | contact c | E | hold | at c |
+  |---|---|---|---|---|---|---|
+  | slash | Sword_Attack | 1.533 | .433 (blade crosses the front) | .70 | – | tip (1.82, .86) |
+  | sideslash | Sword_Regular_C | 2.0 | .687 | 1.067 | – | tip (1.80, .48) |
+  | smash | Sword_Heavy_Combo | 4.333 | 2.633 (tip lands low in front) | 3.229 | – | tip (1.71, .01) |
+  | thrust | Sword_Dash | 1.567 | .321 (98% reach) | .921 | – | tip (1.75, .67); the hand pulls back within .05 s |
+  | cast | Spell_Simple_Enter_R | .533 | .404 (full extension) | .533 | .35 | handR (.62, 1.42) |
+  | castup | OverhandThrow | 1.333 | .292 (hand highest) | .30 | .40 | handR y 1.63 |
+  | stomp | Jump_Land | 1.267 | .20 (hips lowest) | – | – | hips .48 |
+  | throw | OverhandThrow | 1.333 | .371 (release) | – | – | handR (.98, 1.16) |
 
-  If the first hit is not at t=0, set `contact` to the hit time so the blade/hand is at the target then.
+  If the first hit is not at t=0, set `contact` to the hit time so the blade/hand is at the target then. The sword attacks lunge low (hips .57–.76), so literal chest-height arcs sit high: use `fx.anchor('tip', T)` / `fx.bladeArc`. Melee reach: target x ≈ tip x at the hit + .2 (sword ~1.9–2.0, dagger ~1.0–1.4, unarmed ~.9–1.6).
 * **Anchors.** `fx.anchor(name, t = 0, off)` returns the fx-local `[x, y, z]` of a rig point with the actor posed at act time `t` (build time, no live follow). Body names: `handR handL tip chest head hips feet`; target: `tgt` (= `tgtChest`), `tgtChest`, `tgtHead`, `tgtFeet`. `off` adds `[dx, dy, dz]`. It does not see moves you make in `fx.on()` (dashes, teleports): add that offset yourself (`C = fx.anchor('handR', 0.02); C[0] += x1`). Body-only effects: call `fx.body.setPose(...)` before the first `fx.anchor`.
   Typical: projectile `from = fx.anchor('handR', tRelease)`, `to = fx.anchor('tgt')`; melee contact `C = fx.anchor('tip', T)`, pivot `H = fx.anchor('handR', T)`; mouth `fx.anchor('head', 0, [0.85 * fx.body.headR, -0.45 * fx.body.headR, 0])`.
 * **Live followers.** `k.at(name)` (skills) returns a mover `(obj) => …` that places an object at the live anchor each frame (`'handR'` default; aliases `'armR'`/`'armL'`; target names work too). Low level: `fx.body.point(name, outVector3)` (world space; convert with `fx.worldToLocal`).
 * **Blade arcs.** `fx.bladeArc(t0, t1)` returns `fx.slash()` params `{center, radius, a0, a1, tilt}` fitted to the real blade tip path over act time `[t0, t1]`; use it for crescents so they pass through the weapon.
-* **Target.** `fx.target` (skeleton) reacts to `hits`; tint it with `fx.target.set({...})` and the actor with `fx.body.set({...})`; never change shared model materials directly. For melee set `act.target` x so the blade tip at the hit reaches the target (`anchor-audit` prints `REACH … suggest target.x`).
+* **Target.** `fx.target` (peasant, char `skeleton`) reacts to `hits` (`push` < 1.2 plays Hit_Chest, else Hit_Head; it never falls); tint it with `fx.target.set({...})` and the actor with `fx.body.set({...})`; never change shared model materials directly. For melee set `act.target` x so the blade tip at the hit reaches the target (`anchor-audit` prints `REACH … suggest target.x`).
 * **Rule.** Never hard-code hand, head or target coordinates. Body-volume centres (auras, shells, body-filling emitters) may keep fixed heights; mark such lines with a trailing `// anchor-ok`. Check with `node tools/anchor-audit.mjs <files> --check` (exit 1 on unmarked literals near an anchor) and `node tools/actor-smoke.mjs cat:<category>` (NaN / determinism / binding warnings, no browser).
 
 ## Builders on `fx` (all take `t0`, `dur`, `fade:[in,out]` seconds; default = whole effect; coordinates are fx-local meters)

@@ -143,13 +143,13 @@ export interface StageDef {
 
 /** rig anchors for Fx.anchor(): actor body, or the target (tgt = tgtChest) */
 export type AnchorName = 'handR' | 'handL' | 'tip' | 'chest' | 'head' | 'hips' | 'feet' | 'tgt' | 'tgtChest' | 'tgtHead' | 'tgtFeet';
-/** a frame of a shared KayKit clip, or a crossfade of two */
+/** a frame of a shared Quaternius UAL clip (e.g. Idle_Loop, Sword_Attack, Spell_Simple_Shoot_R), or a crossfade of two */
 export type Pose = { clip: string; time: number } | { a: { clip: string; time: number }; b: { clip: string; time: number }; f: number };
 export interface ActDef {
   kind: string; weapon?: string; target?: Vec3 | false; windup?: number;
-  /** actor model; default: mage for staff / weaponless casts, else knight */
+  /** actor model (knight = Quaternius Male_Ranger, mage = Female_Ranger); default: mage for staff / weaponless casts, else knight */
   char?: 'knight' | 'mage';
-  /** act time where the kind's contact frame lands (blade crosses the front / full reach / chop lands); default 0. Set it to the blade hit t. */
+  /** act time where the kind's contact frame lands (blade crosses the front / full reach / chop lands / cast release); default 0. Set it to the first hit t (tip reach ~1.7-1.8 m: target x ~ tip x + .2). */
   contact?: number;
   /** pose keys [t, POSES name | {clip,time}, 'snap'?] (default: from kind) */
   keys?: Array<[number, string | { clip: string; time: number }, 'snap'?]>;
@@ -176,10 +176,11 @@ export class Fx extends THREE.Group {
     armR: { hand: THREE.Object3D }; armL: { hand: THREE.Object3D };
     /** offset holders (Dummy frame) applied to spine / head / hips each frame */
     torso: THREE.Object3D; neck: THREE.Object3D; pelvis: THREE.Object3D;
+    /** headMesh: head-centre holder (+X = face); headR ~.125 knight / .115 mage (bbox incl. neck); weaponLen from WLEN (sword 1.06) */
     headMesh: THREE.Object3D; headR: number; weaponLen: number;
   };
-  /** Skeleton_Warrior target (act.target), same overlay API as body */
-  target?: THREE.Group & { set(params: Record<string, unknown>): void; point(name: 'chest' | 'head' | 'feet', out?: THREE.Vector3): THREE.Vector3; mat: THREE.MeshStandardMaterial; kick(s?: number): void };
+  /** training target (act.target; char 'skeleton' = Quaternius Male_Peasant, faces -X), same overlay API as body */
+  target?: THREE.Group & { set(params: Record<string, unknown>): void; point(name: 'chest' | 'head' | 'feet', out?: THREE.Vector3): THREE.Vector3; mat: THREE.MeshStandardMaterial; /** s < 1.2 Hit_Chest, else Hit_Head */ kick(s?: number): void };
   /** fx-local [x,y,z] of a rig anchor at act time t (poses the body at t, then restores); off adds [dx,dy,dz] */
   anchor(name: AnchorName, t?: number, off?: Vec3): Vec3;
   /** fx.slash() params {center, radius, a0, a1, tilt, depth} fitted to the real blade (handR pivot, tip path) over act time [t0, t1] */
@@ -276,17 +277,18 @@ export class Emitter {}
 export const prims: Record<string, (...args: unknown[]) => unknown>;
 export const Dummy: unknown;
 export const Target: unknown;
-export const POSES: Record<string, unknown>;
+/** pose name -> {clip, time} frame of a shared clip (src/core/dummy.js) */
+export const POSES: Record<string, { clip: string; time: number }>;
 
 /* ---------- textures (assets/fx, see docs/AUTHORING.md) ---------- */
 export function loadTextures(base?: string | URL): Promise<void>;
 export function getTex(name: string): TexEntry;
 export const TEX: Record<string, TexEntry>;
 
-/* ---------- character models (assets/models, KayKit CC0) ---------- */
-/** Load Knight / Mage / Skeleton_Warrior. Await before creating effects with an actor (act/body). Idempotent. */
+/* ---------- character models (assets/models, Quaternius CC0, built by tools/build-chars.mjs) ---------- */
+/** Load knight.glb (mesh + all clips), mage.glb, target.glb (+ tex/*.jpg). Await before creating effects with an actor (act/body). Idempotent. */
 export function loadModels(base?: string | URL): Promise<void>;
-export const MODELS: Record<'knight' | 'mage' | 'skeleton', { scene: THREE.Object3D; props: string[]; clips: Map<string, THREE.AnimationClip> }>;
+export const MODELS: Record<'knight' | 'mage' | 'skeleton', { scene: THREE.Object3D; clips: Map<string, THREE.AnimationClip> }>;
 
 /* ---------- parametric mesh builders (src/core/meshes.js) ---------- */
 export function surface(nu: number, nv: number, f: (u: number, v: number) => Vec3): THREE.BufferGeometry;
