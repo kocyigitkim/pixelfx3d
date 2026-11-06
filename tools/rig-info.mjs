@@ -24,15 +24,21 @@ for (const c of Object.keys(MODELS)) { const names = new Set(); MODELS[c].scene.
 // contact times
 const R = rig('knight'), mixer = new THREE.AnimationMixer(R.m), slot = R.b('handslotr'), hips = R.b('hips'), TIP = 1.41;
 function sample(clip, fn) { const a = mixer.clipAction(CLIPS.get(clip)); mixer.stopAllAction(); a.play(); const D = CLIPS.get(clip).duration, r = [];
-  for (let t = 0; t <= D + 1e-6; t += 1 / 120) { a.time = Math.min(t, D - 1e-4); mixer.update(0); R.g.updateMatrixWorld(true); r.push({ t, ...fn() }); } a.stop(); return { D, r }; }
+  for (let t = 0; t <= D + 1e-6; t += 1 / 240) { a.time = Math.min(t, D - 1e-4); mixer.update(0); R.g.updateMatrixWorld(true); r.push({ t, ...fn() }); } a.stop(); return { D, r }; }
 const pt = () => ({ tip: slot.localToWorld(new THREE.Vector3(0, TIP, 0)), hand: slot.getWorldPosition(new THREE.Vector3()), hip: hips.getWorldPosition(new THREE.Vector3()) });
 const metric = {
+  // blade crosses the actor's front (+X) on the forward swing (tip moving -Z -> +Z): smallest |tip.z| among those frames reaching >=85% of max tip.x
+  front: (r) => { const mx = Math.max(...r.map((x) => x.tip.x)); return r.filter((x, i) => i > 0 && x.tip.z > r[i - 1].tip.z && x.tip.x >= 0.85 * mx).reduce((a, b) => (Math.abs(b.tip.z) < Math.abs(a.tip.z) ? b : a)); },
+  // thrust arrives: first frame at >=98% of max forward tip reach
+  stab: (r) => { const mx = Math.max(...r.map((x) => x.tip.x)); return r.find((x) => x.tip.x >= 0.98 * mx); },
+  // chop lands: first frame after the fastest frame with the tip low (<0.1 m) in front
+  chop: (r) => { const f = metric.speed(r); return r.find((x) => x.t > f.t && x.tip.y < 0.1 && x.tip.x > 0.5) || f; },
   speed: (r) => { let bi = 1, bs = -1; for (let i = 1; i < r.length; i++) { const s = r[i].tip.distanceTo(r[i - 1].tip); if (s > bs) { bs = s; bi = i; } } return r[bi]; },
   reach: (r) => r.reduce((a, b) => (b.hand.x > a.hand.x ? b : a)),
   height: (r) => r.reduce((a, b) => (b.hand.y > a.hand.y ? b : a)),
   land: (r) => { const pk = r.reduce((a, b) => (b.hip.y > a.hip.y ? b : a)); return r.filter((x) => x.t > pk.t).reduce((a, b) => (b.hip.y < a.hip.y ? b : a)); },
 };
-const KINDS = [['slash', '1H_Melee_Attack_Slice_Diagonal', 'speed'], ['sideslash', '1H_Melee_Attack_Slice_Horizontal', 'speed'], ['smash', '2H_Melee_Attack_Chop', 'speed'], ['thrust', '1H_Melee_Attack_Stab', 'reach'], ['cast', 'Spellcast_Shoot', 'reach'], ['castup', 'Spellcast_Raise', 'height'], ['stomp', 'Jump_Full_Short', 'land'], ['throw', 'Throw', 'speed']];
+const KINDS = [['slash', '1H_Melee_Attack_Slice_Diagonal', 'front'], ['sideslash', '1H_Melee_Attack_Slice_Horizontal', 'front'], ['smash', '2H_Melee_Attack_Chop', 'chop'], ['thrust', '1H_Melee_Attack_Stab', 'stab'], ['cast', 'Spellcast_Shoot', 'reach'], ['castup', 'Spellcast_Raise', 'height'], ['stomp', 'Jump_Full_Short', 'land'], ['throw', 'Throw', 'speed']];
 log('kind | clip | dur | contact | metric | tip@c | hand@c');
 for (const [k, c, m] of KINDS) { const { D, r } = sample(c, pt), x = metric[m](r); log(`${k} | ${c} | ${f3(D)} | ${f3(x.t)} | ${m} | ${V(x.tip)} | ${V(x.hand)}`); }
 if (process.argv.includes('--poses')) {
@@ -44,4 +50,10 @@ if (process.argv.includes('--poses')) {
   log(`1H_Sword top ${V(top)} vs tip() ${V(tp)}: d ${f3(top.distanceTo(tp))} ${top.distanceTo(tp) < 0.1 ? 'ok' : 'FAIL'}`);
   for (const n of ['handR', 'handL', 'tip', 'chest', 'head', 'hips', 'feet']) log(`idle ${n} ${V(d.point(n, w))}`);
   const T = new (await import('../src/core/dummy.js')).Target(); T.updateMatrixWorld(true); for (const n of ['chest', 'head', 'feet']) log(`target ${n} ${V(T.point(n, w))}`);
+}
+// --trace [clip ...]: per clip, per 1/30 s frame, sword tip / handR / hips (Dummy frame: faces +X) — pick contact frames in front of the actor
+if (process.argv.includes('--trace')) {
+  const { Dummy } = await import('../src/core/dummy.js'), d = new Dummy({ weapon: 'sword' }), w = new THREE.Vector3(), sel = process.argv.slice(process.argv.indexOf('--trace') + 1).filter((a) => !a.startsWith('--'));
+  for (const c of sel.length ? sel : KINDS.map((k) => k[1])) { const D = CLIPS.get(c).duration; log(`trace ${c} (${f3(D)} s): t | tip | handR | hips`);
+    for (let t = 0; t <= D + 1e-6; t += 1 / 30) { d.setPose({ clip: c, time: t }); d.updateMatrixWorld(true); log(`  ${f3(t)} | ${V(d.tip(undefined, w))} | ${V(d.point('handR', w))} | ${V(d.point('hips', w))}`); } }
 }

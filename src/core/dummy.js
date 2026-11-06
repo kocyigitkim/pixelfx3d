@@ -44,9 +44,9 @@ function overlay(src, u) {
 const C = (clip, time) => ({ clip, time }), SD = '1H_Melee_Attack_Slice_Diagonal', SH = '1H_Melee_Attack_Slice_Horizontal', CH2 = '2H_Melee_Attack_Chop', ST = '1H_Melee_Attack_Stab', CH1 = '1H_Melee_Attack_Chop', JP = 'Jump_Full_Short';
 export const POSES = {
   idle: C('Idle', 0), guard: C('Idle', 0),
-  windupHigh: C(SD, 0.3), cut: C(SD, 0.433), follow: C(SD, 0.55), sideBack: C(SH, 0.15), sideCut: C(SH, 0.267),
-  overheadUp: C(CH2, 0.6), smashDown: C(CH2, 0.833), smashGround: C(CH2, 0.95), overhead2: C(CH2, 0.55),
-  pullback: C(ST, 0.35), thrustBack: C(ST, 0.35), lunge: C(ST, 0.7), behind: C(ST, 0.5),
+  windupHigh: C(SD, 0.3), cut: C(SD, 0.396), follow: C(SD, 0.467), sideBack: C(SH, 0.2), sideCut: C(SH, 0.258),
+  overheadUp: C(CH2, 0.6), smashDown: C(CH2, 0.867), smashGround: C(CH2, 0.95), overhead2: C(CH2, 0.55),
+  pullback: C(ST, 0.3), thrustBack: C(ST, 0.3), lunge: C(ST, 0.433), behind: C(ST, 0.5),
   castCharge: C('Spellcast_Long', 1.0), castRelease: C('Spellcast_Shoot', 0.3), castUp: C('Spellcast_Raise', 0.667),
   crouch: C(JP, 0.1), leap: C(JP, 0.45), land: C(JP, 0.7), throwBack: C('Throw', 0.55), throwFwd: C('Throw', 0.8),
   upLow: C('2H_Melee_Attack_Slice', 0.25), upHigh: C(CH1, 0.533), slashBack: C(CH1, 0.45),
@@ -54,8 +54,8 @@ export const POSES = {
   roar: C('Cheer', 0.6), armsWide: C('Cheer', 0.3), hurt: C('Hit_A', 0.15), bowDraw: C('1H_Ranged_Aiming', 0.5), bowRelease: C('1H_Ranged_Shoot', 0.2),
   runA: C('Running_A', 0), runB: C('Running_A', 0.4), runAir: C('Running_B', 0.25), dashLow: C('Dodge_Forward', 0.2), vanish: C('Dodge_Backward', 0.2),
 };
-/** act kind -> [clip, duration, contact time] (contact lands on act time 0; measured by tools/rig-info.mjs) */
-const ACTS = { slash: [SD, 1, 0.433], sideslash: [SH, 1.067, 0.267], smash: [CH2, 1.633, 0.833], thrust: [ST, 1.6, 0.7], cast: ['Spellcast_Shoot', 0.933, 0.3],
+/** act kind -> [clip, duration, contact time] (contact lands on act time 0; tools/rig-info.mjs: slash/sideslash = blade crosses the front (+X, z~0), smash = tip lands low in front, thrust = full reach) */
+const ACTS = { slash: [SD, 1, 0.396], sideslash: [SH, 1.067, 0.258], smash: [CH2, 1.633, 0.867], thrust: [ST, 1.6, 0.433], cast: ['Spellcast_Shoot', 0.933, 0.3],
   castup: ['Spellcast_Raise', 2.1, 0.667], stomp: [JP, 1.167, 0.7], throw: ['Throw', 1.367, 0.733] };
 const WLEN = { sword: 1.08, staff: 0.94, hammer: 1.0, spear: 1.8, dagger: 0.42, scythe: 1.4, whip: 0.3 };
 /** per char: chest offset (spine-local), head centre offset (head-local), head radius (m) */
