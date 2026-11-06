@@ -1,59 +1,73 @@
-// Rig measurements (GPU-free): scale check, contact times, prop lengths, anchor offsets. node tools/rig-info.mjs [--poses]
+// Rig measurements (GPU-free, 240 Hz): clips, heights, y0, grip, anchor offsets, contact + E table. node tools/rig-info.mjs [--poses] [--trace [clip ...]]
 import './node-env.mjs';
 import * as THREE from 'three';
-import { loadModels, MODELS } from '../src/core/models.js';
-import { CLIPS, cloneModel } from '../src/core/models.js';
+import { loadModels, MODELS, CLIPS, cloneModel } from '../src/core/models.js';
 await loadModels();
-const S = 0.75, f3 = (x) => +x.toFixed(3), V = (v) => `[${f3(v.x)}, ${f3(v.y)}, ${f3(v.z)}]`, out = [];
-const log = (...a) => { const s = a.join(' '); out.push(s); console.log(s); };
-function rig(char) { const g = new THREE.Group(), m = cloneModel(char); m.scale.setScalar(S); m.rotation.y = Math.PI / 2; g.add(m); g.updateMatrixWorld(true); return { g, m, b: (n) => m.getObjectByName(n) }; }
-const box = (o) => new THREE.Box3().setFromObject(o, true);
-// scale
-const K = rig('knight'), top = box(K.m).max.y; log(`S ${S}: top ${f3(top)} m (${f3(top / S)} model units) ${top >= 1.75 && top <= 1.9 ? 'ok' : 'OUT OF [1.75,1.9]'}`);
-for (const c of ['mage', 'skeleton']) log(`  ${c} top ${f3(box(rig(c).m).max.y)} m`);
-// props (slot-local +Y extent, metres)
-for (const [c, n] of [['knight', '1H_Sword'], ['knight', '2H_Sword'], ['mage', '2H_Staff'], ['mage', '1H_Wand']]) { const o = MODELS[c].scene.getObjectByName(n); o.geometry.computeBoundingBox(); const bb = o.geometry.boundingBox.clone().applyMatrix4(o.matrix); log(`prop ${c}/${n}: slot y ${f3(bb.min.y)}..${f3(bb.max.y)} → len ${f3(bb.max.y * S)} m`); }
-// anchor offsets in bone-local units (rest pose) + head radius
-for (const [c, head, body] of [['knight', 'Knight_Head', 'Knight_Body'], ['mage', 'Mage_Head', 'Mage_Body'], ['skeleton', 'Skeleton_Warrior_Head', 'Skeleton_Warrior_Body']]) {
-  const R = rig(c), hb = box(R.b(head)), bb = box(R.b(body)), hc = hb.getCenter(new THREE.Vector3()), bc = bb.getCenter(new THREE.Vector3()), hs = hb.getSize(new THREE.Vector3());
-  const hO = R.b('head').worldToLocal(hc.clone()), cO = R.b('spine').worldToLocal(bc.clone()), w = new THREE.Vector3();
-  log(`${c}: head center ${V(hc)} → head-local ${V(hO)}; body center ${V(bc)} → spine-local ${V(cO)}; headR ${f3((hs.x + hs.y + hs.z) / 6)} m; rest handslotr ${V(R.b('handslotr').getWorldPosition(w))} hips ${V(R.b('hips').getWorldPosition(w))}`);
+const f3 = (x) => +x.toFixed(3), V = (v) => `[${f3(v.x)}, ${f3(v.y)}, ${f3(v.z)}]`;
+const log = (...a) => console.log(a.join(' '));
+const IDLE = 'Idle_Loop', BLADE = 1.06, FING = ['index', 'middle', 'ring', 'pinky'];
+/** model in the Dummy frame (faces +X), posed by clip frames */
+function rig(char) {
+  const g = new THREE.Group(), m = cloneModel(char), mx = new THREE.AnimationMixer(m); m.rotation.y = Math.PI / 2; g.add(m);
+  const b = (n) => m.getObjectByName(n), w = (n) => b(n).getWorldPosition(new THREE.Vector3());
+  const pose = (clip, t) => { const c = MODELS[char].clips.get(clip); mx.stopAllAction(); const a = mx.clipAction(c); a.play(); a.time = Math.min(Math.max(0, t), c.duration - 1e-4); mx.update(0); g.updateMatrixWorld(true); };
+  return { g, m, b, w, pose };
 }
-// missing tracks
+const box = (o) => new THREE.Box3().setFromObject(o, true), mesh = (m, re) => { let r; m.traverse((o) => { if (o.isSkinnedMesh && re.test(o.name)) r = o; }); return r; };
+// clips
+log(`clips ${CLIPS.size}: ${[...CLIPS.values()].map((c) => `${c.name} ${f3(c.duration)}`).join(', ')}`);
 for (const c of Object.keys(MODELS)) { const names = new Set(); MODELS[c].scene.traverse((o) => names.add(o.name)); const miss = new Set(); for (const cl of CLIPS.values()) for (const t of cl.tracks) if (!names.has(t.name.split('.')[0])) miss.add(t.name.split('.')[0]); log(`missing tracks ${c}: ${[...miss].join(',') || 'none'}`); }
-// contact times
-const R = rig('knight'), mixer = new THREE.AnimationMixer(R.m), slot = R.b('handslotr'), hips = R.b('hips'), TIP = 1.41;
-function sample(clip, fn) { const a = mixer.clipAction(CLIPS.get(clip)); mixer.stopAllAction(); a.play(); const D = CLIPS.get(clip).duration, r = [];
-  for (let t = 0; t <= D + 1e-6; t += 1 / 240) { a.time = Math.min(t, D - 1e-4); mixer.update(0); R.g.updateMatrixWorld(true); r.push({ t, ...fn() }); } a.stop(); return { D, r }; }
-const pt = () => ({ tip: slot.localToWorld(new THREE.Vector3(0, TIP, 0)), hand: slot.getWorldPosition(new THREE.Vector3()), hip: hips.getWorldPosition(new THREE.Vector3()) });
-const metric = {
-  // blade crosses the actor's front (+X) on the forward swing (tip moving -Z -> +Z): smallest |tip.z| among those frames reaching >=85% of max tip.x
-  front: (r) => { const mx = Math.max(...r.map((x) => x.tip.x)); return r.filter((x, i) => i > 0 && x.tip.z > r[i - 1].tip.z && x.tip.x >= 0.85 * mx).reduce((a, b) => (Math.abs(b.tip.z) < Math.abs(a.tip.z) ? b : a)); },
-  // thrust arrives: first frame at >=98% of max forward tip reach
-  stab: (r) => { const mx = Math.max(...r.map((x) => x.tip.x)); return r.find((x) => x.tip.x >= 0.98 * mx); },
-  // chop lands: first frame after the fastest frame with the tip low (<0.1 m) in front
-  chop: (r) => { const f = metric.speed(r); return r.find((x) => x.t > f.t && x.tip.y < 0.1 && x.tip.x > 0.5) || f; },
-  speed: (r) => { let bi = 1, bs = -1; for (let i = 1; i < r.length; i++) { const s = r[i].tip.distanceTo(r[i - 1].tip); if (s > bs) { bs = s; bi = i; } } return r[bi]; },
-  reach: (r) => r.reduce((a, b) => (b.hand.x > a.hand.x ? b : a)),
-  height: (r) => r.reduce((a, b) => (b.hand.y > a.hand.y ? b : a)),
-  land: (r) => { const pk = r.reduce((a, b) => (b.hip.y > a.hip.y ? b : a)); return r.filter((x) => x.t > pk.t).reduce((a, b) => (b.hip.y < a.hip.y ? b : a)); },
-};
-const KINDS = [['slash', '1H_Melee_Attack_Slice_Diagonal', 'front'], ['sideslash', '1H_Melee_Attack_Slice_Horizontal', 'front'], ['smash', '2H_Melee_Attack_Chop', 'chop'], ['thrust', '1H_Melee_Attack_Stab', 'stab'], ['cast', 'Spellcast_Shoot', 'reach'], ['castup', 'Spellcast_Raise', 'height'], ['stomp', 'Jump_Full_Short', 'land'], ['throw', 'Throw', 'speed']];
-log('kind | clip | dur | contact | metric | tip@c | hand@c');
-for (const [k, c, m] of KINDS) { const { D, r } = sample(c, pt), x = metric[m](r); log(`${k} | ${c} | ${f3(D)} | ${f3(x.t)} | ${m} | ${V(x.tip)} | ${V(x.hand)}`); }
-if (process.argv.includes('--poses')) {
-  const { Dummy, POSES } = await import('../src/core/dummy.js'), d = new Dummy({ weapon: 'sword' }), w = new THREE.Vector3();
-  log('pose | handR y | tip y | hips y');
-  for (const n of Object.keys(POSES)) { d.setPose(POSES[n]); d.updateMatrixWorld(true); log(`${n} | ${f3(d.point('handR', w).y)} | ${f3(d.tip(undefined, w).y)} | ${f3(d.point('hips', w).y)}`); }
-  d.setPose(POSES.idle); d.updateMatrixWorld(true); const sw = d.model.getObjectByName('1H_Sword'); sw.geometry.computeBoundingBox();
-  const top = sw.localToWorld(new THREE.Vector3(0, sw.geometry.boundingBox.max.y, 0)), tp = d.tip(undefined, new THREE.Vector3());
-  log(`1H_Sword top ${V(top)} vs tip() ${V(tp)}: d ${f3(top.distanceTo(tp))} ${top.distanceTo(tp) < 0.1 ? 'ok' : 'FAIL'}`);
-  for (const n of ['handR', 'handL', 'tip', 'chest', 'head', 'hips', 'feet']) log(`idle ${n} ${V(d.point(n, w))}`);
-  const T = new (await import('../src/core/dummy.js')).Target(); T.updateMatrixWorld(true); for (const n of ['chest', 'head', 'feet']) log(`target ${n} ${V(T.point(n, w))}`);
+// per char at Idle_Loop@0: height, y0, grip (hand-local, finger loop centres), head/chest offsets
+const RIG = {};
+for (const c of ['knight', 'mage', 'skeleton']) {
+  const R = rig(c); R.pose(IDLE, 0); const bb = box(R.m), y0 = bb.min.y, top = bb.max.y - y0;
+  const loop = (f, s) => R.b('hand_' + s).worldToLocal([1, 2, 3].map((i) => R.w(`${f}_0${i}_${s}`)).reduce((a, x) => a.add(x), new THREE.Vector3()).divideScalar(3));
+  const grip = (s) => { const L = FING.map((f) => loop(f, s)); return [L.reduce((a, x) => a.add(x), new THREE.Vector3()).divideScalar(4), L[0].clone().sub(L[3]).normalize()]; };
+  const [gp, ga] = grip('r'), [lp, la] = grip('l');
+  const hb = box(mesh(R.m, /_Head$/)), hc = hb.getCenter(new THREE.Vector3()), hs = hb.getSize(new THREE.Vector3()), cb = box(mesh(R.m, /_Body$/)).getCenter(new THREE.Vector3());
+  const head = R.b('Head').worldToLocal(hc.clone()), chest = R.b('spine_03').worldToLocal(cb.clone()), headR = (hs.x + hs.y + hs.z) / 6;
+  RIG[c] = { chest, head, headR, gp, ga, y0 };
+  log(`${c}: top ${f3(top)} ${top >= 1.75 && top <= 1.9 ? 'ok' : 'OUT OF [1.75,1.9]'}, y0 ${f3(y0)} ${Math.abs(y0) < 0.03 ? 'ok' : 'BIG'}; grip r pos ${V(gp)} axis ${V(ga)} | l pos ${V(lp)} axis ${V(la)} (mirror d ${f3(Math.hypot(lp.x + gp.x, lp.y - gp.y, lp.z - gp.z))})`);
+  log(`  chest spine_03-local ${V(chest)} (y ${f3(cb.y - y0)}); head Head-local ${V(head)} (y ${f3(hc.y - y0)}), headR ${f3(headR)}`);
+  R.m.position.y = -y0; R.g.updateMatrixWorld(true); const tip = R.b('hand_r').localToWorld(gp.clone().addScaledVector(ga, BLADE));
+  log(`  idle handR ${V(R.w('hand_r'))} grip ${V(R.b('hand_r').localToWorld(gp.clone()))} tip ${V(tip)} hips ${V(R.w('pelvis'))} spine_03 ${V(R.w('spine_03'))} Head ${V(R.w('Head'))}`);
 }
-// --trace [clip ...]: per clip, per 1/30 s frame, sword tip / handR / hips (Dummy frame: faces +X) — pick contact frames in front of the actor
+// contact table (knight, 240 Hz, sword tip at BLADE m along the grip axis)
+const K = rig('knight'), G = RIG.knight; K.m.position.y = -G.y0;
+function sample(clip) {
+  const D = CLIPS.get(clip).duration, r = [];
+  for (let t = 0; t <= D + 1e-6; t += 1 / 240) { K.pose(clip, t); const h = K.b('hand_r'); r.push({ t, tip: h.localToWorld(G.gp.clone().addScaledVector(G.ga, BLADE)), hand: K.w('hand_r'), hip: K.w('pelvis') }); }
+  r.forEach((x, i) => { const p = r[Math.max(0, i - 1)]; x.ts = x.tip.distanceTo(p.tip) * 240; x.hs = x.hand.distanceTo(p.hand) * 240; }); return { D, r };
+}
+const best = (r, f) => r.reduce((a, b) => (f(b) > f(a) ? b : a));
+const metric = {
+  // blade crosses the actor's front (tip z changes sign, tip x > .5): the fastest such frame
+  front: (r) => { const c = r.filter((x, i) => i > 0 && Math.sign(x.tip.z) !== Math.sign(r[i - 1].tip.z) && x.tip.x > 0.5); return c.length ? best(c, (x) => x.ts) : metric.speed(r); },
+  stab: (r) => { const mx = Math.max(...r.map((x) => x.tip.x)); return r.find((x) => x.tip.x >= 0.98 * mx); },
+  // first frame after the fastest one with the tip low (<= .05) in front
+  chop: (r) => { const f = metric.speed(r); return r.find((x) => x.t > f.t && x.tip.y <= 0.05 && x.tip.x > 0.5) || f; },
+  speed: (r) => best(r, (x) => x.ts), release: (r) => best(r, (x) => x.hs),
+  reach: (r) => { const mx = Math.max(...r.map((x) => x.hand.x)); return r.find((x) => x.hand.x >= 0.98 * mx && x.hs < 1.2); }, /* near full extension, arm slowing */ height: (r) => best(r, (x) => x.hand.y), low: (r) => best(r, (x) => -x.hip.y),
+};
+// E candidate: end of the first settled run (hand speed < .8 m/s) after contact, capped at c + .6 (before the clip winds into its recovery / next swing)
+const settle = (r, c) => { const i0 = r.findIndex((x) => x.t > c.t && x.hs < 0.8); if (i0 < 0) return r[r.length - 1]; let i = i0; while (i + 1 < r.length && r[i + 1].hs < 0.8 && r[i + 1].t <= c.t + 0.6) i++; return r[i]; };
+const KINDS = [['slash', 'Sword_Attack', 'front'], ['sideslash', 'Sword_Regular_C', 'front'], ['smash', 'Sword_Heavy_Combo', 'chop'], ['thrust', 'Sword_Dash', 'stab'], ['cast', 'Spell_Simple_Enter_R', 'reach'], ['castup', 'OverhandThrow', 'height'], ['stomp', 'Jump_Land', 'low'], ['throw', 'OverhandThrow', 'release']];
+log(`kind | clip | D | c | metric | E | tip@c | hand@c | hips@c | tip speed@c | tip@E`);
+for (const [k, c, m] of KINDS) { const { D, r } = sample(c), x = metric[m](r), e = settle(r, x); log(`${k} | ${c} | ${f3(D)} | ${f3(x.t)} | ${m} | ${f3(e.t)} | ${V(x.tip)} | ${V(x.hand)} | ${V(x.hip)} | ${f3(x.ts)} | ${V(e.tip)}`); }
+if (process.argv.includes('--poses')) {
+  const D = await import('../src/core/dummy.js'), d = new D.Dummy({ weapon: 'sword' }), w = new THREE.Vector3();
+  log('pose | clip@time | handR y | tip y | hips y');
+  for (const n of Object.keys(D.POSES)) { d.setPose(D.POSES[n]); d.updateMatrixWorld(true); log(`${n} | ${D.POSES[n].clip}@${D.POSES[n].time} | ${f3(d.point('handR', w).y)} | ${f3(d.tip(undefined, w).y)} | ${f3(d.point('hips', w).y)}`); }
+  log('kind | contact frame | tip | handR | hips | act keys');
+  for (const [k] of KINDS) { const ks = D.actKeys(k, 0.45, 0), p = ks[1][1]; d.setPose(p); d.updateMatrixWorld(true); log(`${k} | ${p.clip}@${f3(p.time)} | ${V(d.tip(undefined, new THREE.Vector3()))} | ${V(d.point('handR', w))} | ${V(d.point('hips', w))} | ${ks.map(([t, q]) => `${f3(t)}:${typeof q === 'string' ? q : f3(q.time)}`).join(' ')}`); }
+  d.setPose(D.POSES.idle); d.updateMatrixWorld(true);
+  for (const n of ['handR', 'handL', 'tip', 'chest', 'head', 'hips', 'feet']) log(`idle ${n} ${V(d.point(n, w))}`);
+  log(`idle skinned bbox y ${f3(box(d.model).min.y)}..${f3(box(d.model).max.y)}`);
+  const T = new D.Target(); T.position.set(2.2, 0, 0); T.updateMatrixWorld(true); for (const n of ['chest', 'head', 'feet']) log(`target(x 2.2) ${n} ${V(T.point(n, w))}`);
+}
+// --trace [clip ...]: per clip, per 1/30 s frame, sword tip / handR / hips (Dummy frame: faces +X)
 if (process.argv.includes('--trace')) {
   const { Dummy } = await import('../src/core/dummy.js'), d = new Dummy({ weapon: 'sword' }), w = new THREE.Vector3(), sel = process.argv.slice(process.argv.indexOf('--trace') + 1).filter((a) => !a.startsWith('--'));
-  for (const c of sel.length ? sel : KINDS.map((k) => k[1])) { const D = CLIPS.get(c).duration; log(`trace ${c} (${f3(D)} s): t | tip | handR | hips`);
+  for (const c of sel.length ? sel : [...new Set(KINDS.map((k) => k[1]))]) { const D = CLIPS.get(c).duration; log(`trace ${c} (${f3(D)} s): t | tip | handR | hips`);
     for (let t = 0; t <= D + 1e-6; t += 1 / 30) { d.setPose({ clip: c, time: t }); d.updateMatrixWorld(true); log(`  ${f3(t)} | ${V(d.tip(undefined, w))} | ${V(d.point('handR', w))} | ${V(d.point('hips', w))}`); } }
 }

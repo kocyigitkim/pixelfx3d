@@ -12,10 +12,15 @@ const HR = `${SRC}/Universal Base Characters[Standard]/Hairstyles/Rigged to Head
 /** out file -> [outfit, head source (full body, cut to Head/neck_01), extra skinned meshes...] */
 const CHARS = { knight: [OF + 'Male_Ranger', BC + 'Superhero_Male_FullBody'], mage: [OF + 'Female_Ranger', BC + 'Superhero_Female_FullBody'], target: [OF + 'Male_Peasant', BC + 'Superhero_Male_FullBody', HR + 'Hair_SimpleParted'] };
 const HEAD = new Set(['Head', 'neck_01']);
+const UAL = [`${SRC}/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb`, `${SRC}/Universal Animation Library 2[Standard]/Unreal-Godot/UAL2_Standard.glb`];
+/** clips stored in knight.glb (shared by bone name); '_R' = right-handed mirror of the (left-handed) source clip, only the mirror is stored */
+const KEEP = ['Idle_Loop', 'A_TPose', 'Sword_Attack', 'Sword_Regular_A', 'Sword_Regular_B', 'Sword_Regular_C', 'Sword_Heavy_Combo', 'Sword_Dash', 'Spell_Simple_Enter_R', 'Spell_Simple_Shoot_R',
+  'Pistol_Aim_Up', 'Pistol_Aim_Neutral', 'Pistol_Shoot', 'Jump_Start', 'Jump_Land', 'OverhandThrow', 'Punch_Cross', 'Hit_Chest', 'Hit_Head', 'Sprint_Loop', 'Jog_Fwd_Loop', 'Shield_Dash', 'Roll', 'LayToIdle'];
 
 const NC = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16 }, TA = { 5121: Uint8Array, 5123: Uint16Array, 5125: Uint32Array, 5126: Float32Array };
 const CT = new Map(Object.entries(TA).map(([k, T]) => [T, +k]));
 function load(p) { const j = JSON.parse(readFileSync(p + '.gltf', 'utf8')), dir = p.replace(/[^/]*$/, ''); return { j, dir, bin: readFileSync(dir + j.buffers[0].uri) }; }
+function loadGlb(p) { const b = readFileSync(p), jl = b.readUInt32LE(12); return { j: JSON.parse(b.subarray(20, 20 + jl).toString('utf8')), bin: b.subarray(28 + jl, 28 + jl + b.readUInt32LE(20 + jl)) }; }
 function acc(g, i) {
   const a = g.j.accessors[i], v = g.j.bufferViews[a.bufferView], T = TA[a.componentType], o = g.bin.byteOffset + (v.byteOffset || 0) + (a.byteOffset || 0);
   assert(!v.byteStride && !a.sparse, 'interleaved/sparse unsupported'); return new T(g.bin.buffer.slice(o, o + a.count * NC[a.type] * T.BYTES_PER_ELEMENT));
@@ -75,8 +80,29 @@ function primitive(w, g, p, skinJoints, cut) {
 }
 function mesh(w, g, mi, skinJoints, cut) { const m = g.j.meshes[mi]; return w.j.meshes.push({ name: m.name, primitives: m.primitives.map((p) => primitive(w, g, p, skinJoints, cut)) }) - 1; }
 
+/* ---------------------------------------------------------------- clips: rotations + pelvis translation (shifted onto the char's rest), no scale; constant tracks -> 2 keys */
+const mirrorName = (n) => n.replace(/_([lr])$/, (_, c) => (c === 'l' ? '_r' : '_l'));
+function clips(w, names) {
+  const U = UAL.map(loadGlb), byName = new Map(w.j.nodes.map((n, i) => [n.name, i])), pel = w.j.nodes[byName.get('pelvis')].translation;
+  for (const name of names) {
+    const mir = name.endsWith('_R'), src = mir ? name.slice(0, -2) : name, g = U.find((u) => u.j.animations.some((a) => a.name === src)); assert(g, 'missing clip ' + src);
+    const a = g.j.animations.find((x) => x.name === src), uPel = g.j.nodes.find((n) => n.name === 'pelvis').translation, inputs = new Map(), anim = { name, channels: [], samplers: [] };
+    const input = (arr) => { const k = arr.join(','); if (!inputs.has(k)) inputs.set(k, w.add(arr, 'SCALAR', { min: [arr[0]], max: [arr[arr.length - 1]] })); return inputs.get(k); };
+    for (const c of a.channels) {
+      const bone = g.j.nodes[c.target.node].name, path = c.target.path; if (path === 'scale' || (path === 'translation' && bone !== 'pelvis')) continue;
+      const smp = a.samplers[c.sampler], T = acc(g, smp.input), V = acc(g, smp.output), k = path === 'rotation' ? 4 : 3; assert.equal(smp.interpolation, 'LINEAR');
+      if (path === 'translation') for (let i = 0; i < V.length; i += 3) for (let j = 0; j < 3; j++) V[i + j] += pel[j] - uPel[j];
+      if (mir) for (let i = 0; i < V.length; i += k) { if (k === 3) V[i] = -V[i]; else { V[i + 1] = -V[i + 1]; V[i + 2] = -V[i + 2]; } }
+      const node = byName.get(mir ? mirrorName(bone) : bone); assert(node != null, 'no node ' + bone);
+      const flat = V.every((x, i) => Math.abs(x - V[i % k]) < 1e-6), times = flat ? Float32Array.of(T[0], T[T.length - 1]) : T, vals = flat ? Float32Array.from([...V.subarray(0, k), ...V.subarray(0, k)]) : V;
+      anim.channels.push({ sampler: anim.samplers.push({ input: input(times), output: w.add(vals, k === 4 ? 'VEC4' : 'VEC3'), interpolation: 'LINEAR' }) - 1, target: { node, path } });
+    }
+    (w.j.animations ??= []).push(anim);
+  }
+}
+
 /* ---------------------------------------------------------------- characters */
-function build(name, [outfit, head, ...extra]) {
+function build(name, [outfit, head, ...extra], clipNames = []) {
   const w = writer(), o = load(outfit), sk = o.j.skins[0];
   assert(o.j.skins.length === 1 && sk.joints.length === 65, outfit + ': expected one 65-joint skin');
   w.j.nodes = JSON.parse(JSON.stringify(o.j.nodes)); w.j.scenes = [{ name, nodes: o.j.scenes[0].nodes }];
@@ -89,11 +115,12 @@ function build(name, [outfit, head, ...extra]) {
     g.j.nodes.forEach((n) => { if (n.mesh == null) return; const cut = f === head && /^super/i.test(n.name);
       arm.children.push(w.j.nodes.push({ name: cut ? n.name + '_Head' : n.name, mesh: mesh(w, g, n.mesh, s.joints, cut), skin: si }) - 1); });
   }
+  if (clipNames.length) clips(w, clipNames);
   return w.glb();
 }
 
 mkdirSync(OUT + 'tex', { recursive: true });
-const files = Object.fromEntries(Object.entries(CHARS).map(([k, v]) => [k, build(k, v)]));
+const files = Object.fromEntries(Object.entries(CHARS).map(([k, v]) => [k, build(k, v, k === 'knight' ? KEEP : [])]));
 for (const [k, b] of Object.entries(files)) writeFileSync(`${OUT}${k}.glb`, b);
 
 /* ---------------------------------------------------------------- textures (sips: JPEG q85 colour / q90 normal maps) */
@@ -112,5 +139,18 @@ for (const [k, b] of Object.entries(files)) {
   const bones = new Set(sm.flatMap((m) => m.skeleton.bones)); assert.equal(bones.size, 65, k + ': bones');
   const j = g.parser.json; for (const im of j.images) assert(existsSync(OUT + im.uri), k + ': missing texture ' + im.uri);
   g.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(g.scene, true);
+  if (k === 'knight') assert.deepEqual(g.animations.map((c) => c.name), KEEP, 'clip list'); else assert.equal(g.animations.length, 0);
   console.log(`${k}.glb ${(b.length / 1e6).toFixed(2)} MB: ${sm.length} skinned meshes (${sm.map((m) => m.name).join(' ')}), ${j.images.length} textures, y ${bb.min.y.toFixed(3)}..${bb.max.y.toFixed(3)}`);
+}
+
+// mirror check: each '_R' clip at 10 times, every joint (root-local) = x-reflection of the source clip's mirrored joint within 1 mm
+{
+  const b = build('knight', CHARS.knight, [...KEEP, ...KEEP.filter((n) => n.endsWith('_R')).map((n) => n.slice(0, -2))]), g = await new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset, b.byteOffset + b.length), '');
+  const root = g.scene.getObjectByName('root'), bones = []; root.traverse((o) => o.isBone && bones.push(o)); const mx = new THREE.AnimationMixer(g.scene);
+  const pose = (clip, t) => { mx.stopAllAction(); const a = mx.clipAction(clip); a.play(); a.time = t; mx.update(0); g.scene.updateMatrixWorld(true); return new Map(bones.map((o) => [o.name, root.worldToLocal(o.getWorldPosition(new THREE.Vector3()))])); };
+  for (const n of KEEP.filter((x) => x.endsWith('_R'))) {
+    const R = g.animations.find((c) => c.name === n), S = g.animations.find((c) => c.name === n.slice(0, -2)); let worst = 0;
+    for (let i = 0; i < 10; i++) { const t = (R.duration * i) / 10, pr = pose(R, t), ps = pose(S, t); for (const [bn, p] of pr) { const q = ps.get(mirrorName(bn)); worst = Math.max(worst, Math.hypot(p.x + q.x, p.y - q.y, p.z - q.z)); } }
+    assert(worst < 1e-3, `${n}: mirror error ${worst}`); console.log(`mirror ${n}: max joint error ${(worst * 1000).toFixed(3)} mm`);
+  }
 }
