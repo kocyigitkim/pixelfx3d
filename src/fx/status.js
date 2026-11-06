@@ -42,13 +42,14 @@ function skull(glow = '#9a5cff', hdr = 3) {
 const rig = (fx) => { const o = [0, 0.95, 1.25, 1.73], h = [0, fx.anchor('hips')[1], fx.anchor('chest')[1], fx.anchor('head')[1]];
   return ([x, y, z]) => { let i = 1; while (i < 3 && y > o[i]) i++; return [x, h[i - 1] + ((h[i] - h[i - 1]) * (y - o[i - 1])) / (o[i] - o[i - 1]), z]; }; };
 /** head point from a P5 head-relative offset (P5 head radius .115), scaled to this rig's head */
-const headAt = (fx, x, y, z) => fx.anchor('head', 0, [x, y, z].map((v) => (v * fx.body.headR) / 0.115));
-/** little eyes on the dummy's face (+X); P5 sizes scaled by k = headR / .115. returns the pupils */
+const headAt = (fx, x, y, z) => fx.anchor('head', 0, [x, y, z].map((v) => v * 0.92)); // P5 offsets x .92: the real face front is ~.105 (mouth) to .13 (nose) vs the P5 sphere .115 (headR .125 includes the neck)
+/** little eyes over the real eyes (+X = face); headMesh-frame eye centre x, y, z mid, z half-gap and eyeball front x per char (measured from the Eyes mesh, Idle). returns the pupils */
+const EYE = { knight: [0.081, 0.041, 0.008, 0.036, 0.096], mage: [0.061, 0.033, -0.001, 0.039, 0.077] };
 function eyes(fx, open) {
-  const hm = fx.body.headMesh, k = fx.body.headR / 0.115, out = []; const white = new THREE.MeshBasicMaterial({ color: '#f4f4f4' }), blk = new THREE.MeshBasicMaterial({ color: '#0a0a0e' });
+  const hm = fx.body.headMesh, [, y, zm, dz, fx0] = EYE[fx.body.char] || EYE.knight, out = []; const white = new THREE.MeshBasicMaterial({ color: '#f4f4f4' }), blk = new THREE.MeshBasicMaterial({ color: '#0a0a0e' });
   for (const s of [-1, 1]) {
-    if (open) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.03 * k, 12, 10), white); e.position.set(0.1 * k, 0.02 * k, 0.045 * k * s); e.scale.set(0.6, 1, 1); hm.add(e); const p = new THREE.Mesh(new THREE.SphereGeometry(0.015 * k, 10, 8), blk); p.position.set(0.026 * k, 0, 0); e.add(p); out.push(p); }
-    else { const e = new THREE.Mesh(new THREE.CapsuleGeometry(0.003 * k, 0.03 * k, 3, 6), blk); e.position.set(0.114 * k, 0.012 * k, 0.045 * k * s); e.rotation.x = Math.PI / 2; e.scale.set(1.2, 1, 1); hm.add(e); }
+    if (open) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.017, 12, 10), white); e.position.set(fx0 - 0.004, y, zm + dz * s); e.scale.set(0.6, 1, 1); hm.add(e); const p = new THREE.Mesh(new THREE.SphereGeometry(0.0085, 10, 8), blk); p.position.set(0.015, 0, 0); e.add(p); out.push(p); }
+    else { const e = new THREE.Mesh(new THREE.CapsuleGeometry(0.002, 0.022, 3, 6), blk); e.position.set(fx0 + 0.002, y, zm + dz * s); e.rotation.x = Math.PI / 2; e.scale.set(1.2, 1, 1); hm.add(e); }
   }
   return out;
 }
@@ -112,7 +113,7 @@ export default [
       fx.light({ color: '#8ad0ff', intensity: 8, pos: [0, 2.3, 0.4], range: 4 });
       const hd = fx.body.neck, tor = fx.body.torso;
       fx.on((t) => { const a = t / 2.4 * TAU; hd.rotation.y = Math.sin(a) * 0.5; hd.rotation.x = Math.sin(a * 2) * 0.08; tor.rotation.z = -0.02 + Math.sin(a * 2 + 1) * 0.05; tor.rotation.x = Math.sin(a) * 0.04;
-        const dart = Math.sin(a * 4); pp.forEach((p) => { p.position.z = dart * 0.012; p.position.y = Math.cos(a * 3) * 0.008; });
+        const dart = Math.sin(a * 4); pp.forEach((p) => { p.position.z = dart * 0.007; p.position.y = Math.cos(a * 3) * 0.005; });
         fx.body.set({ rim: '#7ad0ff', rimAmt: 0.6, tint: '#aab8ff', tintAmt: 0.08 }); });
     } },
 
@@ -151,7 +152,7 @@ export default [
       for (let i = 1; i <= 3; i++) { const d = new Dummy({ color: '#ffd24a' }); d.position.x = -0.42 * i; d.u.uHolo.value = 1; d.u.uScanCol.value.set('#ffcf40'); d.u.uAlpha.value = 0.5 - i * 0.12; d.u.uTint.value.set('#ffd24a'); d.u.uTintAmt.value = 0.6; d.u.uGlow.value = 1; ghosts.push(d); fx.mesh(d, null, { dur: 99 }); }
       const bobP = (t) => ({ clip: 'Sprint_Loop', time: fr(t / 0.6) * 0.667 }); // run cycle, one stride per 0.6 s
       fx.emitter({ count: 40, kind: 'streak', shape: 'box', shapeSize: [0.4, 0.9, 0.9], pos: [-0.8, 1.0, 0], dir: [-1, 0, 0], spread: 0.02, speed: [6, 9], life: [0.3, 0.45], size: [0.3, 0.3], ramp: [[0, '#fff6c0', 0], [0.3, '#ffe070', 0.8], [1, '#ffc020', 0]], intensity: 0.8, stretch: 0 });
-      fx.emitter({ count: 30, kind: 'dust', blend: 'normal', shape: 'box', shapeSize: [0.1, 0.02, 0.15], pos: [-0.1, 0.05, 0], dir: [-1, 0.5, 0], spread: 0.5, speed: [0.8, 2], life: [0.5, 0.9], size: [0.15, 0.5], ramp: [[0, '#5b503f', 0], [0.2, '#5b503f', 0.5], [1, '#453b2c', 0]], lit: 1, order: -1, gravity: [0, 0.2, 0], drag: 1.5 });
+      fx.emitter({ count: 30, kind: 'dust', blend: 'normal', shape: 'box', shapeSize: [0.1, 0.02, 0.15], pos: [-0.1, 0.05, 0], dir: [-1, 0.5, 0], spread: 0.5, speed: [0.8, 2], life: [0.5, 0.9], size: [0.15, 0.5], ramp: [[0, '#5b503f', 0], [0.2, '#5b503f', 0.5], [1, '#453b2c', 0]], lit: 1, order: -1, gravity: [0, 0.2, 0], drag: 1.5 }); // anchor-ok
       fx.emitter({ count: 26, kind: 'spark', shape: 'box', shapeSize: [0.2, 0.9, 0.3], pos: [-0.2, 1.0, 0], dir: [-1, 0.1, 0], spread: 0.3, speed: [2, 4], life: [0.3, 0.6], size: [0.05, 0.01], stretch: 1.5, ramp: [[0, '#fff2dc'], [0.4, '#ffd040'], [1, '#a05000', 0]], intensity: 3 }); // anchor-ok
       fx.light({ color: '#ffd24a', intensity: 14, pos: [-0.4, 1.4, 1.2], range: 5 });
       fx.on((t) => { fx.body.setPose(bobP(t)); ghosts.forEach((d, i) => { d.setPose(bobP(t - 0.06 * (i + 1))); d.u.uTime.value = t; }); fx.body.set({ rim: '#ffd24a', rimAmt: 1.2, tint: '#ffe060', tintAmt: 0.1, glow: 0.4 }); });

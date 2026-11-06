@@ -102,7 +102,7 @@ export default [
 
   SKILL('quantum/echo-clone', 'Echo clone', m(['quantum'], 'clone-attack', 0.4, 14, 3, 'point'), 2.0, {
     view: 'side', sky: 'dark',
-    act: act('slash', 0, 1.41, { weapon: 'sword' }),
+    act: act('slash', 0, 2.0, { weapon: 'sword' }),
     // P3=166
     build(fx, o) {
       const k = kit(fx, o, QUANTUM), KEYS = [[0, 'guard'], [0.3, 'windupHigh'], [0.5, 'cut', 'snap'], [0.7, 'follow']];
@@ -173,7 +173,7 @@ export default [
     act: act('sideslash', 0.5, 2.4, { weapon: 'sword', hits: [0.5, 0.7, 0.9].map((t) => ({ t, stop: 0.05, shake: 0.2, amp: 0.03, push: 1.2 })) }),
     // P3=176
     build(fx, o) {
-      const k = kit(fx, o, QUANTUM), R = [1.6, 1.1, 0], SC = fx.anchor('tgt', 0, [-0.2, 0, 0]), SP = fx.anchor('tgt', 0, [-0.2, 0, 0.1]); // rift portal; slashes on the target chest
+      const k = kit(fx, o, QUANTUM), R = [1.6, 1.1, 0], SC = fx.anchor('tgt', 0, [-0.2, 0, 0]), SP = fx.anchor('tgt', 0, [-0.2, 0, 0.1]); // rift portal; slashes on the target chest // anchor-ok
       const rift = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 2), new THREE.ShaderMaterial({ uniforms: { uTime: { value: 0 }, uOpen: { value: 0 }, uPulse: { value: 0 } }, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }', fragmentShader: RIFT_F, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
       rift.position.set(...R);
       fx.mesh(rift, (t) => { const u = rift.material.uniforms; u.uTime.value = t; u.uOpen.value = sm(0, 0.4, t) * (1 - sm(1.4, 1.8, t)); u.uPulse.value = k.g >= 2 ? sm(0.6, 0.8, t) * (1 - sm(0.9, 1.2, t)) : 0; }, { t0: -0.2, dur: 2.2 });

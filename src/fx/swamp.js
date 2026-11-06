@@ -81,13 +81,13 @@ export default [
       k.smoke({ count: 80, ramp: MUD.map((s, i) => (i === 1 ? [s[0], s[1], 0.6] : s)), shape: 'disc', radius: 1.6, pos: [2.5, 0.3, 0], dir: [0, 1, 0], speed: [0.2, 0.6], life: [1.5, 2.5], size: [0.6, 1.4], emit: 3 }); // 80
       k.decal({ kind: 'scorch', r: [0.6, 1], pos: [2.5, 0, 0], t0: 0, dur: 3.2 });
       k.em({ count: 40, kind: 'drop', shape: 'sphere', radius: 0.3, pos: [4, 0.4, 0], dir: [1, 0.2, 0], spread: 0.6, speed: [1, 3], life: [0.4, 0.8], size: [0.1, 0.05], gravity: [0, -9, 0], delay: 1.2, emit: 0.001 }); // 40
-      ct(fx, k, fx.anchor('tgt', 0, [0, 0.1, 0]), 1.4, 30, { lightI: 0 }); // 32
+      ct(fx, k, fx.anchor('tgt', 0, [0, 0.1, 0]), 1.4, 30, { lightI: 0 }); // 32 // anchor-ok
       k.ribbon({ points: (t) => { const x = CR(t)[0]; return [[x - 0.3, 0.15, 0], [x, 0.7, 0], [x + 0.3, 0.15, 0]]; }, n: 2, width: 0.35, intensity: 1.2, head: () => 1.001, fade: [0.05, 0.3], t0: 0, dur: 3.2 });
       k.em({ count: 50, kind: 'glint', shape: 'box', shapeSize: [0.4, 0.4, 2.2], dir: [0, 1, 0], speed: [0.3, 0.8], life: [0.6, 1.0], size: [0.08, 0.03], intensity: 1.5, delay: 0, emit: 1.6, t0: -0.02, follow: (m, a, t) => m.position.set(CR(t)[0], 0.4, 0) });
       k.light({ pos: [2.5, 1, 0.8], t0: 0, dur: 3.2, fade: [0.1, 0.6], intensity: 40 });
       if (k.g >= 2) { const m2 = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 2, 16, 1, false, 0, Math.PI), metal('#2c3016')); m2.rotation.x = Math.PI / 2; m2.material.roughness = 0.9; m2.material.metalness = 0; fx.mesh(m2, (t) => { const u = sm(0.8, 2.4, t); m2.position.set(0.4 + 3.6 * u, 0.4, -0.5); m2.visible = u > 0.01; }, { t0: 0.8, dur: 2.4 }); }
       if (k.g === 3) k.em({ count: 30, kind: 'glint', shape: 'disc', radius: 1.5, pos: [3, 0.5, 0], dir: [0, 1, 0], speed: [0.2, 0.8], life: [0.4, 0.8], size: [0.12, 0.04], intensity: 1.5, delay: 1.4, emit: 1.5 }); // 30
-      k.extras(fx.anchor('tgt', 0, [0, 0.1, 0]), 1.4);
+      k.extras(fx.anchor('tgt', 0, [0, 0.1, 0]), 1.4); // anchor-ok
     } }),
 
   SKILL('swamp/reed-snare', 'Reed snare', m(['water', 'earth', 'swamp'], 'bind', 0.5, 12, 6, 'point'), 2.8, {

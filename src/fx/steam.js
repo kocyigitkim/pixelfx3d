@@ -101,7 +101,7 @@ export default [
     act: act('smash', 0, 2.2, { weapon: 'hammer', windup: 0.6, hits: [{ t: 0, stop: 0.14, shake: 0.55, amp: 0.08 }] }),
     // P3=378
     build(fx, o) {
-      const k = kit(fx, o, STEAM), kf = kit(fx, o, FIRE), I = [1.15, 0, 0];
+      const k = kit(fx, o, STEAM), kf = kit(fx, o, FIRE), I = [fx.anchor('tip', 0)[0], 0, 0]; // hammer head on the ground
       k.smoke({ ramp: VAPOR, count: 120, shape: 'ring', radius: 0.4, pos: I, dir: [0, 0.15, 0], radial: 1, speed: [3, 6], drag: 1.5, life: [1.5, 2.5], size: [0.6, 1.6], emit: 0.001 });
       k.em({ count: 40, kind: 'drop', shape: 'sphere', radius: 0.3, pos: I, radial: 1, speed: [2, 4], gravity: [0, -9, 0], life: [0.6, 1], size: [0.06, 0.03], intensity: 1.5, emit: 0.001 });
       k.decal({ kind: 'glow', r: [1.2, 1.2], pos: [I[0], 0.02, 0], t0: 0, dur: 1.6 });

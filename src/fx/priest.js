@@ -172,9 +172,9 @@ export default [
       }
       if (k.g === 3) {
         k.ribbon({ points: arc(chest2, C), n: 11, width: 0.04, t0: 1.2, dur: 0.15 });
-        k.em({ count: 40, kind: 'soft', shape: 'disc', radius: 0.4, pos: [0, 0.05, 0], dir: [0, 1, 0], speed: [0.3, 0.8], delay: 1.2, emit: 0.6, t0: 1.2 });
+        k.em({ count: 40, kind: 'soft', shape: 'disc', radius: 0.4, pos: [0, 0.05, 0], dir: [0, 1, 0], speed: [0.3, 0.8], delay: 1.2, emit: 0.6, t0: 1.2 }); // anchor-ok
       }
-      k.extras(fx.anchor('chest', 0, [-0.05, -0.09, 0]), 1.2);
+      k.extras(fx.anchor('chest', 0, [-0.05, -0.09, 0]), 1.2); // anchor-ok
     } }),
 
   SKILL('priest/sun-lance', 'Sun lance', m(['holy'], 'projectile', 0.5, 6, 9, 'point'), 1.8, {

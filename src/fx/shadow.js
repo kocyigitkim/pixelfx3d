@@ -209,7 +209,7 @@ export default [
   { id: 'shadow/life-steal', name: 'Life steal', category: 'shadow', loop: false, duration: 2.2, stage: { sky: 'dusk', bloom: 0.5, view: { pos: [1.2, 1.7, 5.8], target: [1.2, 1.1, 0], fov: 38 } },
     act: { kind: 'cast', target: [2.6, 0, 0], windup: 0.35 },
     build(fx) {
-      const src = fx.anchor('tgt', 0, [-0.1, 0, 0]), dst = fx.anchor('chest', 0, [0.12, 0, 0.05]); // target chest -> caster chest
+      const src = fx.anchor('tgt', 0, [-0.1, 0, 0]), dst = fx.anchor('chest', 0, [0.12, 0, 0.05]); // target chest -> caster chest // anchor-ok
       fx.emitter({ count: 50, kind: 'drop', blend: 'add', shape: 'sphere', radius: 0.12, dir: [-1, 0.3, 0], spread: 1.1, speed: [0.6, 2], life: [0.4, 0.9], gravity: [0, -5, 0], size: [0.05, 0.03], ramp: [[0, '#ff6a70'], [1, '#800010', 0]], intensity: 1.5, emit: 0.9, delay: 0.25, pos: src });
       fx.ring({ t0: 0.25, dur: 0.5, r: [0.1, 0.5], width: [0.15, 0.03], normal: 'cam', pos: src, intensity: 1.0, ramp: [[0, '#fff2dc'], [0.4, '#ff5a60'], [1, '#900010']] });
       const NO = 9;
@@ -221,7 +221,7 @@ export default [
         fx.mesh(orb, (t, pr, f, w, o) => { const p = path(Math.min(t, t0 + 0.7)); o.position.set(p[0], p[1], p[2]); o.visible = t > t0 && t < t0 + 0.72; }, { dur: 99 });
         fx.emitter({ count: 14, kind: 'soft', shape: 'sphere', radius: 0.1, speed: [0.5, 1.6], life: [0.3, 0.5], size: [0.1, 0.01], ramp: [[0, '#fff2dc', 1], [0.3, '#ff6a70', 0.8], [1, '#600', 0]], intensity: 1.5, delay: t0 + 0.68, pos: dst });
       }
-      fx.ring({ t0: 0.9, dur: 1.0, r: [0.2, 0.5], width: [0.15, 0.03], normal: 'cam', pos: fx.anchor('chest', 0, [0.1, -0.05, 0]), intensity: 0.8, breakup: 0.1, ramp: [[0, '#fff2dc'], [0.3, '#ff6a70'], [1, '#800018']] });
+      fx.ring({ t0: 0.9, dur: 1.0, r: [0.2, 0.5], width: [0.15, 0.03], normal: 'cam', pos: fx.anchor('chest', 0, [0.1, -0.05, 0]), intensity: 0.8, breakup: 0.1, ramp: [[0, '#fff2dc'], [0.3, '#ff6a70'], [1, '#800018']] }); // anchor-ok
       fx.light({ color: '#ff3040', intensity: 35, pos: [0.5, 1.4, 1], range: 6, t0: 0.3, dur: 1.8, fade: [0.2, 0.7] });
       fx.on((t) => { const k = sm(0.7, 1.3, t) * (1 - sm(1.4, 2.1, t)); fx.body.set({ tint: '#ff2030', tintAmt: 0.4 * k, rim: '#ff5060', rimAmt: 1.2 * k, glow: 0.5 * k }); if (fx.target) fx.target.u && 0; });
     } },

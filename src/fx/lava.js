@@ -84,7 +84,7 @@ export default [
 
   SKILL('lava/molten-fist', 'Molten fist', m(ELEM, 'melee-strike', 0.3, 6, 2, 'point'), 1.8, {
     view: 'side',
-    act: act('thrust', 0.04, 1.72, { windup: 0.45, hits: [{ t: 0.04, stop: 0.12, shake: 0.35, amp: 0.05, push: 1.8 }] }),
+    act: act('thrust', 0.04, 0.9, { windup: 0.45, contact: 0.04, hits: [{ t: 0.04, stop: 0.12, shake: 0.35, amp: 0.05, push: 1.8 }] }),
     // P3=335
     build(fx, o) {
       const k = kit(fx, o, LAVA), C = fx.anchor('tgt', 0, [-0.08, 0.1, 0.1]), A = fx.anchor('handR', 0.04); // fist at contact
@@ -96,7 +96,7 @@ export default [
       k.em({ count: 25, kind: 'drop', shape: 'point', pos: A, dir: [1, 0.3, 0], spread: 0.6, speed: [1, 3], gravity: [0, -9, 0], bounce: 0.2, life: [0.6, 1], size: [0.07, 0.03], intensity: 1.5, delay: 0.04, emit: 0.001 });
       k.em({ count: 25, kind: 'drop', shape: 'point', pos: C, dir: [0, 0.5, 0.5], spread: 0.8, speed: [1, 3], gravity: [0, -9, 0], bounce: 0.2, life: [0.6, 1], size: [0.07, 0.03], intensity: 1.5, delay: 0.04, emit: 0.001 });
       k.em({ count: 40, kind: 'drop', shape: 'point', pos: C, dir: [0, 1, 0], spread: 1, speed: [1, 3], gravity: [0, -6, 0], bounce: 0.2, life: [0.6, 1], size: [0.07, 0.03], intensity: 1.5, delay: 0.04, emit: 0.001 });
-      [[1.4, 0, 0.2], [1.8, 0, 0.3], [1.2, 0, -0.1], [1.9, 0, -0.2]].forEach((p) => k.decal({ kind: 'glow', r: [0.2, 0.2], pos: p, t0: 0.04, dur: 1.2 }));
+      [[-0.32, 0.2], [0.08, 0.3], [-0.52, -0.1], [0.18, -0.2]].forEach(([dx, z]) => k.decal({ kind: 'glow', r: [0.2, 0.2], pos: [C[0] + 0.08 + dx, 0, z], t0: 0.04, dur: 1.2 }));
       k.smoke({ count: 30, shape: 'sphere', radius: 0.3, pos: C, dir: [0, 1, 0], speed: [0.5, 1.2], life: [0.8, 1.4], size: [0.4, 0.9], delay: 0.05, emit: 0.001 });
       k.em({ count: 20, kind: 'shard', shape: 'point', pos: C, dir: [0.5, 0.3, 0.8], spread: 1, speed: [2, 5], gravity: [0, -9, 0], bounce: 0.3, life: [0.6, 1], size: [0.08, 0.03], intensity: 1, delay: 0.04, emit: 0.001, ramp: [[0, '#1b1210'], [1, '#050302', 0]] });
       if (k.g >= 2) k.ring({ t0: 0.04, dur: 0.35, r: [0.2, 1.4], normal: 'cam', pos: C });

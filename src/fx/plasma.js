@@ -18,7 +18,7 @@ const seg = (fx, k, y, dir) => {
 export default [
   SKILL('plasma/arc-torch', 'Arc torch', m(['fire', 'plasma'], 'melee-sweep', 0.3, 6, 2, 'arc'), 1.4, {
     view: 'side', sky: 'dark',
-    act: act('sideslash', 0.05, 1.28, { weapon: 'sword' }),
+    act: act('sideslash', 0.05, 2.0, { weapon: 'sword', contact: 0.05 }),
     // P3=156
     build(fx, o) {
       const k = kit(fx, o, PLASMA), to = k.at('armR'), C = fx.anchor('tip', 0.05); // blade tip at contact

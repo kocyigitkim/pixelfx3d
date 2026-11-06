@@ -43,7 +43,7 @@ export default [
     act: act('cast', 0.15, 4),
     // P3=262
     build(fx, o) {
-      const k = kit(fx, o, ION), to = k.at('armR'), MZ = fx.anchor('handR', 0.15, [0.2, 0, 0]), T = fx.anchor('tgt'), y = (x) => MZ[1] + ((T[1] - MZ[1]) * (x - MZ[0])) / (T[0] - MZ[0]); // horn muzzle at the shot; y(): cone line muzzle -> target chest
+      const k = kit(fx, o, ION), to = k.at('armR'), MZ = fx.anchor('handR', 0.15, [0.2, 0, 0]), T = fx.anchor('tgt'), y = (x) => MZ[1] + ((T[1] - MZ[1]) * (x - MZ[0])) / (T[0] - MZ[0]); // horn muzzle at the shot; y(): cone line muzzle -> target chest // anchor-ok
       const horn = new THREE.Group();
       const cone = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.4, 16, 1, true), metal('#8a929c')); cone.rotation.z = -Math.PI / 2; cone.position.x = 0.2; horn.add(cone);
       fx.mesh(horn, () => to(horn), { t0: -0.3, dur: 2.0 });

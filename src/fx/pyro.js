@@ -40,7 +40,7 @@ export default [
 
   SKILL('pyro/inferno-wheel', 'Inferno wheel', m(['fire'], 'spin-ring', 0.4, 12, 2, 'ring'), 2.2, {
     view: 'high',
-    act: { kind: 'slash', weapon: 'sword', target: [1.47, 0, 0], windup: 0.4, keys: [[-0.3, 'guard'], [0, 'sideBack'], [0.2, 'sideCut', 'snap'], [0.6, 'sideBack', 'snap'], [1.0, 'sideCut', 'snap'], [1.6, 'sideBack'], [2.2, 'guard']], hits: [{ t: 0.2, stop: 0.05, shake: 0.2, amp: 0.03, push: 1 }, { t: 0.6, stop: 0.05, shake: 0.2, amp: 0.03, push: 1 }, { t: 1.0, stop: 0.07, shake: 0.3, amp: 0.04, push: 1.5 }] },
+    act: { kind: 'slash', weapon: 'sword', target: [1.8, 0, 0], windup: 0.4, keys: [[-0.3, 'guard'], [0, 'sideBack'], [0.2, 'sideCut', 'snap'], [0.6, 'sideBack', 'snap'], [1.0, 'sideCut', 'snap'], [1.6, 'sideBack'], [2.2, 'guard']], hits: [{ t: 0.2, stop: 0.05, shake: 0.2, amp: 0.03, push: 1 }, { t: 0.6, stop: 0.05, shake: 0.2, amp: 0.03, push: 1 }, { t: 1.0, stop: 0.07, shake: 0.3, amp: 0.04, push: 1.5 }] },
     // P3=352
     build(fx, o) {
       const k = kit(fx, o, FIRE);

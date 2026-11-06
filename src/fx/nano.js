@@ -13,7 +13,7 @@ export default [
   // 1. swarm-blade: 20 metal chips assemble along the blade, then scatter
   SKILL('nano/swarm-blade', 'Swarm blade', m(['earth', 'nano'], 'melee-swarm', 0.3, 6, 2, 'arc'), 1.4, {
     view: 'side', sky: 'dark',
-    act: act('slash', 0.07, 1.6, { contact: 0.07 }),
+    act: act('slash', 0.07, 1.96, { contact: 0.07 }),
     // P3=194
     build(fx, o) {
       const k = kit(fx, o, NANO), grip = bladeTable(fx, -0.05, 0.35, 0.3), tip = bladeTable(fx, -0.05, 0.35, 1.0), C = bladeTable(fx, -0.05, 0.35, 1.3)(0.07); // swarm-blade middle at contact

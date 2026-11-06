@@ -111,12 +111,12 @@ export default [
       k.em({ count: 30, kind: 'rock', blend: 'normal', lit: 1, shape: 'sphere', radius: 0.3, pos: [3, 0.2, 0], dir: [0, 1, 0], spread: 1, speed: [2, 4], life: [1, 1.6], gravity: [0, -10, 0], size: [0.15, 0.1], bounce: 0.3, rot: 4, delay: 0.3, emit: 0.8 }); // 30
       k.ribbon({ points: (t) => { const x = X(t); return [[x - 1, 0.2, 0], [x, 0.9, 0], [x + 0.4, 0.3, 0]]; }, n: 2, width: 0.12, head: () => 1.001, fade: [0.05, 0.3], t0: 0, dur: 1.4 });
       k.ring({ t0: 0.9, dur: 0.6, r: [0.2, 2.5], normal: 'up', pos: [4, 0.02, 0] });
-      ct(fx, k, fx.anchor('tgt', 0, [0, 0.1, 0]), 1.0, 30, { lightI: 0 }); // 32
+      ct(fx, k, fx.anchor('tgt', 0, [0, 0.1, 0]), 1.0, 30, { lightI: 0 }); // 32 // anchor-ok
       k.light({ pos: [2.5, 1, 0.8], t0: 0, dur: 3, fade: [0.1, 0.6], intensity: 30 });
       if (k.g >= 2) k.em({ count: 100, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'line', shapeSize: [1.6, 0, 0], rot3: [0, Math.PI / 2, 0], pos: [0.5, 0.3, 0], dir: [0.5, 1, 0], speed: [1.5, 3], life: [1, 1.8], size: [0.3, 0.6], delay: 0.2, emit: 1.4, follow: (mm, ta, t) => mm.position.set(X(t) - 0.3, 0.3, 0) }); // 100
       if (k.g === 3) {
         k.em({ count: 60, kind: 'dust', blend: 'normal', lit: 1, ramp: SAND, shape: 'sphere', radius: 0.6, pos: [4, 0.3, 0], dir: [1, 1, 0], speed: [2, 4], life: [1, 1.8], size: [0.4, 0.8], delay: 1.0, emit: 0.001 }); // 60
       }
-      k.extras(fx.anchor('tgt', 0, [0, -0.1, 0]), 1.0);
+      k.extras(fx.anchor('tgt', 0, [0, -0.1, 0]), 1.0); // anchor-ok
     } }),
 ];
